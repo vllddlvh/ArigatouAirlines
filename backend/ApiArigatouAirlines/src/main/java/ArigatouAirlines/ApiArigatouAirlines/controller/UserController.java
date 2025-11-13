@@ -38,6 +38,11 @@ public class UserController {
                 .build();
     }
 
+//    @GetMapping("/testMyInfo")
+//    public String testMyInfo() {
+//        return userService.testGetMyInfo();
+//    }
+
     @GetMapping()
     @PostAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<UserResponse>> getAll() {

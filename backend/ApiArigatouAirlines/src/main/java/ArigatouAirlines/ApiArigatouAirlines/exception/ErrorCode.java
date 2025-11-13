@@ -50,7 +50,18 @@ public enum ErrorCode {
     INVALID_PASSWORD(4004, "Password must be at least 8 characters!", HttpStatus.BAD_REQUEST),
     EMAIL_IS_NULL(4005, "Email must not be null!", HttpStatus.BAD_REQUEST),
     DOB_IS_NULL(4006, "Date of birth must not be null!", HttpStatus.BAD_REQUEST),
-    CONFIRM_PASSWORD_FAIL(4007, "New password and confirm password do not match!", HttpStatus.BAD_REQUEST);
+    CONFIRM_PASSWORD_FAIL(4007, "New password and confirm password do not match!", HttpStatus.BAD_REQUEST),
+
+
+    //─────────────── 5xxx: Airport & Airline Error & aircraft ───────────────
+    AIRPORTCODE_EXISTED(5001, "AirportCode doesn't existed!", HttpStatus.BAD_REQUEST),
+    AIRPORTID_NOT_EXISTD(5002, "AiportId doesn't exiseted!", HttpStatus.BAD_REQUEST),
+    AIRLINECODE_EXISTED(5003, "AirlineCode doesn't  existed!", HttpStatus.BAD_REQUEST),
+    AIRLINEID_NOT_EXISTED(5004, "AirlineId doesn't existed!", HttpStatus.BAD_REQUEST),
+    AIRCRAFT_TYPE_ID_NOT_EXSITED(5005, "AircraftTypeId doesn't existed!", HttpStatus.BAD_REQUEST),
+    AIRCRAFT_ID_NOT_EXSITED(5006, "AircraftId  doesn't existed!", HttpStatus.BAD_REQUEST),
+    SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST);
+
 
     int code;
     String message;
