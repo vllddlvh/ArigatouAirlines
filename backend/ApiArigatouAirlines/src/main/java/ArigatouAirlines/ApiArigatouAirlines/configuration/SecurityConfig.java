@@ -36,6 +36,10 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS_GET = {
             "/payment/create_payment",  //test
             "/payment/payment_info",     //test
+            "users/myInfo",
+            "/testMyInfo",
+            "/airport",
+            "/aircraft"
     };
 
 

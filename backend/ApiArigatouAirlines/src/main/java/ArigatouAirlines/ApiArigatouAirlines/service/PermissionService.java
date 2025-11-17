@@ -8,13 +8,13 @@ import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.PermissionMapper;
 import ArigatouAirlines.ApiArigatouAirlines.repository.PermissionRepository;
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j

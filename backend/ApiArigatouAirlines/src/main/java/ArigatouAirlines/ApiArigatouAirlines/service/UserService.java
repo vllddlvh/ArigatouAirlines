@@ -52,10 +52,16 @@ public class UserService {
 
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
-        String id = context.getAuthentication().getName();
-        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        String username = context.getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         return userMapper.toUserResponse(user);
     }
+
+//    public String testGetMyInfo() {
+//        var context = SecurityContextHolder.getContext();
+//        String id = context.getAuthentication().getName();
+//        return id;
+//    }
 
     public UserResponse create(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
