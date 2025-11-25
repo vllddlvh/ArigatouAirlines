@@ -2,6 +2,7 @@ package ArigatouAirlines.ApiArigatouAirlines.controller;
 
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.AircraftTypeRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.AircraftTypeResponse;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.AircraftTypeResponseWithoutList;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.ApiResponse;
 import ArigatouAirlines.ApiArigatouAirlines.service.AircraftTypeService;
 import lombok.AccessLevel;
@@ -28,8 +29,8 @@ public class AircraftTypeController {
     }
 
     @GetMapping
-    ApiResponse<List<AircraftTypeResponse>> getAllAircraftType() {
-        return ApiResponse.<List<AircraftTypeResponse>>builder()
+    ApiResponse<List<AircraftTypeResponseWithoutList>> getAllAircraftTypes() {
+        return ApiResponse.<List<AircraftTypeResponseWithoutList>>builder()
                 .body(aircraftTypeService.getAllAircraftTypes())
                 .build();
     }

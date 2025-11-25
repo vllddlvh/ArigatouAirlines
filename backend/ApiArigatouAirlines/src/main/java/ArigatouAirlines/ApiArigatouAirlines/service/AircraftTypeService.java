@@ -2,6 +2,7 @@ package ArigatouAirlines.ApiArigatouAirlines.service;
 
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.AircraftTypeRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.AircraftTypeResponse;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.AircraftTypeResponseWithoutList;
 import ArigatouAirlines.ApiArigatouAirlines.entity.AircraftType;
 import ArigatouAirlines.ApiArigatouAirlines.entity.SeatMap;
 import ArigatouAirlines.ApiArigatouAirlines.enums.SeatClass;
@@ -77,9 +78,9 @@ public class AircraftTypeService {
         return aircraftTypeMapper.toAircraftTypeResponse(aircraftType);
     }
 
-    public List<AircraftTypeResponse> getAllAircraftTypes() {
+    public List<AircraftTypeResponseWithoutList> getAllAircraftTypes() {
         return aircraftTypeRepository.findAll()
-                .stream().map(aircraftTypeMapper :: toAircraftTypeResponse).toList();
+                .stream().map(aircraftTypeMapper :: toAircraftTypeResponseWithoutList).toList();
     }
 
     public AircraftTypeResponse getAircraftTypeById(int aircraftTypeId) {
