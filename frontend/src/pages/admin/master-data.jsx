@@ -484,11 +484,12 @@ function MasterDataManagementDashboard() {
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         fetchAllData();
-    }, [fetchAllData]);
+    }, []);
 
     // --- Xử lý hành động CRUD ---
     const handleAction = async ({ type, payload }) => {

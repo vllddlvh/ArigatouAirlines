@@ -1,11 +1,9 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.response;
 
-import ArigatouAirlines.ApiArigatouAirlines.entity.Airline;
-import ArigatouAirlines.ApiArigatouAirlines.entity.Airport;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -13,12 +11,17 @@ import java.sql.Time;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightScheduleResponse {
+    int scheduleId;
     String flightNumber;
-    Airline airline;
-    AirportResponse departureAirport;
-    Airport arrivalAirport;
-    Time departureTime;
-    Time arrivalTime;
+    String aircraftType;
+    String departureCity;
+    String arrivalCity;
+    String departureAirportCode;
+    String arrivalAirportCode;
+    LocalDateTime departureTime;
+    LocalDateTime arrivalTime;
+    Long basePrice;
     int durationMinutes;
+    String status;
     boolean isActive;
 }

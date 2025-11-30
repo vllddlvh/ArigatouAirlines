@@ -1,13 +1,11 @@
 package ArigatouAirlines.ApiArigatouAirlines.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
 
 @Entity(name = "flight_schedule")
 @Getter
@@ -26,26 +24,35 @@ public class FlightSchedule {
     @Size(max = 20)
     String flightNumber;
 
-    @OneToOne
-            @JoinColumn(name = "airline_id")
-    Airline airline;
+    @Column(name = "aircraft_type")
+    String aircraftType;
 
-    @OneToOne
-            @JoinColumn(name = "departure_airport_id")
-    Airport departureAirport;
+    @Column(name = "departure_city")
+    String departureCity;
 
-    @OneToOne
-    @JoinColumn(name = "arrival_airport_id")
-    Airport arrivalAirport;
+    @Column(name = "arrival_city")
+    String arrivalCity;
+
+    @Column(name = "departure_airport")
+    String departureAirportCode;
+
+    @Column(name = "arrival_airport")
+    String arrivalAirportCode;
 
     @Column(name = "departure_time")
-    Time departureTime;
+    LocalDateTime departureTime;
 
     @Column(name = "arrival_time")
-    Time arrivalTime;
+    LocalDateTime arrivalTime;
+
+    @Column(name = "base_price")
+    Long basePrice;
 
     @Column(name = "duration_minutes")
     int durationMinutes;
+
+    @Column(name = "status")
+    String status;
 
     @Column(name = "is_active")
     boolean isActive;

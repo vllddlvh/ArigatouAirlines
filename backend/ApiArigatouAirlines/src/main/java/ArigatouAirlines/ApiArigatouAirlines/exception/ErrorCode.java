@@ -60,7 +60,11 @@ public enum ErrorCode {
     AIRLINEID_NOT_EXISTED(5004, "AirlineId doesn't existed!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_TYPE_ID_NOT_EXSITED(5005, "AircraftTypeId doesn't existed!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_ID_NOT_EXSITED(5006, "AircraftId  doesn't existed!", HttpStatus.BAD_REQUEST),
-    SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST);
+    SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST),
+    AIRPORT_NOT_EXISTED(5008, "Airport doesn't exist!", HttpStatus.BAD_REQUEST),
+
+    //─────────────── 6xxx: Flight Errors ───────────────
+    FLIGHT_NOT_EXISTED(6001, "Flight doesn't exist!", HttpStatus.BAD_REQUEST);
 
 
     int code;

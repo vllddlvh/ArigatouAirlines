@@ -199,3 +199,65 @@ export const deleteAirline = async (id) => {
     throw error.response?.data?.message || "Đã xảy ra lỗi khi xóa hãng hàng không.";
   }
 };
+
+// ==================== FLIGHT SCHEDULE ====================
+
+export const getAllFlights = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/flight`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi lấy danh sách chuyến bay.";
+  }
+};
+
+export const getFlightById = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/flight/${id}`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi lấy thông tin chuyến bay.";
+  }
+};
+
+export const createFlight = async (data) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/flight`, data, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi tạo chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi tạo chuyến bay.";
+  }
+};
+
+export const updateFlight = async (id, data) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/api/flight/${id}`, data, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi cập nhật chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi cập nhật chuyến bay.";
+  }
+};
+
+export const deleteFlight = async (id) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/api/flight/${id}`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi xóa chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi xóa chuyến bay.";
+  }
+};
