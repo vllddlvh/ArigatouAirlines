@@ -36,37 +36,43 @@ const formatISODateToLocal = (isoString) => {
 
 export function EditFlightDialog({ flight, onClose, onSave }) {
     // 1. Khởi tạo state với giá trị ban đầu đã được format cho input type="datetime-local"
-    const initialDepartureTime = useMemo(() => formatISODateToLocal(flight.ddt), [flight.ddt]);
-    const initialArrivalTime = useMemo(() => formatISODateToLocal(flight.adt), [flight.adt]);
+    // Sử dụng field names từ backend: departureTime, arrivalTime
+    const initialDepartureTime = useMemo(() => formatISODateToLocal(flight.departureTime || flight.ddt), [flight.departureTime, flight.ddt]);
+    const initialArrivalTime = useMemo(() => formatISODateToLocal(flight.arrivalTime || flight.adt), [flight.arrivalTime, flight.adt]);
 
     const [editedFlight, setEditedFlight] = useState({
         ...flight,
-        departureTime: initialDepartureTime,
-        arrivalTime: initialArrivalTime,
+        departureTimeLocal: initialDepartureTime,
+        arrivalTimeLocal: initialArrivalTime,
     });
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleInputChange = (e) => {
-        // Xử lý sự kiện input chuẩn
-        const { name, value } = e.target;
-        setEditedFlight(prev => ({ ...prev, [name]: value }));
+    const handleFieldChange = (field) => (e) => {
+        const { value } = e.target;
+        setEditedFlight(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
         
-        const editFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/flight/update?id=${editedFlight.flightId}`;
+        // Sử dụng scheduleId từ backend (không phải flightId)
+        const flightId = flight.scheduleId || flight.flightId;
+        const editFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/flight/${flightId}`;
         
-        // Chuyển đổi datetime-local string sang Unix seconds (milliseconds / 1000)
-        const departureSeconds = Date.parse(editedFlight.departureTime) / 1000;
-        const arrivalSeconds = Date.parse(editedFlight.arrivalTime) / 1000;
-
-        // Dữ liệu API (giữ nguyên logic gốc)
-        const apiBody = JSON.stringify({
-            "arrivalTime": {"seconds": arrivalSeconds},
-            "departureTime": {"seconds": departureSeconds},
-        });
+        // Chuyển đổi datetime-local string sang ISO string cho backend (LocalDateTime)
+        const apiBody = {
+            flightNumber: flight.flightNumber,
+            aircraftType: flight.aircraftType,
+            departureCity: flight.departureCity,
+            arrivalCity: flight.arrivalCity,
+            departureAirport: flight.departureAirportCode || flight.departureAirport,
+            arrivalAirport: flight.arrivalAirportCode || flight.arrivalAirport,
+            departureTime: new Date(editedFlight.departureTimeLocal).toISOString(),
+            arrivalTime: new Date(editedFlight.arrivalTimeLocal).toISOString(),
+            basePrice: flight.basePrice,
+            status: flight.status
+        };
 
         try {
             const response = await fetch(editFlightApi, {
@@ -76,24 +82,15 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
                     "admin": "true",
                     "authorization": "Bearer " + localStorage.getItem("token")
                 }, 
-                body: apiBody
+                body: JSON.stringify(apiBody)
             });
 
             if (!response.ok) {
-                // Đọc thông báo lỗi từ server nếu có
                 const errorData = await response.json().catch(() => ({ message: 'Lỗi server không xác định.' }));
                 throw new Error(errorData.message || "failed");
             }
 
-            // Cập nhật state gốc với dữ liệu đã format lại trước khi gọi onSave
-            const updatedDisplayFlight = {
-                ...editedFlight,
-                // Chuyển đổi lại thành format string hiển thị nếu cần (đã được xử lý trong component cha)
-                ddt: editedFlight.departureTime, 
-                adt: editedFlight.arrivalTime
-            };
-
-            onSave(updatedDisplayFlight); // Gọi hàm lưu thành công (cũng sẽ đóng dialog)
+            onSave(editedFlight);
         } catch (error) {
             alert(`Lỗi khi cập nhật chuyến bay: ${error.message || "Vui lòng kiểm tra kết nối."}`);
         } finally {
@@ -107,7 +104,7 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
                 <DialogHeader className="border-b pb-3 mb-4">
                     <DialogTitle className="text-2xl font-bold text-primary flex items-center gap-2">
                         <PlaneTakeoff className="h-6 w-6 text-primary" />
-                        {`Chỉnh sửa chuyến bay ${flight.id}`}
+                        {`Chỉnh sửa chuyến bay ${flight.flightNumber || flight.id}`}
                     </DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground">
                         Chỉ cho phép thay đổi thời gian khởi hành và hạ cánh.
@@ -116,23 +113,23 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
                 
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-6 py-4">
-                        {/* Current Route Display (Added for context) */}
+                        {/* Current Route Display */}
                         <div className="bg-muted p-3 rounded-lg flex justify-between text-sm font-semibold text-foreground">
-                            <span>Từ: {flight.src}</span>
-                            <span>Đến: {flight.dest}</span>
+                            <span>Từ: {flight.departureAirportCode || flight.src} ({flight.departureCity || ''})</span>
+                            <span>Đến: {flight.arrivalAirportCode || flight.dest} ({flight.arrivalCity || ''})</span>
                         </div>
 
                         {/* Departure Time */}
                         <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
-                            <Label htmlFor="departureTime" className="text-left md:text-right font-semibold text-gray-700 flex items-center gap-1">
+                            <Label htmlFor="departureTimeLocal" className="text-left md:text-right font-semibold text-gray-700 flex items-center gap-1">
                                 <PlaneTakeoff className="h-4 w-4 text-primary" /> Khởi hành
                             </Label>
                             <Input
-                                id="departureTime"
-                                name="departureTime"
+                                id="departureTimeLocal"
+                                name="departureTimeLocal"
                                 type="datetime-local"
-                                value={editedFlight.departureTime}
-                                onChange={handleInputChange}
+                                value={editedFlight.departureTimeLocal}
+                                onChange={handleFieldChange('departureTimeLocal')}
                                 required
                                 className="col-span-3 border-2 border-border focus:border-primary transition-colors h-10"
                             />
@@ -140,15 +137,15 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
 
                         {/* Arrival Time */}
                         <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
-                            <Label htmlFor="arrivalTime" className="text-left md:text-right font-semibold text-gray-700 flex items-center gap-1">
+                            <Label htmlFor="arrivalTimeLocal" className="text-left md:text-right font-semibold text-gray-700 flex items-center gap-1">
                                 <PlaneLanding className="h-4 w-4 text-primary" /> Hạ cánh
                             </Label>
                             <Input
-                                id="arrivalTime"
-                                name="arrivalTime"
+                                id="arrivalTimeLocal"
+                                name="arrivalTimeLocal"
                                 type="datetime-local"
-                                value={editedFlight.arrivalTime}
-                                onChange={handleInputChange}
+                                value={editedFlight.arrivalTimeLocal}
+                                onChange={handleFieldChange('arrivalTimeLocal')}
                                 required
                                 className="col-span-3 border-2 border-border focus:border-primary transition-colors h-10"
                             />

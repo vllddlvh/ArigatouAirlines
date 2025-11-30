@@ -33,10 +33,10 @@ export function AddFlightDialog() {
         status: 'Scheduled' // Đặt trạng thái mặc định hợp lý hơn
     })
 
-    const handleFieldChange = (field) => (e) => {
-        const { value } = e.target;
-        setFlightData(prev => ({ ...prev, [field]: value }));
-    };
+    const handleInputChange = (e) => {
+        const { name, value } = e.target
+        setFlightData(prev => ({ ...prev, [name]: value }))
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -133,7 +133,7 @@ export function AddFlightDialog() {
                                     label="Số hiệu Chuyến bay" 
                                     icon={Hash}
                                     value={flightData.flightNumber}
-                                    onChange={handleFieldChange('flightNumber')}
+                                    onChange={handleInputChange}
                                     required
                                     placeholder="Ví dụ: QA301"
                                 />
@@ -142,7 +142,7 @@ export function AddFlightDialog() {
                                     label="Loại Tàu bay (Aircraft)" 
                                     icon={Plane}
                                     value={flightData.aircraftType}
-                                    onChange={handleFieldChange('aircraftType')}
+                                    onChange={handleInputChange}
                                     required
                                     placeholder="Ví dụ: Boeing 787"
                                 />
@@ -156,14 +156,14 @@ export function AddFlightDialog() {
                                 {/* Departure */}
                                 <div className="space-y-3 border-r pr-4 border-border">
                                     <h4 className="text-md font-semibold text-primary flex items-center gap-2"><ArrowRight className="h-4 w-4" /> ĐIỂM ĐI</h4>
-                                    <InputRow id="departureCity" label="Thành phố" icon={MapPin} value={flightData.departureCity} onChange={handleFieldChange('departureCity')} required />
-                                    <InputRow id="departureAirport" label="Sân bay (Mã IATA)" icon={Anchor} value={flightData.departureAirport} onChange={handleFieldChange('departureAirport')} required />
+                                    <InputRow id="departureCity" label="Thành phố" icon={MapPin} value={flightData.departureCity} onChange={handleInputChange} required />
+                                    <InputRow id="departureAirport" label="Sân bay (Mã IATA)" icon={Anchor} value={flightData.departureAirport} onChange={handleInputChange} required />
                                 </div>
                                 {/* Arrival */}
                                 <div className="space-y-3 pl-4">
                                     <h4 className="text-md font-semibold text-primary flex items-center gap-2"><ArrowRight className="h-4 w-4 rotate-180" /> ĐIỂM ĐẾN</h4>
-                                    <InputRow id="arrivalCity" label="Thành phố" icon={MapPin} value={flightData.arrivalCity} onChange={handleFieldChange('arrivalCity')} required />
-                                    <InputRow id="arrivalAirport" label="Sân bay (Mã IATA)" icon={Anchor} value={flightData.arrivalAirport} onChange={handleFieldChange('arrivalAirport')} required />
+                                    <InputRow id="arrivalCity" label="Thành phố" icon={MapPin} value={flightData.arrivalCity} onChange={handleInputChange} required />
+                                    <InputRow id="arrivalAirport" label="Sân bay (Mã IATA)" icon={Anchor} value={flightData.arrivalAirport} onChange={handleInputChange} required />
                                 </div>
                             </div>
                         </div>
@@ -178,7 +178,7 @@ export function AddFlightDialog() {
                                     icon={CalendarDays}
                                     type="datetime-local" 
                                     value={flightData.departureTime}
-                                    onChange={handleFieldChange('departureTime')}
+                                    onChange={handleInputChange}
                                     required
                                 />
                                 <InputRow 
@@ -187,7 +187,7 @@ export function AddFlightDialog() {
                                     icon={Clock}
                                     type="datetime-local" 
                                     value={flightData.arrivalTime}
-                                    onChange={handleFieldChange('arrivalTime')}
+                                    onChange={handleInputChange}
                                     required
                                 />
                                 <div className="md:col-span-2">
@@ -198,7 +198,7 @@ export function AddFlightDialog() {
                                         type="number" 
                                         step="1000"
                                         value={flightData.basePrice}
-                                        onChange={handleFieldChange('basePrice')}
+                                        onChange={handleInputChange}
                                         required
                                         placeholder="Ví dụ: 1500000"
                                     />
