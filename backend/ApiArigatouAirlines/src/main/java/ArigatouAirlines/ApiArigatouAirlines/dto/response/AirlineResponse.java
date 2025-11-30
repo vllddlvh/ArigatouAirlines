@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AirlineResponse {
+    int airlineId;
     String airlineCode;
     String airlineName;
     String country;

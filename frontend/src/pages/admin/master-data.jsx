@@ -8,23 +8,23 @@ import { Dialog,DialogHeader,DialogTitle,DialogFooter,DialogContent  } from '@/c
 import {Table, TableHead,TableHeader,TableBody,TableRow,TableCell} from '@/components/ui/table-admin';
 import { Tabs, TabsList,TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import * as masterDataService from '@/services/masterDataService';
 
 
 
 
 
-// --- MOCK DATA ---
+// --- MOCK DATA (chỉ dùng cho Airport nếu chưa có API) ---
 const MOCK_AIRPORTS = [
     { id: 'SBA001', code: 'HAN', name: 'Sân bay Nội Bài', city: 'Hà Nội' },
     { id: 'SBA002', code: 'SGN', name: 'Sân bay Tân Sơn Nhất', city: 'TP. Hồ Chí Minh' },
 ];
-const MOCK_AIRLINES = [
-    { id: 'HHK001', code: 'VN', name: 'Vietnam Airlines', country: 'Việt Nam' },
-    { id: 'HHK002', code: 'VJ', name: 'VietJet Air', country: 'Việt Nam' },
-];
-const MOCK_AIRCRAFTS = [
-    { id: 'MB001', model: 'Boeing 787', capacity: 300, owner: 'VN' },
-    { id: 'MB002', model: 'Airbus A321', capacity: 220, owner: 'VJ' },
+
+// Status options cho Aircraft
+const AIRCRAFT_STATUS_OPTIONS = [
+    { value: 'ACTIVE', label: 'Đang hoạt động' },
+    { value: 'INACTIVE', label: 'Ngừng hoạt động' },
+    { value: 'MAINTENANCE', label: 'Đang bảo trì' },
 ];
 // -----------------
 
@@ -135,35 +135,42 @@ const AirlineManagement = ({ data, onAction }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ id: '', code: '', name: '', country: '' });
+    const [formData, setFormData] = useState({ airlineId: '', airlineCode: '', airlineName: '', country: '' });
 
-    const filteredData = data.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.country.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredData = data.filter(item => {
+        const name = item.airlineName?.toLowerCase() || '';
+        const code = item.airlineCode?.toLowerCase() || '';
+        const country = item.country?.toLowerCase() || '';
+        const search = searchTerm.toLowerCase();
+        return name.includes(search) || code.includes(search) || country.includes(search);
+    });
 
     const handleSave = (e) => {
         e.preventDefault();
-        if (!formData.code || !formData.name || !formData.country) {
+        if (!formData.airlineCode || !formData.airlineName || !formData.country) {
             alert('Vui lòng điền đầy đủ thông tin.');
             return;
         }
-        const payload = { ...formData, code: formData.code.toUpperCase().trim() };
+        const payload = { ...formData, airlineCode: formData.airlineCode.toUpperCase().trim() };
         onAction({ type: isEditing ? 'UPDATE_AIRLINE' : 'ADD_AIRLINE', payload });
         setIsDialogOpen(false);
-        setFormData({ id: '', code: '', name: '', country: '' });
+        setFormData({ airlineId: '', airlineCode: '', airlineName: '', country: '' });
     };
 
     const handleEdit = (item) => {
         setIsEditing(true);
-        setFormData(item);
+        setFormData({
+            airlineId: item.airlineId,
+            airlineCode: item.airlineCode || '',
+            airlineName: item.airlineName || '',
+            country: item.country || ''
+        });
         setIsDialogOpen(true);
     };
 
     const handleAdd = () => {
         setIsEditing(false);
-        setFormData({ id: '', code: '', name: '', country: '' });
+        setFormData({ airlineId: '', airlineCode: '', airlineName: '', country: '' });
         setIsDialogOpen(true);
     };
 
@@ -193,15 +200,15 @@ const AirlineManagement = ({ data, onAction }) => {
                         <TableRow className="h-24"><TableCell colSpan={4} className="text-center text-gray-500">Không có dữ liệu hãng hàng không.</TableCell></TableRow>
                     ) : (
                         filteredData.map(item => (
-                            <TableRow key={item.id} className="grid-cols-[1.5fr_2fr_2fr_1.5fr]">
-                                <TableCell className="font-semibold text-orange-600">{item.code}</TableCell>
-                                <TableCell>{item.name}</TableCell>
+                            <TableRow key={item.airlineId} className="grid-cols-[1.5fr_2fr_2fr_1.5fr]">
+                                <TableCell className="font-semibold text-orange-600">{item.airlineCode}</TableCell>
+                                <TableCell>{item.airlineName}</TableCell>
                                 <TableCell>{item.country}</TableCell>
                                 <TableCell className="text-center flex space-x-2 m-auto ">
                                     <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
                                         <Edit className="h-4 w-4" />
                                     </Button>
-                                    <Button size="sm" variant="destructive" onClick={() => onAction({ type: 'DELETE_AIRLINE', payload: item.id })}>
+                                    <Button size="sm" variant="destructive" onClick={() => onAction({ type: 'DELETE_AIRLINE', payload: item.airlineId })}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </TableCell>
@@ -218,8 +225,8 @@ const AirlineManagement = ({ data, onAction }) => {
                         <DialogTitle>{isEditing ? 'Sửa Thông tin Hãng' : 'Thêm Hãng hàng không Mới'}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSave} className="space-y-4 py-2">
-                        <div><Label htmlFor="code">Mã (Code)</Label><Input id="code" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} required disabled={isEditing} placeholder="VD: VN" /></div>
-                        <div><Label htmlFor="name">Tên Hãng</Label><Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required placeholder="VD: Vietnam Airlines" /></div>
+                        <div><Label htmlFor="airlineCode">Mã (Code)</Label><Input id="airlineCode" value={formData.airlineCode} onChange={e => setFormData({...formData, airlineCode: e.target.value})} required disabled={isEditing} placeholder="VD: VN" /></div>
+                        <div><Label htmlFor="airlineName">Tên Hãng</Label><Input id="airlineName" value={formData.airlineName} onChange={e => setFormData({...formData, airlineName: e.target.value})} required placeholder="VD: Vietnam Airlines" /></div>
                         <div><Label htmlFor="country">Quốc gia</Label><Input id="country" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} required placeholder="VD: Việt Nam" /></div>
                         <DialogFooter><Button type="submit" variant="primary">{isEditing ? 'Lưu Thay Đổi' : 'Thêm Mới'}</Button></DialogFooter>
                     </form>
@@ -230,43 +237,85 @@ const AirlineManagement = ({ data, onAction }) => {
 };
 
 // --- 3. Sub-Component: Quản lý Máy bay (Aircraft) ---
-const AircraftManagement = ({ data, airlinesData, onAction }) => {
+const AircraftManagement = ({ data, airlinesData, aircraftTypesData, onAction }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ id: '', model: '', capacity: 0, owner: '' });
+    const [editingAircraftId, setEditingAircraftId] = useState(null);
+    const [formData, setFormData] = useState({ 
+        registrationNumber: '', 
+        statusAircraft: 'ACTIVE', 
+        aircraftTypeId: '', 
+        airlineId: '' 
+    });
 
-    const filteredData = data.filter(item => 
-        item.model.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        item.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredData = data.filter(item => {
+        const regNum = item.registrationNumber?.toLowerCase() || '';
+        const typeName = item.aircraftType?.typeName?.toLowerCase() || '';
+        const airlineName = item.airline?.airlineName?.toLowerCase() || '';
+        const search = searchTerm.toLowerCase();
+        return regNum.includes(search) || typeName.includes(search) || airlineName.includes(search);
+    });
 
-    const getAirlineName = (ownerCode) => {
-        const airline = airlinesData.find(a => a.code === ownerCode);
-        return airline ? `${airline.name} (${airline.code})` : ownerCode;
+    const getStatusLabel = (status) => {
+        const option = AIRCRAFT_STATUS_OPTIONS.find(o => o.value === status);
+        return option ? option.label : status;
+    };
+
+    const getStatusBadgeClass = (status) => {
+        switch(status) {
+            case 'ACTIVE': return 'bg-green-100 text-green-700';
+            case 'INACTIVE': return 'bg-red-100 text-red-700';
+            case 'MAINTENANCE': return 'bg-yellow-100 text-yellow-700';
+            default: return 'bg-gray-100 text-gray-700';
+        }
     };
 
     const handleSave = (e) => {
         e.preventDefault();
-        if (!formData.id || !formData.model || formData.capacity <= 0 || !formData.owner) {
-            alert('Vui lòng điền đầy đủ và chính xác thông tin.');
+        if (!formData.registrationNumber || !formData.aircraftTypeId || !formData.airlineId) {
+            alert('Vui lòng điền đầy đủ thông tin.');
             return;
         }
-        onAction({ type: isEditing ? 'UPDATE_AIRCRAFT' : 'ADD_AIRCRAFT', payload: formData });
+        const payload = {
+            ...formData,
+            aircraftTypeId: parseInt(formData.aircraftTypeId),
+            airlineId: parseInt(formData.airlineId),
+        };
+        if (isEditing) {
+            onAction({ type: 'UPDATE_AIRCRAFT', payload: { id: editingAircraftId, data: payload } });
+        } else {
+            onAction({ type: 'ADD_AIRCRAFT', payload });
+        }
         setIsDialogOpen(false);
-        setFormData({ id: '', model: '', capacity: 0, owner: '' });
+        resetForm();
+    };
+
+    const resetForm = () => {
+        setFormData({ 
+            registrationNumber: '', 
+            statusAircraft: 'ACTIVE', 
+            aircraftTypeId: aircraftTypesData[0]?.aircraftTypeId || '', 
+            airlineId: airlinesData[0]?.airlineId || '' 
+        });
+        setEditingAircraftId(null);
     };
 
     const handleEdit = (item) => {
         setIsEditing(true);
-        setFormData(item);
+        setEditingAircraftId(item.aircraftId);
+        setFormData({
+            registrationNumber: item.registrationNumber || '',
+            statusAircraft: item.statusAircraft || 'ACTIVE',
+            aircraftTypeId: item.aircraftType?.aircraftTypeId || '',
+            airlineId: item.airline?.airlineId || '',
+        });
         setIsDialogOpen(true);
     };
 
     const handleAdd = () => {
         setIsEditing(false);
-        setFormData({ id: '', model: '', capacity: 0, owner: airlinesData[0]?.code || '' });
+        resetForm();
         setIsDialogOpen(true);
     };
 
@@ -274,7 +323,7 @@ const AircraftManagement = ({ data, airlinesData, onAction }) => {
         <div className="space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
                 <Input
-                    placeholder="Tìm kiếm theo Mã, Model hoặc Hãng sở hữu..."
+                    placeholder="Tìm kiếm theo số đăng ký, loại máy bay hoặc hãng..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-md"
@@ -285,28 +334,36 @@ const AircraftManagement = ({ data, airlinesData, onAction }) => {
             </div>
 
             <div className="border rounded-lg overflow-hidden shadow-sm">
-                <TableHeader className="grid-cols-[1.5fr_2fr_1fr_2fr_1.5fr]">
-                    <TableHead>MÃ MÁY BAY</TableHead>
-                    <TableHead>MẪU (MODEL)</TableHead>
+                <TableHeader className="grid-cols-[1.5fr_2fr_1fr_2fr_1.5fr_1.5fr]">
+                    <TableHead>SỐ ĐĂNG KÝ</TableHead>
+                    <TableHead>LOẠI MÁY BAY</TableHead>
                     <TableHead>SỨC CHỨA</TableHead>
                     <TableHead>HÃNG SỞ HỮU</TableHead>
+                    <TableHead>TRẠNG THÁI</TableHead>
                     <TableHead className="text-center">HÀNH ĐỘNG</TableHead>
                 </TableHeader>
                 <TableBody>
                     {filteredData.length === 0 ? (
-                        <TableRow className="h-24"><TableCell colSpan={5} className="text-center text-gray-500">Không có dữ liệu máy bay.</TableCell></TableRow>
+                        <TableRow className="h-24"><TableCell colSpan={6} className="text-center text-gray-500">Không có dữ liệu máy bay.</TableCell></TableRow>
                     ) : (
                         filteredData.map(item => (
-                            <TableRow key={item.id} className="grid-cols-[1.5fr_2fr_1fr_2fr_1.5fr]">
-                                <TableCell className="font-semibold text-green-600">{item.id}</TableCell>
-                                <TableCell>{item.model}</TableCell>
-                                <TableCell>{item.capacity} chỗ</TableCell>
-                                <TableCell className="text-gray-700 font-medium">{getAirlineName(item.owner)}</TableCell>
+                            <TableRow key={item.aircraftId} className="grid-cols-[1.5fr_2fr_1fr_2fr_1.5fr_1.5fr]">
+                                <TableCell className="font-semibold text-green-600">{item.registrationNumber}</TableCell>
+                                <TableCell>{item.aircraftType?.typeName || 'N/A'}</TableCell>
+                                <TableCell>{item.aircraftType?.totalSeats || 0} chỗ</TableCell>
+                                <TableCell className="text-gray-700 font-medium">
+                                    {item.airline?.airlineName || 'N/A'} ({item.airline?.airlineCode || ''})
+                                </TableCell>
+                                <TableCell>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(item.statusAircraft)}`}>
+                                        {getStatusLabel(item.statusAircraft)}
+                                    </span>
+                                </TableCell>
                                 <TableCell className="text-center space-x-2 flex m-auto">
                                     <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
                                         <Edit className="h-4 w-4" />
                                     </Button>
-                                    <Button size="sm" variant="destructive" onClick={() => onAction({ type: 'DELETE_AIRCRAFT', payload: item.id })}>
+                                    <Button size="sm" variant="destructive" onClick={() => onAction({ type: 'DELETE_AIRCRAFT', payload: item.aircraftId })}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </TableCell>
@@ -323,21 +380,66 @@ const AircraftManagement = ({ data, airlinesData, onAction }) => {
                         <DialogTitle>{isEditing ? 'Sửa Thông tin Máy bay' : 'Thêm Máy bay Mới'}</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSave} className="space-y-4 py-2">
-                        <div><Label htmlFor="id">Mã Máy bay</Label><Input id="id" value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})} required disabled={isEditing} placeholder="VD: MB003" /></div>
-                        <div><Label htmlFor="model">Mẫu (Model)</Label><Input id="model" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} required placeholder="VD: Boeing 737 Max" /></div>
-                        <div><Label htmlFor="capacity">Sức chứa (Chỗ)</Label><Input id="capacity" type="number" min="1" value={formData.capacity} onChange={e => setFormData({...formData, capacity: parseInt(e.target.value) || 0})} required placeholder="VD: 180" /></div>
-                        
-                        {/* Dropdown giả lập cho Hãng sở hữu */}
                         <div>
-                            <Label htmlFor="owner">Hãng sở hữu</Label>
+                            <Label htmlFor="registrationNumber">Số đăng ký (Registration Number)</Label>
+                            <Input 
+                                id="registrationNumber" 
+                                value={formData.registrationNumber} 
+                                onChange={e => setFormData({...formData, registrationNumber: e.target.value})} 
+                                required 
+                                placeholder="VD: VN-A321" 
+                            />
+                        </div>
+                        
+                        {/* Dropdown Loại máy bay */}
+                        <div>
+                            <Label htmlFor="aircraftTypeId">Loại máy bay</Label>
                             <select 
-                                id="owner" 
-                                value={formData.owner} 
-                                onChange={e => setFormData({...formData, owner: e.target.value})}
+                                id="aircraftTypeId" 
+                                value={formData.aircraftTypeId} 
+                                onChange={e => setFormData({...formData, aircraftTypeId: e.target.value})}
+                                className="w-full p-2.5 border rounded-lg focus:outline-none transition-shadow duration-200 text-gray-800 h-10 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                required
+                            >
+                                <option value="">-- Chọn loại máy bay --</option>
+                                {aircraftTypesData.map(type => (
+                                    <option key={type.aircraftTypeId} value={type.aircraftTypeId}>
+                                        {type.typeName} ({type.totalSeats} chỗ)
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Dropdown Hãng sở hữu */}
+                        <div>
+                            <Label htmlFor="airlineId">Hãng sở hữu</Label>
+                            <select 
+                                id="airlineId" 
+                                value={formData.airlineId} 
+                                onChange={e => setFormData({...formData, airlineId: e.target.value})}
+                                className="w-full p-2.5 border rounded-lg focus:outline-none transition-shadow duration-200 text-gray-800 h-10 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                required
+                            >
+                                <option value="">-- Chọn hãng hàng không --</option>
+                                {airlinesData.map(airline => (
+                                    <option key={airline.airlineId} value={airline.airlineId}>
+                                        {airline.airlineName} ({airline.airlineCode})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Dropdown Trạng thái */}
+                        <div>
+                            <Label htmlFor="statusAircraft">Trạng thái</Label>
+                            <select 
+                                id="statusAircraft" 
+                                value={formData.statusAircraft} 
+                                onChange={e => setFormData({...formData, statusAircraft: e.target.value})}
                                 className="w-full p-2.5 border rounded-lg focus:outline-none transition-shadow duration-200 text-gray-800 h-10 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                                {airlinesData.map(airline => (
-                                    <option key={airline.code} value={airline.code}>{airline.name} ({airline.code})</option>
+                                {AIRCRAFT_STATUS_OPTIONS.map(option => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -354,19 +456,49 @@ const AircraftManagement = ({ data, airlinesData, onAction }) => {
 function MasterDataManagementDashboard() {
     const { toast } = useToast();
     const [airports, setAirports] = useState(MOCK_AIRPORTS);
-    const [airlines, setAirlines] = useState(MOCK_AIRLINES);
-    const [aircrafts, setAircrafts] = useState(MOCK_AIRCRAFTS);
+    const [airlines, setAirlines] = useState([]);
+    const [aircrafts, setAircrafts] = useState([]);
+    const [aircraftTypes, setAircraftTypes] = useState([]);
     const [activeTab, setActiveTab] = useState("airports");
     const [isLoading, setIsLoading] = useState(false);
 
-    // --- Xử lý hành động Mock (CRUD) ---
-    const handleAction = ({ type, payload }) => {
+    // --- Fetch data từ backend khi component mount ---
+    const fetchAllData = useCallback(async () => {
         setIsLoading(true);
-        setTimeout(() => {
-            let success = true;
-            let description = "";
+        try {
+            const [airlinesRes, aircraftsRes, aircraftTypesRes] = await Promise.all([
+                masterDataService.getAllAirlines(),
+                masterDataService.getAllAircrafts(),
+                masterDataService.getAllAircraftTypes(),
+            ]);
+            setAirlines(airlinesRes || []);
+            setAircrafts(aircraftsRes || []);
+            setAircraftTypes(aircraftTypesRes || []);
+        } catch (error) {
+            console.error("Lỗi khi tải dữ liệu:", error);
+            toast({ 
+                title: "Lỗi", 
+                description: "Không thể tải dữ liệu từ server. Vui lòng thử lại.", 
+                variant: "destructive" 
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast]);
 
+    useEffect(() => {
+        fetchAllData();
+    }, [fetchAllData]);
+
+    // --- Xử lý hành động CRUD ---
+    const handleAction = async ({ type, payload }) => {
+        setIsLoading(true);
+        let success = true;
+        let description = "";
+
+        try {
             switch (type) {
+                // Airport (vẫn dùng mock vì chưa có API)
                 case 'DELETE_AIRPORT':
                     setAirports(airports.filter(a => a.id !== payload));
                     description = "Đã xóa sân bay thành công (MOCK).";
@@ -379,43 +511,55 @@ function MasterDataManagementDashboard() {
                     setAirports(airports.map(a => a.id === payload.id ? payload : a));
                     description = `Đã cập nhật sân bay ${payload.code} (MOCK).`;
                     break;
+
+                // Airline (vẫn dùng mock vì cấu trúc frontend khác backend)
                 case 'DELETE_AIRLINE':
-                    setAirlines(airlines.filter(a => a.id !== payload));
+                    setAirlines(airlines.filter(a => a.airlineId !== payload));
                     description = "Đã xóa hãng hàng không thành công (MOCK).";
                     break;
                 case 'ADD_AIRLINE':
-                    setAirlines([...airlines, { ...payload, id: `HHK${Date.now()}` }]);
-                    description = `Đã thêm hãng ${payload.code} mới (MOCK).`;
+                    setAirlines([...airlines, { ...payload, airlineId: Date.now() }]);
+                    description = `Đã thêm hãng ${payload.airlineCode} mới (MOCK).`;
                     break;
                 case 'UPDATE_AIRLINE':
-                    setAirlines(airlines.map(a => a.id === payload.id ? payload : a));
-                    description = `Đã cập nhật hãng ${payload.code} (MOCK).`;
+                    setAirlines(airlines.map(a => a.airlineId === payload.airlineId ? payload : a));
+                    description = `Đã cập nhật hãng ${payload.airlineCode} (MOCK).`;
                     break;
+
+                // Aircraft - Gọi API Backend
                 case 'DELETE_AIRCRAFT':
-                    setAircrafts(aircrafts.filter(a => a.id !== payload));
-                    description = "Đã xóa máy bay thành công (MOCK).";
+                    await masterDataService.deleteAircraft(payload);
+                    description = "Đã xóa máy bay thành công.";
+                    await fetchAllData(); // Refresh data
                     break;
                 case 'ADD_AIRCRAFT':
-                    setAircrafts([...aircrafts, { ...payload, id: payload.id.toUpperCase().trim() }]);
-                    description = `Đã thêm máy bay ${payload.id} mới (MOCK).`;
+                    await masterDataService.createAircraft(payload);
+                    description = `Đã thêm máy bay ${payload.registrationNumber} mới.`;
+                    await fetchAllData(); // Refresh data
                     break;
                 case 'UPDATE_AIRCRAFT':
-                    setAircrafts(aircrafts.map(a => a.id === payload.id ? payload : a));
-                    description = `Đã cập nhật máy bay ${payload.id} (MOCK).`;
+                    await masterDataService.updateAircraft(payload.id, payload.data);
+                    description = `Đã cập nhật máy bay ${payload.data.registrationNumber}.`;
+                    await fetchAllData(); // Refresh data
                     break;
+
                 default:
                     success = false;
                     description = "Hành động không xác định.";
                     break;
             }
+        } catch (error) {
+            success = false;
+            description = typeof error === 'string' ? error : "Có lỗi xảy ra. Vui lòng thử lại.";
+            console.error("Lỗi xử lý hành động:", error);
+        }
 
-            toast({ 
-                title: success ? "Thành công" : "Lỗi", 
-                description: description, 
-                variant: success ? "success" : "destructive" 
-            });
-            setIsLoading(false);
-        }, 500); // Tăng độ trễ để thấy hiệu ứng loading
+        toast({ 
+            title: success ? "Thành công" : "Lỗi", 
+            description: description, 
+            variant: success ? "success" : "destructive" 
+        });
+        setIsLoading(false);
     };
 
     // --- Cải tiến TabsTrigger Mock để sử dụng state nội bộ cho active style ---
@@ -471,7 +615,8 @@ function MasterDataManagementDashboard() {
                             <TabsContent value="aircrafts" activeTab={activeTab}>
                                 <AircraftManagement 
                                     data={aircrafts} 
-                                    airlinesData={airlines} // Truyền dữ liệu airlines cho dropdown
+                                    airlinesData={airlines}
+                                    aircraftTypesData={aircraftTypes}
                                     onAction={handleAction} 
                                 />
                             </TabsContent>
