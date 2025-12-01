@@ -8,6 +8,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.sql.Time;
+import java.time.LocalTime;
 
 @Entity(name = "flight_schedule")
 @Getter
@@ -26,27 +27,28 @@ public class FlightSchedule {
     @Size(max = 20)
     String flightNumber;
 
-    @OneToOne
+    @ManyToOne
             @JoinColumn(name = "airline_id")
     Airline airline;
 
-    @OneToOne
+    @ManyToOne
             @JoinColumn(name = "departure_airport_id")
     Airport departureAirport;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "arrival_airport_id")
     Airport arrivalAirport;
 
     @Column(name = "departure_time")
-    Time departureTime;
+    LocalTime departureTime;
 
     @Column(name = "arrival_time")
-    Time arrivalTime;
+    LocalTime arrivalTime;
 
     @Column(name = "duration_minutes")
     int durationMinutes;
 
-    @Column(name = "is_active")
-    boolean isActive;
+    @Builder.Default
+    @Column(name = "is_active", columnDefinition = "TINYINT(1) DEFAULT 1")
+    boolean active = true;
 }

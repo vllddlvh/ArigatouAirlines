@@ -60,8 +60,13 @@ public enum ErrorCode {
     AIRLINEID_NOT_EXISTED(5004, "AirlineId doesn't existed!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_TYPE_ID_NOT_EXSITED(5005, "AircraftTypeId doesn't existed!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_ID_NOT_EXSITED(5006, "AircraftId  doesn't existed!", HttpStatus.BAD_REQUEST),
-    SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST);
+    SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST),
 
+
+    //─────────────── 6xxx: Flight ───────────────
+    DEPARTURE_AND_ARRIVAL_TIME_CANNOT_CONFLICT(6001, "Departure and arrival time can't conflict", HttpStatus.BAD_REQUEST),
+    FLIGHT_SCHEDULE_ID_NOT_EXISTED(6002, "FlightScheduleId doesn't existed!", HttpStatus.BAD_REQUEST),
+    FLIGHT_ID_NOT_EXISTED(6003, "FlightId doesn't existed!", HttpStatus.BAD_REQUEST);
 
     int code;
     String message;

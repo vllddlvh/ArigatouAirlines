@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.sql.Time;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -14,11 +15,11 @@ import java.sql.Time;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightScheduleResponse {
     String flightNumber;
-    Airline airline;
+    AirlineResponse airline;
     AirportResponse departureAirport;
-    Airport arrivalAirport;
-    Time departureTime;
-    Time arrivalTime;
+    AirportResponse arrivalAirport;
+    LocalTime departureTime;
+    LocalTime arrivalTime;
     int durationMinutes;
-    boolean isActive;
+    boolean active;
 }
