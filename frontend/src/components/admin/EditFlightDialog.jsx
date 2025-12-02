@@ -6,30 +6,26 @@ import { Label } from "@/components/ui/label"
 import { Clock, PlaneTakeoff, PlaneLanding, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Helper function to format ISO date string for datetime-local input
-// Required format: YYYY-MM-DDTHH:mm
-const formatISODateToLocal = (isoString) => {
-    if (!isoString) return '';
+// Helper: chuẩn hoá chuỗi thời gian từ backend sang format cho input datetime-local
+// Đầu vào có thể là:
+//  - "YYYY-MM-DDTHH:mm:ss" (LocalDateTime từ backend)
+//  - "YYYY-MM-DD HH:mm:ss" (fallback cũ)
+// Đầu ra: "YYYY-MM-DDTHH:mm"
+const formatISODateToLocal = (value) => {
+    if (!value) return '';
     try {
-        // Assuming isoString comes in a format like "YYYY-MM-DD HH:mm:ss" or similar
-        // We'll normalize it to a valid date object first
-        const dateObj = new Date(isoString);
-
-        if (isNaN(dateObj.getTime())) {
-            // Fallback for custom date formats (like the one in the original component)
-            // Trying to reconstruct a standard date string
-            const [datePart, timePart] = isoString.split(' ');
-            const [year, month, day] = datePart.split('-');
-            const [hour, minute] = timePart.split(':');
-
-            // Construct the YYYY-MM-DDTHH:mm format
-            return `${year}-${month}-${day}T${hour}:${minute}`;
+        let str = value.toString();
+        // Đảm bảo dùng ký tự 'T' giữa ngày và giờ
+        if (str.includes(' ')) {
+            str = str.replace(' ', 'T');
         }
-
-        // Standard way for ISO strings
-        return dateObj.toISOString().slice(0, 16);
+        // Cắt tới phút: YYYY-MM-DDTHH:mm
+        if (str.length >= 16) {
+            return str.slice(0, 16);
+        }
+        return str;
     } catch {
-        return ''; // Return empty string on failure
+        return '';
     }
 };
 
@@ -55,12 +51,12 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-        
+
         // Sử dụng scheduleId từ backend (không phải flightId)
         const flightId = flight.scheduleId || flight.flightId;
         const editFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/flight/${flightId}`;
-        
-        // Chuyển đổi datetime-local string sang ISO string cho backend (LocalDateTime)
+
+        // Chuyển datetime-local string (YYYY-MM-DDTHH:mm) sang LocalDateTime string (YYYY-MM-DDTHH:mm:ss)
         const apiBody = {
             flightNumber: flight.flightNumber,
             aircraftType: flight.aircraftType,
@@ -68,8 +64,8 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
             arrivalCity: flight.arrivalCity,
             departureAirport: flight.departureAirportCode || flight.departureAirport,
             arrivalAirport: flight.arrivalAirportCode || flight.arrivalAirport,
-            departureTime: new Date(editedFlight.departureTimeLocal).toISOString(),
-            arrivalTime: new Date(editedFlight.arrivalTimeLocal).toISOString(),
+            departureTime: editedFlight.departureTimeLocal ? `${editedFlight.departureTimeLocal}:00` : null,
+            arrivalTime: editedFlight.arrivalTimeLocal ? `${editedFlight.arrivalTimeLocal}:00` : null,
             basePrice: flight.basePrice,
             status: flight.status
         };

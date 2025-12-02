@@ -17,6 +17,24 @@ import { toast } from "@/hooks/use-toast"
 import { Plus, Plane, Hash, Anchor, DollarSign, Clock, MapPin, CalendarDays, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+
+// --- Helper Component for Input Row ---
+const InputRow = ({ id, label, type = "text", icon: Icon, required, ...props }) => (
+    <div className="flex flex-col space-y-1.5">
+        <Label htmlFor={id} className="font-semibold text-gray-700 flex items-center gap-2">
+            {Icon && <Icon className="h-4 w-4 text-primary" />}
+            {label}
+        </Label>
+        <Input
+            id={id}
+            type={type}
+            required={required}
+            className="border-2 border-border focus:border-primary transition-colors h-10"
+            {...props}
+        />
+    </div>
+);
+
 export function AddFlightDialog() {
     const [isOpen, setIsOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,8 +52,9 @@ export function AddFlightDialog() {
     })
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target
-        setFlightData(prev => ({ ...prev, [name]: value }))
+        const { id, value} = e.target
+        console.log(id)
+        setFlightData(prev => ({ ...prev, [id]: value }))
     }
 
     const handleSubmit = async (e) => {
@@ -83,23 +102,6 @@ export function AddFlightDialog() {
         }
     }
 
-    // --- Helper Component for Input Row ---
-    const InputRow = ({ id, label, type = "text", icon: Icon, required, ...props }) => (
-        <div className="flex flex-col space-y-1.5">
-            <Label htmlFor={id} className="font-semibold text-gray-700 flex items-center gap-2">
-                {Icon && <Icon className="h-4 w-4 text-primary" />}
-                {label}
-            </Label>
-            <Input
-                id={id}
-                name={id}
-                type={type}
-                required={required}
-                className="border-2 border-border focus:border-primary transition-colors h-10"
-                {...props}
-            />
-        </div>
-    );
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -128,7 +130,7 @@ export function AddFlightDialog() {
                         <div className="p-4 border border-border rounded-lg bg-muted/30">
                             <h3 className="font-bold text-lg text-foreground mb-3">Thông tin Cơ bản</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InputRow 
+                                <InputRow
                                     id="flightNumber" 
                                     label="Số hiệu Chuyến bay" 
                                     icon={Hash}
@@ -137,7 +139,7 @@ export function AddFlightDialog() {
                                     required
                                     placeholder="Ví dụ: QA301"
                                 />
-                                <InputRow 
+                                <InputRow
                                     id="aircraftType" 
                                     label="Loại Tàu bay (Aircraft)" 
                                     icon={Plane}

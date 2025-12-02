@@ -13,5 +13,6 @@ public class AirlineRequest {
     
     String airlineName;
     String country;
+    @Builder.Default
     boolean active = true;
 }
