@@ -54,7 +54,7 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
 
         // Sử dụng scheduleId từ backend (không phải flightId)
         const flightId = flight.scheduleId || flight.flightId;
-        const editFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/flight/${flightId}`;
+        const editFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/flight/${flightId}`;
 
         // Chuyển datetime-local string (YYYY-MM-DDTHH:mm) sang LocalDateTime string (YYYY-MM-DDTHH:mm:ss)
         const apiBody = {

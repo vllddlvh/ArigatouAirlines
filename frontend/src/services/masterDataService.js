@@ -204,7 +204,7 @@ export const deleteAirline = async (id) => {
 
 export const getAllFlights = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/flight`, {
+    const response = await axios.get(`${API_BASE_URL}/flight`, {
       headers: getAuthHeader(),
     });
     return extractBody(response);
@@ -216,7 +216,7 @@ export const getAllFlights = async () => {
 
 export const getFlightById = async (id) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/flight/${id}`, {
+    const response = await axios.get(`${API_BASE_URL}/flight/${id}`, {
       headers: getAuthHeader(),
     });
     return extractBody(response);
@@ -228,7 +228,7 @@ export const getFlightById = async (id) => {
 
 export const createFlight = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/flight`, data, {
+    const response = await axios.post(`${API_BASE_URL}/flight`, data, {
       headers: getAuthHeader(),
     });
     return extractBody(response);
@@ -240,7 +240,7 @@ export const createFlight = async (data) => {
 
 export const updateFlight = async (id, data) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/api/flight/${id}`, data, {
+    const response = await axios.put(`${API_BASE_URL}/flight/${id}`, data, {
       headers: getAuthHeader(),
     });
     return extractBody(response);
@@ -252,7 +252,7 @@ export const updateFlight = async (id, data) => {
 
 export const deleteFlight = async (id) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/api/flight/${id}`, {
+    const response = await axios.delete(`${API_BASE_URL}/flight/${id}`, {
       headers: getAuthHeader(),
     });
     return extractBody(response);

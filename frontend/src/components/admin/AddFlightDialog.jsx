@@ -61,7 +61,7 @@ export function AddFlightDialog() {
         e.preventDefault()
         setIsSubmitting(true)
 
-        const createFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/flight`
+        const createFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/flight`
         const formattedFlightData = {
             ...flightData,
             departureTime: new Date(flightData.departureTime).toISOString(),
