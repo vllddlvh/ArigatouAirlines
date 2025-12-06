@@ -19,12 +19,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FlightResponse {
+public class FlightResponseWithoutList {
     FlightSchedule schedule;
     int  aircraftId;
     LocalDate flightDate;
     LocalDateTime departureDateTime;
     LocalDateTime arrivalDateTime;
     StatusFlight status;
-    List<FlightSeatResponse> flightSeatList;
 }

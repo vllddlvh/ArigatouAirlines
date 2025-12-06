@@ -2,15 +2,18 @@ package ArigatouAirlines.ApiArigatouAirlines.service;
 
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.FlightRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightResponse;
-import ArigatouAirlines.ApiArigatouAirlines.entity.Aircraft;
-import ArigatouAirlines.ApiArigatouAirlines.entity.Flight;
-import ArigatouAirlines.ApiArigatouAirlines.entity.FlightSchedule;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightResponseWithoutList;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightSeatResponse;
+import ArigatouAirlines.ApiArigatouAirlines.entity.*;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat;
 import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.FlightMapper;
+import ArigatouAirlines.ApiArigatouAirlines.mapper.FlightSeatMapper;
 import ArigatouAirlines.ApiArigatouAirlines.repository.AircraftRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightScheduleRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.FlightSeatRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,19 +32,16 @@ public class FlightService {
     FlightMapper flightMapper;
     FlightScheduleRepository flightScheduleRepository;
     AircraftRepository aircraftRepository;
+    FlightSeatRepository flightSeatRepository;
+    FlightSeatMapper flightSeatMapper;
 
     public FlightResponse creationFlight(FlightRequest flightRequest) {
         Flight flight = flightMapper.toFlight(flightRequest);
+        List<FlightSeatResponse> flightSeatReponseList = new ArrayList<>();
         if(flightScheduleRepository.existsById(flightRequest.getScheduleId())) {
             FlightSchedule schedule = flightScheduleRepository.findById(flightRequest.getScheduleId())
                     .orElseThrow();
             flight.setSchedule(schedule);
-        }
-
-        if(aircraftRepository.existsById(flightRequest.getAircraftId())) {
-            Aircraft aircraft = aircraftRepository.findById(flightRequest.getAircraftId())
-                    .orElseThrow();
-            flight.setAircraft(aircraft);
         }
 
         LocalTime departureTime = flightRequest.getDepartureTime() == null
@@ -52,18 +53,40 @@ public class FlightService {
 
         flightRepository.save(flight);
 
+        if(aircraftRepository.existsById(flightRequest.getAircraftId())) {
+            Aircraft aircraft = aircraftRepository.findById(flightRequest.getAircraftId())
+                    .orElseThrow();
+            flight.setAircraft(aircraft);
+            AircraftType aircraftType = aircraft.getAircraftType();
+            List<SeatMap> seatMapList = aircraftType.getListSeatMap();
+            List<FlightSeat> flightSeatList = new ArrayList<>();
+            for(int i = 0; i < seatMapList.size(); i++) {
+                FlightSeat flightSeat = FlightSeat.builder()
+                        .flight(flight)
+                        .seatMap(seatMapList.get(i))
+                        .build();
+                flightSeatRepository.save(flightSeat);
+                flightSeatList.add(flightSeat);
+            }
+            flightSeatReponseList = flightSeatList.stream().map(flightSeatMapper::toFlightSeatResponse).toList();
+        }
         FlightResponse flightResponse = flightMapper.toFlightResponse(flight);
         flightResponse.setAircraftId(flight.getAircraft().getAircraftId());
+        flightResponse.setFlightSeatList(flightSeatReponseList);
         return flightResponse;
     }
 
-    public List<FlightResponse> getListFlight() {
-        return flightRepository.findAll().stream().map(flightMapper::toFlightResponse).toList();
+    public List<FlightResponseWithoutList> getListFlight() {
+        return flightRepository.findAll().stream().map(flightMapper::toFlightResponseWithoutList).toList();
     }
 
     public FlightResponse getFlight(int flightId) {
-        return flightMapper.toFlightResponse(flightRepository.findById(flightId)
+        FlightResponse flightResponse = flightMapper.toFlightResponse(flightRepository.findById(flightId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_ID_NOT_EXISTED)));
+        List<FlightSeatResponse> flightSeatResponseList = flightSeatRepository.findAllByFlight_FlightId(flightId)
+                .stream().map(flightSeatMapper::toFlightSeatResponse).toList();
+        flightResponse.setFlightSeatList(flightSeatResponseList);
+        return flightResponse;
     }
 
     public FlightResponse updateFlight(int flightId, FlightRequest flightRequest) {
