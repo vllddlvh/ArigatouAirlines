@@ -39,7 +39,9 @@ public class SecurityConfig {
             "users/myInfo",
             "/testMyInfo",
             "/airport",
-            "/aircraft"
+            "/aircraft",
+            "/flightSchedules",
+            "/flights"
     };
 
 

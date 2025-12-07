@@ -13,49 +13,49 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/flight-schedule")
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequestMapping("/flightSchedules")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FlightScheduleController {
     FlightScheduleService flightScheduleService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<FlightScheduleResponse> createFlightSchedule(@RequestBody FlightScheduleRequest request) {
+    public ApiResponse<FlightScheduleResponse> creationFlightSchedule(@RequestBody FlightScheduleRequest flightScheduleRequest) {
         return ApiResponse.<FlightScheduleResponse>builder()
-                .body(flightScheduleService.createFlightSchedule(request))
+                .body(flightScheduleService.creationFlightSchedule(flightScheduleRequest))
                 .build();
     }
 
     @GetMapping
-    ApiResponse<List<FlightScheduleResponse>> getAllFlightSchedules() {
+    public ApiResponse<List<FlightScheduleResponse>> getListFlightSchedule() {
         return ApiResponse.<List<FlightScheduleResponse>>builder()
-                .body(flightScheduleService.getAllFlightSchedules())
+                .body(flightScheduleService.getListFlightSchedule())
                 .build();
     }
 
-    @GetMapping("/{id}")
-    ApiResponse<FlightScheduleResponse> getFlightScheduleById(@PathVariable int id) {
+    @GetMapping("/{flightScheduleId}")
+    public ApiResponse<FlightScheduleResponse> getFlightSchedule(@PathVariable int flightScheduleId) {
         return ApiResponse.<FlightScheduleResponse>builder()
-                .body(flightScheduleService.getFlightScheduleById(id))
+                .body(flightScheduleService.getFlightSchedule(flightScheduleId))
                 .build();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{flightScheduleId}")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<FlightScheduleResponse> updateFlightSchedule(
-            @PathVariable int id,
-            @RequestBody FlightScheduleRequest request) {
+    public ApiResponse<FlightScheduleResponse>
+    updateFlightSchedule(@RequestBody FlightScheduleRequest flightScheduleRequest, @PathVariable int flightScheduleId) {
         return ApiResponse.<FlightScheduleResponse>builder()
-                .body(flightScheduleService.updateFlightSchedule(id, request))
+                .body(flightScheduleService.updateFlightSchedule(flightScheduleRequest, flightScheduleId))
                 .build();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{flightScheduleId}")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<String> deleteFlightSchedule(@PathVariable int id) {
+    public  ApiResponse<String> deleteFlightSchedule(@PathVariable int flightScheduleId) {
         return ApiResponse.<String>builder()
-                .body(flightScheduleService.deleteFlightSchedule(id))
+                .body(flightScheduleService.deleteFlightSchedule(flightScheduleId))
                 .build();
     }
+
 }

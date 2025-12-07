@@ -1,11 +1,14 @@
 package ArigatouAirlines.ApiArigatouAirlines.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.sql.Time;
+import java.time.LocalTime;
 
 @Entity(name = "flight_schedule")
 @Getter
@@ -24,36 +27,28 @@ public class FlightSchedule {
     @Size(max = 20)
     String flightNumber;
 
-    @Column(name = "aircraft_type")
-    String aircraftType;
+    @ManyToOne
+            @JoinColumn(name = "airline_id")
+    Airline airline;
 
-    @Column(name = "departure_city")
-    String departureCity;
+    @ManyToOne
+            @JoinColumn(name = "departure_airport_id")
+    Airport departureAirport;
 
-    @Column(name = "arrival_city")
-    String arrivalCity;
-
-    @Column(name = "departure_airport")
-    String departureAirportCode;
-
-    @Column(name = "arrival_airport")
-    String arrivalAirportCode;
+    @ManyToOne
+    @JoinColumn(name = "arrival_airport_id")
+    Airport arrivalAirport;
 
     @Column(name = "departure_time")
-    LocalDateTime departureTime;
+    LocalTime departureTime;
 
     @Column(name = "arrival_time")
-    LocalDateTime arrivalTime;
-
-    @Column(name = "base_price")
-    Long basePrice;
+    LocalTime arrivalTime;
 
     @Column(name = "duration_minutes")
     int durationMinutes;
 
-    @Column(name = "status")
-    String status;
-
-    @Column(name = "is_active")
-    boolean isActive;
+    @Builder.Default
+    @Column(name = "is_active", columnDefinition = "TINYINT(1) DEFAULT 1")
+    boolean active = true;
 }

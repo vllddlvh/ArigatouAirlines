@@ -1,9 +1,13 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.request;
 
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.AirportResponse;
+import ArigatouAirlines.ApiArigatouAirlines.entity.Airline;
+import ArigatouAirlines.ApiArigatouAirlines.entity.Airport;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
+import java.sql.Time;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -12,13 +16,10 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightScheduleRequest {
     String flightNumber;
-    String aircraftType;
-    String departureCity;
-    String arrivalCity;
-    String departureAirport;  // Mã IATA sân bay đi
-    String arrivalAirport;    // Mã IATA sân bay đến
-    LocalDateTime departureTime;
-    LocalDateTime arrivalTime;
-    Long basePrice;
-    String status;
+    int airlineId;
+    String departureAirportId;
+    String arrivalAirportId;
+    LocalTime departureTime;
+    LocalTime arrivalTime;
+    boolean active = true;
 }
