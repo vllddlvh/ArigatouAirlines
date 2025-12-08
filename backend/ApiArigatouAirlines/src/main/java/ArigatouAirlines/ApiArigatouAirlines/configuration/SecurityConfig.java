@@ -32,6 +32,7 @@ public class SecurityConfig {
             "/auth/refresh-Token",
             "/auth/forget-password",
             "/auth/reset-password/**",
+            "/chatbot/ask",
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
             "/payment/create_payment",  //test
