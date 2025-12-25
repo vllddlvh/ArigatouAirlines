@@ -28,12 +28,16 @@ export default function ScheduledFlights() {
         setIsLoading(true);
         try {
             const data = await masterDataService.getAllFlights();
+            console.log('Dữ liệu chuyến bay từ API:', data);
             setFlights(data || []);
         } catch (error) {
             console.error("Lỗi khi tải danh sách chuyến bay:", error);
+            console.error("Chi tiết lỗi:", error.response);
+            console.error("URL API:", process.env.NEXT_PUBLIC_API_BASE_URL);
+            console.error("Token trong localStorage:", localStorage.getItem("token"));
             toast({
                 title: "Lỗi",
-                description: "Không thể tải danh sách chuyến bay.",
+                description: `Không thể tải danh sách chuyến bay. ${error.response?.data?.message || error.message}`,
                 variant: "destructive"
             });
         } finally {
@@ -61,6 +65,59 @@ export default function ScheduledFlights() {
         setEditingFlight(null);
     };
 
+
+    // --- HELPER FUNCTIONS ---
+    
+    // Định dạng thời gian
+    const formatDateTime = (dateTimeString) => {
+        if (!dateTimeString) return 'N/A';
+        try {
+            const date = new Date(dateTimeString);
+            if (isNaN(date.getTime())) return 'N/A';
+            
+            // Định dạng giờ:phút (24h)
+            const timePart = date.toLocaleTimeString('vi-VN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+            
+            // Định dạng ngày/tháng/năm
+            const datePart = date.toLocaleDateString('vi-VN', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            });
+
+            return (
+                <div className="flex flex-col items-center">
+                    <span className="font-bold text-gray-900">{timePart}</span>
+                    <span className="text-xs text-muted-foreground">{datePart}</span>
+                </div>
+            );
+        } catch {
+            return 'N/A';
+        }
+    };
+    
+    // Định dạng giá theo triệu đồng
+    const formatPriceInMillions = (price) => {
+        if (price === null || price === undefined) return 'N/A';
+        
+        // Nếu giá là chuỗi, xóa các ký tự không phải số
+        const cleanPrice = typeof price === 'string' 
+            ? price.replace(/\D/g, '') 
+            : price;
+        
+        const priceNumber = Number(cleanPrice);
+        if (isNaN(priceNumber)) return 'N/A';
+        
+        // Định dạng thành triệu đồng
+        return (priceNumber / 1000000).toLocaleString('vi-VN', { 
+            minimumFractionDigits: 1, 
+            maximumFractionDigits: 1 
+        }) + ' triệu';
+    };
 
     // --- FILTER & DISPLAY LOGIC ---
 
@@ -103,26 +160,7 @@ export default function ScheduledFlights() {
         }
     }
 
-    const formatDateTime = (dateTimeString) => {
-        if (!dateTimeString) return 'N/A';
-        try {
-            // Handle ISO string or "YYYY-MM-DD HH:mm:ss" format
-            const date = new Date(dateTimeString);
-            if (isNaN(date.getTime())) return 'N/A';
-            
-            const timePart = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            const datePart = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: '2-digit' });
-            return (
-                <div className="flex flex-col items-center">
-                    <span className="font-bold text-gray-900">{timePart}</span>
-                    <span className="text-xs text-muted-foreground">{datePart}</span>
-                </div>
-            );
-        } catch {
-            return 'N/A';
-        }
-    }
-    
+        
     // --- RENDER COMPONENT ---
     return (
         <div className="p-8 lg:pl-64 mx-auto bg-gray-50 min-h-screen">
@@ -192,7 +230,8 @@ export default function ScheduledFlights() {
                             <TableHead className="text-center font-bold text-gray-600">MÁY BAY</TableHead>
                             <TableHead className="text-center font-bold text-gray-600 min-w-[150px]">KHỞI HÀNH</TableHead>
                             <TableHead className="text-center font-bold text-gray-600 min-w-[150px]">HẠ CÁNH</TableHead>
-                            <TableHead className="text-center font-bold text-gray-600">GIÁ CƠ SỞ</TableHead>
+                            <TableHead className="text-center font-bold text-gray-600 min-w-[120px]">HẠNG PHỔ THÔNG</TableHead>
+                            <TableHead className="text-center font-bold text-gray-600 min-w-[120px]">HẠNG THƯƠNG GIA</TableHead>
                             <TableHead className="w-[150px] text-center font-bold text-gray-600">TRẠNG THÁI & HÀNH ĐỘNG</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -241,14 +280,31 @@ export default function ScheduledFlights() {
                                             </span>
                                         </div>
                                     </TableCell>
-                                    
-                                    {/* Giá cơ sở */}
+
+                                    {/* Giá hạng phổ thông */}
                                     <TableCell className="text-center">
-                                        <span className="font-bold text-green-600">
-                                            {flight.basePrice ? `${flight.basePrice.toLocaleString('vi-VN')} VND` : 'N/A'}
-                                        </span>
+                                        <div className="flex flex-col items-center">
+                                            <span className="font-bold text-green-600">
+                                                {formatPriceInMillions(flight.prices?.ECONOMY || flight.basePrice)}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">Phổ thông</span>
+                                        </div>
                                     </TableCell>
-                                    
+
+                                    {/* Giá hạng thương gia */}
+                                    <TableCell className="text-center">
+                                        <div className="flex flex-col items-center">
+                                            <span className="font-bold text-blue-600">
+                                                {flight.prices?.BUSINESS 
+                                                    ? formatPriceInMillions(flight.prices.BUSINESS)
+                                                    : flight.basePrice 
+                                                        ? formatPriceInMillions(flight.basePrice * 1.5)
+                                                        : 'N/A'}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">Thương gia</span>
+                                        </div>
+                                    </TableCell>
+
                                     {/* Trạng thái & Hành động */}
                                     <TableCell className="text-center">
                                         <div className="flex flex-col items-center gap-2">

@@ -1,6 +1,12 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const normalizeApiBaseUrl = (baseUrl) => {
+  const trimmed = String(baseUrl || "http://localhost:8080").replace(/\/+$/, "");
+  if (trimmed.endsWith("/arigatouAirlines")) return trimmed;
+  return `${trimmed}/arigatouAirlines`;
+};
+const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
 
 // Helper: lấy token từ localStorage
 const getAuthHeader = () => {
