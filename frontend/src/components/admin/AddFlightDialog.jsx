@@ -16,14 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast"
 import { Plus, Plane, Hash, Anchor, DollarSign, Clock, MapPin, CalendarDays, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const normalizeApiBaseUrl = (baseUrl) => {
-    const trimmed = String(baseUrl || "http://localhost:8080").replace(/\/+$/, "")
-    if (trimmed.endsWith("/arigatouAirlines")) return trimmed
-    return `${trimmed}/arigatouAirlines`
-}
-const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL)
+import { API_BASE_URL } from '@/lib/api'
 
 // --- Helper Component for Input Row ---
 const InputRow = ({ id, label, type = "text", icon: Icon, required, ...props }) => (

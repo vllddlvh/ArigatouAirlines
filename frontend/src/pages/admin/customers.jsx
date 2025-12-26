@@ -6,24 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog-admin";
 import { EditCustomerDialog } from "@/components/admin/EditCustomerDialog";
-
-const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const normalizeApiBaseUrl = (baseUrl) => {
-  const trimmed = String(baseUrl || "http://localhost:8080").replace(/\/+$/, "");
-  if (trimmed.endsWith("/arigatouAirlines")) return trimmed;
-  return `${trimmed}/arigatouAirlines`;
-};
-const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
-
-const extractBody = (response) => {
-  if (response?.data?.body !== undefined) return response.data.body;
-  return response.data;
-};
-
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import { API_BASE_URL, extractBody, getAuthHeader } from "@/lib/api";
 
 // ===========================================
 // MOCK UI COMPONENTS (Replacing Shadcn/UI imports)
@@ -180,16 +163,12 @@ function CustomerManagementDashboard() {
           email: u.email || "",
           dateOfBirth: u.dateOfBirth || "",
           gender,
-          loyaltyPoints: 0,
-          createdAt: "",
-          address: "N/A",
-          passportNumber: "N/A",
-          identificationNumber: "N/A",
           isSuspended: false,
           roles: u.roles,
           username: u.username,
           fullName: u.fullName,
-          phone: u.phone,
+          phone: u.phone || "",
+          phoneNumber: u.phone || "",
         };
       });
 
@@ -285,15 +264,15 @@ function CustomerManagementDashboard() {
       return (
           <div 
               key={customer.uid}
-              className={`grid grid-cols-[1.5fr_2fr_1fr_1fr_1fr_1fr] items-center p-4 border-b transition-colors ${rowClasses}`}
+              className={`grid grid-cols-[1.5fr_2fr_1.2fr_1fr_1fr_1fr] items-center p-4 border-b transition-colors ${rowClasses}`}
           >
               <div className="font-medium text-gray-900 truncate flex items-center">
                   {isSuspended && <Lock className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />}
                   <span className={isSuspended ? "text-red-500" : ""}>{`${customer.lastName} ${customer.firstName}`}</span>
               </div>
               <div className="text-gray-600 truncate">{customer.email}</div>
-              <div className="text-gray-600 text-sm">{customer.loyaltyPoints}</div>
-              <div className="text-gray-600 text-sm hidden md:block">{customer.dateOfBirth}</div>
+              <div className="text-gray-600 text-sm">{customer.phone || "-"}</div>
+              <div className="text-gray-600 text-sm hidden md:block">{customer.dateOfBirth || "-"}</div>
               <div className="text-gray-600 text-sm hidden sm:block">{customer.gender === "male" ? "Nam" : "Nữ"}</div>
               
               {/* Actions Cell */}
@@ -359,10 +338,10 @@ function CustomerManagementDashboard() {
             <div className="w-full overflow-x-auto">
               <div className="min-w-[700px]">
                 {/* Table Header */}
-                <div className="grid grid-cols-[1.5fr_2fr_1fr_1fr_1fr_1fr] p-4 font-bold text-xs uppercase tracking-wider text-gray-700 bg-gray-100 border-b border-gray-200">
+                <div className="grid grid-cols-[1.5fr_2fr_1.2fr_1fr_1fr_1fr] p-4 font-bold text-xs uppercase tracking-wider text-gray-700 bg-gray-100 border-b border-gray-200">
                   <div className="truncate">HỌ VÀ TÊN</div>
                   <div className="truncate">EMAIL</div>
-                  <div className="truncate">ĐIỂM TÍCH LŨY</div>
+                  <div className="truncate">SĐT</div>
                   <div className="truncate hidden md:block">NGÀY SINH</div>
                   <div className="truncate hidden sm:block">GT</div>
                   <div className="text-right">THAO TÁC</div>
@@ -399,13 +378,10 @@ function CustomerManagementDashboard() {
                  <DetailItem label="UID" value={selectedCustomer.uid} />
                  <DetailItem label="Họ và tên" value={`${selectedCustomer.lastName} ${selectedCustomer.firstName}`} />
                  <DetailItem label="Email" value={selectedCustomer.email} />
-                 <DetailItem label="Ngày sinh" value={selectedCustomer.dateOfBirth} />
+                 <DetailItem label="Số điện thoại" value={selectedCustomer.phone || "-"} />
+                 <DetailItem label="Ngày sinh" value={selectedCustomer.dateOfBirth || "-"} />
                  <DetailItem label="Giới tính" value={selectedCustomer.gender === "male" ? "Nam" : "Nữ"} />
-                 <DetailItem label="Điểm tích lũy" value={selectedCustomer.loyaltyPoints} />
-                 <DetailItem label="Địa chỉ" value={selectedCustomer.address} />
-                 <DetailItem label="Số hộ chiếu" value={selectedCustomer.passportNumber} />
-                 <DetailItem label="CMND/CCCD" value={selectedCustomer.identificationNumber} />
-                 <DetailItem label="Ngày đăng ký" value={selectedCustomer.createdAt} />
+                 <DetailItem label="Username" value={selectedCustomer.username || "-"} />
                </div>
              )}
           </DialogContent>

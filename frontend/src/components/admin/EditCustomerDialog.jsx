@@ -5,14 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from '@/hooks/use-toast'
-
-const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const normalizeApiBaseUrl = (baseUrl) => {
-  const trimmed = String(baseUrl || "http://localhost:8080").replace(/\/+$/, "")
-  if (trimmed.endsWith("/arigatouAirlines")) return trimmed
-  return `${trimmed}/arigatouAirlines`
-}
-const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL)
+import { API_BASE_URL } from '@/lib/api'
 
 export function EditCustomerDialog({ customer, onClose, onSave }) {
   const [editedCustomer, setEditedCustomer] = useState(customer)
@@ -153,42 +146,6 @@ export function EditCustomerDialog({ customer, onClose, onSave }) {
                   <SelectItem value="female">Nữ</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
-                Địa chỉ
-              </Label>
-              <Input
-                id="address"
-                name="address"
-                value={editedCustomer.address || ''}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="passportNumber" className="text-right">
-                Số hộ chiếu
-              </Label>
-              <Input
-                id="passportNumber"
-                name="passportNumber"
-                value={editedCustomer.passportNumber || ''}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="identificationNumber" className="text-right">
-                Số CMND/CCCD
-              </Label>
-              <Input
-                id="identificationNumber"
-                name="identificationNumber"
-                value={editedCustomer.identificationNumber || ''}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
             </div>
           </div>
           <DialogFooter>

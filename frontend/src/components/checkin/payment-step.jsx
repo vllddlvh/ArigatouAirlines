@@ -217,7 +217,7 @@ function BankPaymentDisplay({ loading, handleSubmit, amount, currency }) {
           <div className="p-4 bg-gray-100 rounded-lg mt-2 text-left text-sm space-y-2">
               <p>1. **Thực hiện chuyển khoản** qua Mobile Banking hoặc ATM.</p>
               <p>2. **Điền chính xác** số tiền và nội dung chuyển khoản như trên.</p>
-              <p>3. Nhấn **"Tôi đã thanh toán"** để hệ thống bắt đầu kiểm tra.</p>
+              <p>3. Nhấn **&quot;Tôi đã thanh toán&quot;** để hệ thống bắt đầu kiểm tra.</p>
           </div>
       )}
 

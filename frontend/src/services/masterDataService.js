@@ -1,24 +1,5 @@
 import axios from "axios";
-
-const RAW_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const normalizeApiBaseUrl = (baseUrl) => {
-  const trimmed = String(baseUrl || "http://localhost:8080").replace(/\/+$/, "");
-  if (trimmed.endsWith("/arigatouAirlines")) return trimmed;
-  return `${trimmed}/arigatouAirlines`;
-};
-const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
-
-// Helper: lấy token từ localStorage
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-// Helper: chuẩn hoá response ApiResponse<T>
-const extractBody = (response) => {
-  if (response?.data?.body !== undefined) return response.data.body;
-  return response.data;
-};
+import { API_BASE_URL, extractBody, getAuthHeader } from "@/lib/api";
 
 // ==================== AIRCRAFT ====================
 
