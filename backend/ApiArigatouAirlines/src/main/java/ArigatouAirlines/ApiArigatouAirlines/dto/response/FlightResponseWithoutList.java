@@ -21,7 +21,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightResponseWithoutList {
     FlightSchedule schedule;
-    int  aircraftId;
+    AircraftResponse  aircraft;
     LocalDate flightDate;
     LocalDateTime departureDateTime;
     LocalDateTime arrivalDateTime;
