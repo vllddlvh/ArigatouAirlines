@@ -76,7 +76,7 @@ export function AddFlightDialog() {
         e.preventDefault()
         setIsSubmitting(true)
 
-        const createFlightApi = `${API_BASE_URL}/api/flight`
+        const createFlightApi = `${API_BASE_URL}/api/flights`
 
         const toLocalDateTimeString = (value) => {
             if (!value) return value
