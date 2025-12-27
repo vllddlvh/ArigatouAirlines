@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface FlightMapper {
-    @Mapping(source = "aircraft.aircraftId" ,target = "aircraftId")
     @Mapping(target = "flightSeatList", ignore = true)
     FlightResponse toFlightResponse(Flight flight);
 
@@ -18,6 +17,5 @@ public interface FlightMapper {
     @Mapping(source = "departureTime", target = "departureDateTime", ignore = true)
     Flight toFlight(FlightRequest flightRequest);
 
-    @Mapping(source = "aircraft.aircraftId" ,target = "aircraftId")
     FlightResponseWithoutList toFlightResponseWithoutList(Flight flight);
 }

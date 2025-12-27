@@ -71,7 +71,6 @@ public class FlightService {
             flightSeatReponseList = flightSeatList.stream().map(flightSeatMapper::toFlightSeatResponse).toList();
         }
         FlightResponse flightResponse = flightMapper.toFlightResponse(flight);
-        flightResponse.setAircraftId(flight.getAircraft().getAircraftId());
         flightResponse.setFlightSeatList(flightSeatReponseList);
         return flightResponse;
     }
@@ -114,9 +113,7 @@ public class FlightService {
 
         flightRepository.save(flight);
 
-        FlightResponse flightResponse = flightMapper.toFlightResponse(flight);
-        flightResponse.setAircraftId(flight.getAircraft().getAircraftId());
-        return flightResponse;
+        return flightMapper.toFlightResponse(flight);
     }
 
     public String deleteFlight(int flightId) {
