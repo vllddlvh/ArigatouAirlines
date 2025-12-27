@@ -44,6 +44,7 @@ public class AirlineController {
     }
 
     @PutMapping("{airlineId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<AirlineResponse> updateAirline(@RequestBody AirlineRequest airlineRequest, @PathVariable int airlineId) {
         return ApiResponse.<AirlineResponse>builder()
                 .body(airlineService.updateAirline(airlineRequest, airlineId))
@@ -51,6 +52,7 @@ public class AirlineController {
     }
 
     @DeleteMapping("{airlineId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Void> deleteAirline(@PathVariable int airlineId) {
         airlineService.deleteAirline(airlineId);
         return new ApiResponse<>();

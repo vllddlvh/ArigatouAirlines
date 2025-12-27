@@ -3,6 +3,7 @@ package ArigatouAirlines.ApiArigatouAirlines.controller;
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.FlightRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.ApiResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightResponse;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightResponseWithoutList;
 import ArigatouAirlines.ApiArigatouAirlines.service.FlightService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,8 @@ public class FlightController {
     }
 
     @GetMapping
-    public ApiResponse<List<FlightResponse>> getListFlight() {
-        return ApiResponse.<List<FlightResponse>>builder()
+    public ApiResponse<List<FlightResponseWithoutList>> getListFlight() {
+        return ApiResponse.<List<FlightResponseWithoutList>>builder()
                 .body(flightService.getListFlight())
                 .build();
     }

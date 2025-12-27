@@ -32,6 +32,7 @@ public class SecurityConfig {
             "/auth/refresh-Token",
             "/auth/forget-password",
             "/auth/reset-password/**",
+            "/airline"
     };
     private final String[] PUBLIC_ENDPOINTS_GET = {
             "/payment/create_payment",  //test
@@ -41,7 +42,8 @@ public class SecurityConfig {
             "/airport",
             "/aircraft",
             "/flightSchedules",
-            "/flights"
+            "/flights",
+            "/airline"
     };
 
 
