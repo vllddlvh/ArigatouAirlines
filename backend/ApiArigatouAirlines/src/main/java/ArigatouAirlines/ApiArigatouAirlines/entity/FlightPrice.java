@@ -36,6 +36,6 @@ public class FlightPrice {
     @Column(name = "total_seats")
     int totalSeats;
 
-    @Column(name = "avaiable_seats")
+    @Column(name = "available_seats")
     int availableSeats;
 }

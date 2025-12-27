@@ -7,10 +7,7 @@ import ArigatouAirlines.ApiArigatouAirlines.service.FlightPriceService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/flightPrice")
@@ -23,6 +20,20 @@ public class FlightPriceController {
     ApiResponse<FlightPriceResponse> creationFlightPrice(@RequestBody FlightPriceRequest flightPriceRequest) {
         return ApiResponse.<FlightPriceResponse>builder()
                 .body(flightPriceService.creationFlightPrice(flightPriceRequest))
+                .build();
+    }
+
+    @GetMapping("/{flightPriceId}")
+    ApiResponse<FlightPriceResponse> getFlightPrice(@PathVariable int flightPriceId) {
+        return ApiResponse.<FlightPriceResponse>builder()
+                .body(flightPriceService.getFlightPrice(flightPriceId))
+                .build();
+    }
+
+    @PutMapping("/{flightPriceId}")
+    ApiResponse<FlightPriceResponse> updateFlightPrice(@PathVariable int flightPriceId, @RequestBody FlightPriceRequest flightPriceRequest) {
+        return ApiResponse.<FlightPriceResponse>builder()
+                .body(flightPriceService.updateFlightPrice(flightPriceId, flightPriceRequest))
                 .build();
     }
 }
