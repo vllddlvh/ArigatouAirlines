@@ -1,4 +1,10 @@
 package ArigatouAirlines.ApiArigatouAirlines.mapper;
 
-public class BookingServiceMapper {
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.BookingServiceResponse;
+import ArigatouAirlines.ApiArigatouAirlines.entity.BookingService;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface BookingServiceMapper {
+    BookingServiceResponse toBookingServiceResponse(BookingService bookingService);
 }
