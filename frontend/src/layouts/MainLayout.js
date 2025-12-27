@@ -1,6 +1,7 @@
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import AuthDialog from "../components/AuthDialog";
+import ChatbotWidget from "../components/ChatbotWidget";
 import { useAuth } from "../contexts/AuthContext";
 
 const MainLayout = ({ children }) => {
@@ -26,6 +27,7 @@ const MainLayout = ({ children }) => {
           setIsAuthModalOpen(open);
         }}
       />
+      <ChatbotWidget />
       {isAuthenticated && (
         <>
           <Navbar />

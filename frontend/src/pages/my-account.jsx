@@ -7,8 +7,6 @@ import { Card } from "@/components/ui/card";
 import { useAccountInfo } from "@/hooks/useAccountInfo";
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
 export default function AccountPage() {
   const {
     personalInfo,

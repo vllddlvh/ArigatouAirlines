@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from '@/hooks/use-toast'
+import { API_BASE_URL } from '@/lib/api'
 
 export function EditCustomerDialog({ customer, onClose, onSave }) {
   const [editedCustomer, setEditedCustomer] = useState(customer)
@@ -20,33 +21,72 @@ export function EditCustomerDialog({ customer, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const updateCustomerApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customer/{id=${editedCustomer.id}}`
+
+    const userId = editedCustomer.userId ?? editedCustomer.uid ?? editedCustomer.id
+    const updateCustomerApi = `${API_BASE_URL}/users/${userId}`
 
     try {
+        const payload = {
+          fullName: `${editedCustomer.lastName || ''} ${editedCustomer.firstName || ''}`.trim(),
+          email: editedCustomer.email,
+          phone: editedCustomer.phoneNumber || editedCustomer.phone,
+          gender: editedCustomer.gender
+            ? String(editedCustomer.gender).replace(/^./, (c) => c.toUpperCase())
+            : undefined,
+        }
+
         const response = await fetch(updateCustomerApi, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "admin": "true",
-                "authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + localStorage.getItem("token")
             },
-            body: JSON.stringify(editedCustomer)
+            body: JSON.stringify(payload)
         })
+
+        const responseText = await response.text().catch(() => '')
+
         if (!response.ok) {
-            throw new Error("Send request failed")
+            let message = responseText || "Send request failed"
+            try {
+              const parsed = JSON.parse(responseText)
+              message = parsed?.message || parsed?.error || message
+            } catch {}
+            throw new Error(message)
         }
+
+        let updatedFromApi = null
+        try {
+          const parsed = JSON.parse(responseText)
+          updatedFromApi = parsed?.body ?? parsed
+        } catch {}
+
+        const fullName = String(updatedFromApi?.fullName ?? payload.fullName ?? '').trim()
+        const parts = fullName ? fullName.split(/\s+/) : []
+        const firstName = parts.length ? parts[parts.length - 1] : editedCustomer.firstName
+        const lastName = parts.length > 1 ? parts.slice(0, -1).join(' ') : (fullName || editedCustomer.lastName)
+
+        const mergedCustomer = {
+          ...editedCustomer,
+          ...(updatedFromApi || {}),
+          firstName,
+          lastName,
+          phoneNumber: updatedFromApi?.phone ?? payload.phone ?? editedCustomer.phoneNumber,
+        }
+
         toast({
           title: "Thành công",
           description: "Thông tin của khách hàng đã được cập nhật",
         })
+
+        onSave(mergedCustomer)
     } catch (error) {
       toast({
         title: "Cập nhật thông tin thất bại",
-        description: "Đã có lỗi xảy ra khi kết nối với máy chủ, vui lòng tải lại trang hoặc đăng nhập lại",
+        description: error?.message || "Đã có lỗi xảy ra khi kết nối với máy chủ, vui lòng tải lại trang hoặc đăng nhập lại",
         variant: "destructive"
       })
     }
-    onSave(editedCustomer)
   }
 
   return (
@@ -106,42 +146,6 @@ export function EditCustomerDialog({ customer, onClose, onSave }) {
                   <SelectItem value="female">Nữ</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
-                Địa chỉ
-              </Label>
-              <Input
-                id="address"
-                name="address"
-                value={editedCustomer.address || ''}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="passportNumber" className="text-right">
-                Số hộ chiếu
-              </Label>
-              <Input
-                id="passportNumber"
-                name="passportNumber"
-                value={editedCustomer.passportNumber || ''}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="identificationNumber" className="text-right">
-                Số CMND/CCCD
-              </Label>
-              <Input
-                id="identificationNumber"
-                name="identificationNumber"
-                value={editedCustomer.identificationNumber || ''}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
             </div>
           </div>
           <DialogFooter>

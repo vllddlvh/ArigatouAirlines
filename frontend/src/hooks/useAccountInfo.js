@@ -1,6 +1,7 @@
 // hooks/useAccountInfo.js
 import { useState, useEffect } from "react";
 import { fetchCustomerInfo, updateCustomerInfo } from "@/services/customerService";
+import { toast } from "@/hooks/use-toast";
 
 export function useAccountInfo() {
   const [personalInfo, setPersonalInfo] = useState(null);
@@ -9,44 +10,41 @@ export function useAccountInfo() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Mock API for testing - comment out real fetch
-    // const loadCustomerInfo = async () => {
-    //   try {
-    //     const data = await fetchCustomerInfo();
-    //     setPersonalInfo(data);
-    //   } catch (error) {
-    //     setErrorMessage("Không thể tải thông tin cá nhân.");
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // loadCustomerInfo();
-
-    // Mock data for testing
-    const mockPersonalInfo = {
-      id: "12345",
-      name: "Nguyễn Văn A",
-      email: "nguyenvana@example.com",
-      phone: "0123456789",
-      address: "123 Đường ABC, Quận XYZ, TP.HCM",
-      gender: "Nam",
-      dob: "1990-01-01",
-      passport: "P123456789",
-      bookingHistory: ["BK001", "BK002", "BK003"],
+    const loadCustomerInfo = async () => {
+      setLoading(true);
+      setErrorMessage("");
+      try {
+        const data = await fetchCustomerInfo();
+        setPersonalInfo(data);
+      } catch (error) {
+        const message = error?.message || "Không thể tải thông tin cá nhân.";
+        setErrorMessage(message);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setPersonalInfo(mockPersonalInfo);
-    setLoading(false);
+    loadCustomerInfo();
   }, []);
 
   const handleUpdate = async (updatedInfo) => {
     try {
-      await updateCustomerInfo(updatedInfo);
-      setPersonalInfo(updatedInfo);
+      setErrorMessage("");
+      const updatedFromApi = await updateCustomerInfo(updatedInfo);
+      setPersonalInfo(updatedFromApi);
       setIsEditing(false);
-      alert("Thông tin đã được cập nhật thành công!");
+      toast({
+        title: "Thành công",
+        description: "Thông tin đã được cập nhật.",
+      });
     } catch (error) {
-      setErrorMessage("Cập nhật thông tin thất bại. Vui lòng thử lại.");
+      const message = error?.message || "Cập nhật thông tin thất bại. Vui lòng thử lại.";
+      setErrorMessage(message);
+      toast({
+        title: "Cập nhật thất bại",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 

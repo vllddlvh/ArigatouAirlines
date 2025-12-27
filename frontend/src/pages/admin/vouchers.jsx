@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 // Icons from Lucide for a modern look
-import { Search, Plus, Edit, Trash2, Loader2, Zap, ZapOff, XCircle, CheckCircle, Clock } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Loader2, Zap, ZapOff, XCircle, CheckCircle, Clock, UserX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -16,7 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast"
 import { Plus, Plane, Hash, Anchor, DollarSign, Clock, MapPin, CalendarDays, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
+import { API_BASE_URL } from '@/lib/api'
 
 // --- Helper Component for Input Row ---
 const InputRow = ({ id, label, type = "text", icon: Icon, required, ...props }) => (
@@ -43,48 +43,91 @@ export function AddFlightDialog() {
         aircraftType: '',
         departureCity: '',
         arrivalCity: '',
-        departureAirport: '', // Thêm trường này từ logic gốc
-        arrivalAirport: '',   // Thêm trường này từ logic gốc
+        departureAirport: '',
+        arrivalAirport: '',
         departureTime: '',
         arrivalTime: '',
-        basePrice: '',
-        status: 'Scheduled' // Đặt trạng thái mặc định hợp lý hơn
+        prices: {
+            ECONOMY: '',
+            BUSINESS: ''
+        },
+        status: 'Scheduled'
     })
 
     const handleInputChange = (e) => {
-        const { id, value} = e.target
-        console.log(id)
-        setFlightData(prev => ({ ...prev, [id]: value }))
+        const { id, value } = e.target;
+        
+        // Handle price fields separately
+        if (id === 'economyPrice' || id === 'businessPrice') {
+            const priceType = id === 'economyPrice' ? 'ECONOMY' : 'BUSINESS';
+            setFlightData(prev => ({
+                ...prev,
+                prices: {
+                    ...prev.prices,
+                    [priceType]: value
+                }
+            }));
+        } else {
+            setFlightData(prev => ({ ...prev, [id]: value }));
+        }
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setIsSubmitting(true)
 
-        const createFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/flight`
+        const createFlightApi = `${API_BASE_URL}/api/flight`
+
+        const toLocalDateTimeString = (value) => {
+            if (!value) return value
+            // datetime-local thường là YYYY-MM-DDTHH:mm
+            if (typeof value === 'string' && value.length === 16) return `${value}:00`
+            return value
+        }
+
+        const economyPrice = parseInt(flightData.prices?.ECONOMY, 10)
+        const { prices, ...restFlightData } = flightData
+
+        if (!Number.isFinite(economyPrice) || economyPrice <= 0) {
+            setIsSubmitting(false)
+            alert('Đã xảy ra lỗi: Giá hạng phổ thông phải là số > 0.')
+            return
+        }
+
         const formattedFlightData = {
-            ...flightData,
-            departureTime: new Date(flightData.departureTime).toISOString(),
-            arrivalTime: new Date(flightData.arrivalTime).toISOString(),
-            basePrice: parseInt(flightData.basePrice, 10),
-            // Loại bỏ status: 'On Time' vì không phải là giá trị enum hợp lệ, sử dụng 'Scheduled'
-        };
+            ...restFlightData,
+            departureTime: toLocalDateTimeString(flightData.departureTime),
+            arrivalTime: toLocalDateTimeString(flightData.arrivalTime),
+            basePrice: economyPrice,
+        }
 
         try {
             const response = await fetch(createFlightApi, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "admin": "true",
-                    "authorization": "Bearer " + localStorage.getItem("token")
+                    "Authorization": "Bearer " + localStorage.getItem("token")
                 },
                 body: JSON.stringify(formattedFlightData)
             })
 
             if (!response.ok) {
-                // Đọc thông báo lỗi nếu có
-                const errorData = await response.json().catch(() => ({ message: 'Server responded with an error.' }));
-                throw new Error(errorData.message || "failed");
+                const errorText = await response.text().catch(() => '')
+                let message = 'Server responded with an error.'
+                try {
+                    const parsed = JSON.parse(errorText)
+                    message = parsed?.message || parsed?.error || parsed?.body?.message || message
+                } catch {
+                    if (errorText) message = errorText
+                }
+
+                console.error('Create flight failed', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorText,
+                })
+
+                throw new Error(message)
             }
 
             toast({
@@ -192,14 +235,25 @@ export function AddFlightDialog() {
                                     onChange={handleInputChange}
                                     required
                                 />
-                                <div className="md:col-span-2">
+                                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <InputRow 
-                                        id="basePrice" 
-                                        label="Giá Cơ sở (VND)" 
+                                        id="economyPrice" 
+                                        label="Giá Hạng Phổ Thông (VND)" 
                                         icon={DollarSign}
-                                        type="number" 
+                                        type="number"
+                                        value={flightData.prices.ECONOMY}
+                                        onChange={handleInputChange}
+                                        required
+                                        min="0"
                                         step="1000"
-                                        value={flightData.basePrice}
+                                        placeholder="Nhập giá hạng phổ thông"
+                                    />
+                                    <InputRow 
+                                        id="businessPrice" 
+                                        label="Giá Hạng Thương Gia (VND)" 
+                                        icon={DollarSign}
+                                        type="number"
+                                        value={flightData.prices.BUSINESS}
                                         onChange={handleInputChange}
                                         required
                                         placeholder="Ví dụ: 1500000"

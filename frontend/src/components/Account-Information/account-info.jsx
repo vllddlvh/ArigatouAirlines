@@ -35,14 +35,24 @@ export default function AccountInfo({
   let birthDateDisplay = "";
   let birthDateValue = "";
   if (personalInfo.dateOfBirth) {
-    const dateObj = new Date(personalInfo.dateOfBirth);
+    const raw = String(personalInfo.dateOfBirth);
+    const dateOnly = raw.split("T")[0];
 
-    if (dateObj) {
-      const day = dateObj.getDate().toString().padStart(2, "0");
-      const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
-      const year = dateObj.getFullYear();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+      const year = dateOnly.slice(0, 4);
+      const month = dateOnly.slice(5, 7);
+      const day = dateOnly.slice(8, 10);
       birthDateDisplay = `${day} tháng ${month} năm ${year}`;
-      birthDateValue = `${year}-${month}-${day}`;
+      birthDateValue = dateOnly;
+    } else {
+      const dateObj = new Date(raw);
+      if (!isNaN(dateObj.getTime())) {
+        const day = dateObj.getDate().toString().padStart(2, "0");
+        const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+        const year = dateObj.getFullYear();
+        birthDateDisplay = `${day} tháng ${month} năm ${year}`;
+        birthDateValue = `${year}-${month}-${day}`;
+      }
     }
   }
 

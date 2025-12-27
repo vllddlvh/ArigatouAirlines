@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 // Icons from Lucide
 import { Search, Edit2, Trash2, Eye, Loader2, UserX, XCircle, CheckCircle, Lock, Unlock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog-admin";
+import { EditCustomerDialog } from "@/components/admin/EditCustomerDialog";
+import { API_BASE_URL, extractBody, getAuthHeader } from "@/lib/api";
 
 // ===========================================
 // MOCK UI COMPONENTS (Replacing Shadcn/UI imports)
@@ -113,45 +116,6 @@ const MOCK_CUSTOMERS = [
 ];
 // ------------------------------------------
 
-// Replaced EditCustomerDialog from original import
-const EditCustomerDialog = ({ customer, onClose, onSave }) => {
-  const [formData, setFormData] = useState({ ...customer });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      alert("Vui lòng điền đầy đủ Họ, Tên và Email.");
-      return;
-    }
-    onSave(formData);
-  };
-
-  return (
-    <Dialog open={!!customer} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px]">
-        <DialogHeader>
-          <DialogTitle>Sửa thông tin khách hàng</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <Input name="lastName" placeholder="Họ" value={formData.lastName} onChange={handleChange} />
-          <Input name="firstName" placeholder="Tên" value={formData.firstName} onChange={handleChange} />
-          <Input name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} />
-          <Input name="loyaltyPoints" type="number" placeholder="Điểm tích lũy" value={formData.loyaltyPoints} onChange={handleChange} />
-          <Input name="address" placeholder="Địa chỉ" value={formData.address || ''} onChange={handleChange} />
-        </div>
-        <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button variant="primary" onClick={handleSave}>Lưu thay đổi</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 // Helper component for Detail Dialog
 const DetailItem = ({ label, value }) => (
     <div className="grid grid-cols-4 items-start gap-2 border-b border-gray-100 pb-2">
@@ -174,85 +138,60 @@ function CustomerManagementDashboard() {
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  // --- Hàm Mock API getAllCustomers ---
+  // --- Hàm API getAllCustomers ---
   const getAllCustomers = useCallback(async () => {
-    setIsLoading(true); 
-    await new Promise(resolve => setTimeout(resolve, 800)); 
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/users`, {
+        headers: getAuthHeader(),
+      });
 
-    try { 
-      const transformedCustomers = MOCK_CUSTOMERS.map(a => {
-        // Date Parsing Logic... (same as before)
-        let dob = a.dateOfBirth;
-        if (typeof dob === 'object' && dob.seconds) {
-            dob = new Date(dob.seconds * 1000).toISOString().split('T')[0];
-        } else if (typeof dob === 'string') {
-            dob = a.dateOfBirth.split('T')[0];
-        }
-        let createdAt = a.createdAt;
-        if (typeof createdAt === 'object' && createdAt.seconds) {
-            createdAt = new Date(createdAt.seconds * 1000).toISOString().split('T')[0];
-        } else if (typeof createdAt === 'string') {
-            createdAt = a.createdAt.split('T')[0];
-        }
+      const users = extractBody(response) || [];
+
+      const transformedCustomers = users.map((u) => {
+        const fullName = String(u.fullName || "").trim();
+        const parts = fullName ? fullName.split(/\s+/) : [];
+        const firstName = parts.length ? parts[parts.length - 1] : "";
+        const lastName = parts.length > 1 ? parts.slice(0, -1).join(" ") : fullName;
+        const gender = String(u.gender || "Other").toLowerCase();
 
         return {
-          "uid": a.uid,
-          "firstName": a.firstName,
-          "lastName": a.lastName,
-          "email": a.email,
-          "dateOfBirth": dob,
-          "gender": a.gender,
-          "loyaltyPoints": a.loyaltyPoints,
-          "createdAt": createdAt,
-          "address": a.address || 'N/A',
-          "passportNumber": a.passportNumber || 'N/A',
-          "identificationNumber": a.identificationNumber || 'N/A',
-          "isSuspended": a.isSuspended || false, // Mới
-        }
+          uid: String(u.userId ?? u.id ?? u.uid ?? ""),
+          userId: u.userId ?? u.id,
+          firstName,
+          lastName,
+          email: u.email || "",
+          dateOfBirth: u.dateOfBirth || "",
+          gender,
+          isSuspended: false,
+          roles: u.roles,
+          username: u.username,
+          fullName: u.fullName,
+          phone: u.phone || "",
+          phoneNumber: u.phone || "",
+        };
       });
-      setCustomers(transformedCustomers);
 
+      setCustomers(transformedCustomers);
     } catch (error) {
       showToast({
-       title: "Lỗi tải dữ liệu",
-       description: "MOCK: Không thể tải danh sách khách hàng",
-       variant: "destructive"
-      })
+        title: "Lỗi tải dữ liệu",
+        description: error.response?.data?.message || "Không thể tải danh sách khách hàng",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
-  }, [showToast])
+  }, [showToast]);
   // ------------------------------------------
   
-  // --- MOCK API: Khóa/Mở Khóa Tài khoản ---
-  const toggleCustomerSuspension = async (customer) => {
-      const action = customer.isSuspended ? "Mở khóa" : "Khóa";
-      if (!window.confirm(`Bạn có chắc muốn ${action.toLowerCase()} tài khoản của ${customer.lastName} ${customer.firstName} (${customer.email})?`)) {
-          return;
-      }
-      
-      // MOCK: Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500)); 
-
-      try {
-          // MOCK: Cập nhật trạng thái
-          const updatedCustomer = { ...customer, isSuspended: !customer.isSuspended };
-          
-          setCustomers(prev => prev.map(c => c.uid === customer.uid ? updatedCustomer : c));
-          
-          showToast({
-              title: `${action} thành công!`,
-              description: `Tài khoản ${updatedCustomer.email} đã được ${action.toLowerCase()} (MOCK).`,
-              variant: updatedCustomer.isSuspended ? "warning" : "success"
-          });
-          
-      } catch (error) {
-          showToast({
-              title: `${action} thất bại`,
-              description: "MOCK: Đã có lỗi xảy ra khi cập nhật trạng thái",
-              variant: "destructive"
-          });
-      }
+  // --- Khóa/Mở Khóa Tài khoản ---
+  const toggleCustomerSuspension = async () => {
+      showToast({
+          title: "Chưa hỗ trợ",
+          description: "Chức năng khóa/mở khóa chưa được backend hỗ trợ trong dự án hiện tại.",
+          variant: "warning"
+      });
   };
   // ------------------------------------------
 
@@ -274,11 +213,11 @@ function CustomerManagementDashboard() {
   }
 
   const handleEditComplete = (updatedCustomer) => {
-    setCustomers(customers.map(c => c.uid === updatedCustomer.uid ? updatedCustomer : c))
+    setCustomers(customers.map(c => c.uid === String(updatedCustomer.userId ?? updatedCustomer.uid) ? updatedCustomer : c))
     setEditingCustomer(null)
     showToast({
       title: "Thành công",
-      description: "Thông tin khách hàng đã được cập nhật (MOCK)",
+      description: "Thông tin khách hàng đã được cập nhật",
       variant: "success"
     })
   }
@@ -288,15 +227,24 @@ function CustomerManagementDashboard() {
         return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 400)); 
-
-    setCustomers(customers.filter(a => a.uid !== customer.uid))
-
-    showToast({
-      title: "Thành công",
-      description: `Khách hàng ${customer.uid} đã được xóa (MOCK)`,
-      variant: "destructive"
-    })
+    const userId = customer.userId ?? customer.uid;
+    try {
+      await axios.delete(`${API_BASE_URL}/users/${userId}`, {
+        headers: getAuthHeader(),
+      });
+      setCustomers(customers.filter(a => a.uid !== customer.uid))
+      showToast({
+        title: "Thành công",
+        description: `Khách hàng ${customer.uid} đã được xóa`,
+        variant: "destructive"
+      })
+    } catch (error) {
+      showToast({
+        title: "Xóa thất bại",
+        description: error.response?.data?.message || "Không thể xóa khách hàng",
+        variant: "destructive"
+      })
+    }
   }
   
   const handleViewDetails = (customer) => {
@@ -316,15 +264,15 @@ function CustomerManagementDashboard() {
       return (
           <div 
               key={customer.uid}
-              className={`grid grid-cols-[1.5fr_2fr_1fr_1fr_1fr_1fr] items-center p-4 border-b transition-colors ${rowClasses}`}
+              className={`grid grid-cols-[1.5fr_2fr_1.2fr_1fr_1fr_1fr] items-center p-4 border-b transition-colors ${rowClasses}`}
           >
               <div className="font-medium text-gray-900 truncate flex items-center">
                   {isSuspended && <Lock className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />}
                   <span className={isSuspended ? "text-red-500" : ""}>{`${customer.lastName} ${customer.firstName}`}</span>
               </div>
               <div className="text-gray-600 truncate">{customer.email}</div>
-              <div className="text-gray-600 text-sm">{customer.loyaltyPoints}</div>
-              <div className="text-gray-600 text-sm hidden md:block">{customer.dateOfBirth}</div>
+              <div className="text-gray-600 text-sm">{customer.phone || "-"}</div>
+              <div className="text-gray-600 text-sm hidden md:block">{customer.dateOfBirth || "-"}</div>
               <div className="text-gray-600 text-sm hidden sm:block">{customer.gender === "male" ? "Nam" : "Nữ"}</div>
               
               {/* Actions Cell */}
@@ -390,10 +338,10 @@ function CustomerManagementDashboard() {
             <div className="w-full overflow-x-auto">
               <div className="min-w-[700px]">
                 {/* Table Header */}
-                <div className="grid grid-cols-[1.5fr_2fr_1fr_1fr_1fr_1fr] p-4 font-bold text-xs uppercase tracking-wider text-gray-700 bg-gray-100 border-b border-gray-200">
+                <div className="grid grid-cols-[1.5fr_2fr_1.2fr_1fr_1fr_1fr] p-4 font-bold text-xs uppercase tracking-wider text-gray-700 bg-gray-100 border-b border-gray-200">
                   <div className="truncate">HỌ VÀ TÊN</div>
                   <div className="truncate">EMAIL</div>
-                  <div className="truncate">ĐIỂM TÍCH LŨY</div>
+                  <div className="truncate">SĐT</div>
                   <div className="truncate hidden md:block">NGÀY SINH</div>
                   <div className="truncate hidden sm:block">GT</div>
                   <div className="text-right">THAO TÁC</div>
@@ -430,13 +378,10 @@ function CustomerManagementDashboard() {
                  <DetailItem label="UID" value={selectedCustomer.uid} />
                  <DetailItem label="Họ và tên" value={`${selectedCustomer.lastName} ${selectedCustomer.firstName}`} />
                  <DetailItem label="Email" value={selectedCustomer.email} />
-                 <DetailItem label="Ngày sinh" value={selectedCustomer.dateOfBirth} />
+                 <DetailItem label="Số điện thoại" value={selectedCustomer.phone || "-"} />
+                 <DetailItem label="Ngày sinh" value={selectedCustomer.dateOfBirth || "-"} />
                  <DetailItem label="Giới tính" value={selectedCustomer.gender === "male" ? "Nam" : "Nữ"} />
-                 <DetailItem label="Điểm tích lũy" value={selectedCustomer.loyaltyPoints} />
-                 <DetailItem label="Địa chỉ" value={selectedCustomer.address} />
-                 <DetailItem label="Số hộ chiếu" value={selectedCustomer.passportNumber} />
-                 <DetailItem label="CMND/CCCD" value={selectedCustomer.identificationNumber} />
-                 <DetailItem label="Ngày đăng ký" value={selectedCustomer.createdAt} />
+                 <DetailItem label="Username" value={selectedCustomer.username || "-"} />
                </div>
              )}
           </DialogContent>
