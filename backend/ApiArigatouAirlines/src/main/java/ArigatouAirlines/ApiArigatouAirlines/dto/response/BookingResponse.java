@@ -1,9 +1,7 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.response;
 
-import ArigatouAirlines.ApiArigatouAirlines.entity.User;
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPayment;
-import jakarta.persistence.Column;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,11 +23,11 @@ public class BookingResponse {
 
     StatusBooking statusBooking;
 
-    StatusPayment statusPayment;
+    StatusPaymentBooking statusPayment;
 
     BigDecimal totalAmount;
 
-    LocalDateTime paymentDeadline;
+    Instant paymentDeadline;
 
     Instant createdAt;
 }

@@ -75,7 +75,11 @@ public enum ErrorCode {
     //─────────────── 7xxx: Ticket ───────────────
     CLASS_NAME_IS_AVAILABLE(7001, "ClassName is available!", HttpStatus.BAD_REQUEST),
     TICKET_CLASS_ID_IS_NOT_AVAILABLE(7002, "TicketClassID is not available!", HttpStatus.BAD_REQUEST),
-    FLIGHT_PRICE_ID_IS_NOT_AVAILABLE(7003, "FlightPriceID is not available!", HttpStatus.BAD_REQUEST);
+    FLIGHT_PRICE_ID_IS_NOT_AVAILABLE(7003, "FlightPriceID is not available!", HttpStatus.BAD_REQUEST),
+
+    //─────────────── 8xxx: Booking ───────────────
+    BOOKING_ID_IS_NOT_EXISTED(8001, "BookingID is not existed!", HttpStatus.BAD_REQUEST),
+    PAYMENT_ID_IS_NOT_EXISTED(8002, "PaymentID is not existed!", HttpStatus.BAD_REQUEST);
 
 
     int code;

@@ -17,7 +17,6 @@ import lombok.experimental.FieldDefaults;
 public class TicketResponse {
     int ticketId;
 
-
     BookingResponse booking;
 
     FlightResponse flight;
