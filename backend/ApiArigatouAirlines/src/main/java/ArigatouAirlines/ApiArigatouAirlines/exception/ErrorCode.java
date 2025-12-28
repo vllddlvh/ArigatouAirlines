@@ -70,6 +70,7 @@ public enum ErrorCode {
     DEPARTURE_AND_ARRIVAL_TIME_CANNOT_CONFLICT(6001, "Departure and arrival time can't conflict", HttpStatus.BAD_REQUEST),
     FLIGHT_SCHEDULE_ID_NOT_EXISTED(6002, "FlightScheduleId doesn't existed!", HttpStatus.BAD_REQUEST),
     FLIGHT_ID_NOT_EXISTED(6003, "FlightId doesn't existed!", HttpStatus.BAD_REQUEST),
+    FLIGHT_SEAT_ID_NOT_EXISTED(6004, "FlightSeatId doesn't existed!", HttpStatus.BAD_REQUEST),
 
     //─────────────── 7xxx: Ticket ───────────────
     CLASS_NAME_IS_AVAILABLE(7001, "ClassName is available!", HttpStatus.BAD_REQUEST),

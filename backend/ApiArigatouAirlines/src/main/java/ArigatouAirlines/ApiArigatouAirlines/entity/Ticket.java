@@ -39,6 +39,7 @@ public class Ticket {
     FlightSeat flightSeat;
 
     @Column(name = "ticket_number")
+            @GeneratedValue(strategy = GenerationType.UUID)
     String ticketNumber;
 
     StatusTicket status;

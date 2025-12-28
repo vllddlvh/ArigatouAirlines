@@ -41,9 +41,12 @@ public class FlightPriceService {
         return flightPriceMapper.toFlightPriceResponse(flightPrice);
     }
 
-    public FlightPriceResponse getFlightPrice(int flightPriceId) {
-        FlightPrice flightPrice = flightPriceRepository.findById(flightPriceId)
-                .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_PRICE_ID_IS_NOT_AVAILABLE));
+    public FlightPriceResponse getFlightPrice(int flightId) {
+        if(!flightRepository.existsById(flightId)) {
+            throw new AppException(ErrorCode.FLIGHT_ID_NOT_EXISTED);
+        }
+
+        FlightPrice flightPrice = flightPriceRepository.findFlightPriceByFlight_FlightId(flightId);
 
         return flightPriceMapper.toFlightPriceResponse(flightPrice);
     }

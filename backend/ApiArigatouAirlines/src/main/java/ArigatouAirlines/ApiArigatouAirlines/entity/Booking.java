@@ -28,6 +28,7 @@ public class Booking {
     User user;
 
     @Column(name = "booking_code")
+            @GeneratedValue(strategy = GenerationType.UUID)
     String bookingCode;
 
     @Column(name = "booking_status")

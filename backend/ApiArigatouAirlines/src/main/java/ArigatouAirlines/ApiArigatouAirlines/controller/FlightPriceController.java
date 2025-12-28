@@ -23,10 +23,10 @@ public class FlightPriceController {
                 .build();
     }
 
-    @GetMapping("/{flightPriceId}")
-    ApiResponse<FlightPriceResponse> getFlightPrice(@PathVariable int flightPriceId) {
+    @GetMapping("/{flightId}")
+    ApiResponse<FlightPriceResponse> getFlightPrice(@PathVariable int flightId) {
         return ApiResponse.<FlightPriceResponse>builder()
-                .body(flightPriceService.getFlightPrice(flightPriceId))
+                .body(flightPriceService.getFlightPrice(flightId))
                 .build();
     }
 
