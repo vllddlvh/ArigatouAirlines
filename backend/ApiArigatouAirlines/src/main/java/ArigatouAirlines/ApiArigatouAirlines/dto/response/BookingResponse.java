@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingResponse {
+    int bookingId;
+
     UserResponse user;
 
     String bookingCode;

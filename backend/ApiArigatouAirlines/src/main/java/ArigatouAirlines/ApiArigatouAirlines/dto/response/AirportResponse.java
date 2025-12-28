@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AirportResponse {
+    int airportId;
     String airportCode;
     String airportName;
     String city;
