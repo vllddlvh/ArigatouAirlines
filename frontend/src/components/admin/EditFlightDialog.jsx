@@ -1,94 +1,96 @@
-import { useState, useMemo } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Clock, PlaneTakeoff, PlaneLanding, Save } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-// Helper: chuẩn hoá chuỗi thời gian từ backend sang format cho input datetime-local
-// Đầu vào có thể là:
-//  - "YYYY-MM-DDTHH:mm:ss" (LocalDateTime từ backend)
-//  - "YYYY-MM-DD HH:mm:ss" (fallback cũ)
-// Đầu ra: "YYYY-MM-DDTHH:mm"
-const formatISODateToLocal = (value) => {
-    if (!value) return '';
-    try {
-        let str = value.toString();
-        // Đảm bảo dùng ký tự 'T' giữa ngày và giờ
-        if (str.includes(' ')) {
-            str = str.replace(' ', 'T');
-        }
-        // Cắt tới phút: YYYY-MM-DDTHH:mm
-        if (str.length >= 16) {
-            return str.slice(0, 16);
-        }
-        return str;
-    } catch {
-        return '';
-    }
-};
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Clock, Save, Hash, Anchor, Loader2, Plane } from 'lucide-react'
+import { API_BASE_URL } from '@/lib/api'
+import { toast } from "@/hooks/use-toast"
 
 export function EditFlightDialog({ flight, onClose, onSave }) {
-    // 1. Khởi tạo state với giá trị ban đầu đã được format cho input type="datetime-local"
-    // Sử dụng field names từ backend: departureTime, arrivalTime
-    const initialDepartureTime = useMemo(() => formatISODateToLocal(flight.departureTime || flight.ddt), [flight.departureTime, flight.ddt]);
-    const initialArrivalTime = useMemo(() => formatISODateToLocal(flight.arrivalTime || flight.adt), [flight.arrivalTime, flight.adt]);
-
-    const [editedFlight, setEditedFlight] = useState({
-        ...flight,
-        departureTimeLocal: initialDepartureTime,
-        arrivalTimeLocal: initialArrivalTime,
-    });
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoadingData, setIsLoadingData] = useState(false);
+    const [airlines, setAirlines] = useState([]);
+    const [airports, setAirports] = useState([]);
 
-    const handleFieldChange = (field) => (e) => {
-        const { value } = e.target;
-        setEditedFlight(prev => ({ ...prev, [field]: value }));
-    };
+    // 1. Truy cập sâu vào object 'schedule' để lấy dữ liệu ban đầu
+    const currentSchedule = flight?.schedule || {};
+
+    const [formData, setFormData] = useState({
+        flightNumber: currentSchedule.flightNumber || '',
+        airlineId: currentSchedule.airline?.airlineId?.toString() || '',
+        departureAirportId: currentSchedule.departureAirport?.airportCode || '',
+        arrivalAirportId: currentSchedule.arrivalAirport?.airportCode || '',
+        // Format LocalTime "16:51:00" -> "16:51" cho input time
+        departureTime: currentSchedule.departureTime ? currentSchedule.departureTime.substring(0, 5) : '',
+        arrivalTime: currentSchedule.arrivalTime ? currentSchedule.arrivalTime.substring(0, 5) : '',
+        active: currentSchedule.active ?? true
+    });
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            setIsLoadingData(true);
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { "Authorization": `Bearer ${token}` };
+                const [resAirlines, resAirports] = await Promise.all([
+                    fetch(`${API_BASE_URL}/airline`, { headers }),
+                    fetch(`${API_BASE_URL}/airport`, { headers })
+                ]);
+                const dataAirlines = await resAirlines.json();
+                const dataAirports = await resAirports.json();
+                setAirlines(dataAirlines.body || []);
+                setAirports(dataAirports.body || []);
+            } catch (error) {
+                console.error("Lỗi tải danh mục:", error);
+            } finally {
+                setIsLoadingData(false);
+            }
+        };
+        fetchInitialData();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-
-        // Sử dụng scheduleId từ backend (không phải flightId)
-        const flightId = flight.scheduleId || flight.flightId;
-        const editFlightApi = `${process.env.NEXT_PUBLIC_API_BASE_URL}/flight/${flightId}`;
-
-        // Chuyển datetime-local string (YYYY-MM-DDTHH:mm) sang LocalDateTime string (YYYY-MM-DDTHH:mm:ss)
-        const apiBody = {
-            flightNumber: flight.flightNumber,
-            aircraftType: flight.aircraftType,
-            departureCity: flight.departureCity,
-            arrivalCity: flight.arrivalCity,
-            departureAirport: flight.departureAirportCode || flight.departureAirport,
-            arrivalAirport: flight.arrivalAirportCode || flight.arrivalAirport,
-            departureTime: editedFlight.departureTimeLocal ? `${editedFlight.departureTimeLocal}:00` : null,
-            arrivalTime: editedFlight.arrivalTimeLocal ? `${editedFlight.arrivalTimeLocal}:00` : null,
-            basePrice: flight.basePrice,
-            status: flight.status
-        };
+        const token = localStorage.getItem("token");
+        const scheduleId = currentSchedule.scheduleId; 
 
         try {
-            const response = await fetch(editFlightApi, {
+            const payload = {
+                flightNumber: formData.flightNumber,
+                airlineId: parseInt(formData.airlineId),
+                departureAirportId: formData.departureAirportId,
+                arrivalAirportId: formData.arrivalAirportId,
+                departureTime: `${formData.departureTime}:00`,
+                arrivalTime: `${formData.arrivalTime}:00`,
+                active: formData.active
+            };
+
+            console.log(scheduleId)
+
+            const response = await fetch(`${API_BASE_URL}/flightSchedules/${scheduleId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "admin": "true",
-                    "authorization": "Bearer " + localStorage.getItem("token")
-                }, 
-                body: JSON.stringify(apiBody)
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Lỗi server không xác định.' }));
-                throw new Error(errorData.message || "failed");
-            }
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || "Cập nhật thất bại");
 
-            onSave(editedFlight);
+            toast({ title: "Thành công", description: "Đã cập nhật lịch trình bay." });
+            
+            // Callback để update lại danh sách ở component cha
+            onSave(result.body);
+            onClose();
         } catch (error) {
-            alert(`Lỗi khi cập nhật chuyến bay: ${error.message || "Vui lòng kiểm tra kết nối."}`);
+            alert(`Lỗi: ${error.message}`);
         } finally {
             setIsSaving(false);
         }
@@ -96,68 +98,123 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] rounded-xl shadow-2xl p-6 bg-white">
-                <DialogHeader className="border-b pb-3 mb-4">
-                    <DialogTitle className="text-2xl font-bold text-primary flex items-center gap-2">
-                        <PlaneTakeoff className="h-6 w-6 text-primary" />
-                        {`Chỉnh sửa chuyến bay ${flight.flightNumber || flight.id}`}
+            <DialogContent className="sm:max-w-[550px] bg-white border-none shadow-2xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-primary text-xl font-bold">
+                        <Plane className="h-6 w-6" />
+                        Chỉnh sửa Lịch trình {formData.flightNumber}
                     </DialogTitle>
-                    <DialogDescription className="text-sm text-muted-foreground">
-                        Chỉ cho phép thay đổi thời gian khởi hành và hạ cánh.
+                    <DialogDescription>
+                        Cập nhật thông tin gốc cho mã lịch trình #{currentSchedule.scheduleId}
                     </DialogDescription>
                 </DialogHeader>
-                
-                <form onSubmit={handleSubmit}>
-                    <div className="grid gap-6 py-4">
-                        {/* Current Route Display */}
-                        <div className="bg-muted p-3 rounded-lg flex justify-between text-sm font-semibold text-foreground">
-                            <span>Từ: {flight.departureAirportCode || flight.src} ({flight.departureCity || ''})</span>
-                            <span>Đến: {flight.arrivalAirportCode || flight.dest} ({flight.arrivalCity || ''})</span>
+
+                {isLoadingData ? (
+                    <div className="flex justify-center p-12"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="space-y-6 py-2">
+                        {/* Hàng 1: Số hiệu & Hãng */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-gray-600 font-medium">Số hiệu chuyến</Label>
+                                <div className="relative">
+                                    <Hash className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input 
+                                        className="pl-9"
+                                        value={formData.flightNumber}
+                                        onChange={(e) => setFormData({...formData, flightNumber: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-gray-600 font-medium">Hãng hàng không</Label>
+                                <Select 
+                                    value={formData.airlineId} 
+                                    onValueChange={(val) => setFormData({...formData, airlineId: val})}
+                                >
+                                    <SelectTrigger><SelectValue placeholder="Chọn hãng" /></SelectTrigger>
+                                    <SelectContent>
+                                        {airlines.map((a) => (
+                                            <SelectItem key={a.airlineId} value={a.airlineId.toString()}>{a.airlineCode}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        {/* Departure Time */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
-                            <Label htmlFor="departureTimeLocal" className="text-left md:text-right font-semibold text-gray-700 flex items-center gap-1">
-                                <PlaneTakeoff className="h-4 w-4 text-primary" /> Khởi hành
-                            </Label>
-                            <Input
-                                id="departureTimeLocal"
-                                name="departureTimeLocal"
-                                type="datetime-local"
-                                value={editedFlight.departureTimeLocal}
-                                onChange={handleFieldChange('departureTimeLocal')}
-                                required
-                                className="col-span-3 border-2 border-border focus:border-primary transition-colors h-10"
-                            />
+                        {/* Hàng 2: Lộ trình */}
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <div className="space-y-2">
+                                <Label className="text-blue-600 flex items-center gap-2 font-semibold">
+                                    <Anchor className="h-4 w-4" /> Sân bay đi
+                                </Label>
+                                <Select 
+                                    value={formData.departureAirportId} 
+                                    onValueChange={(val) => setFormData({...formData, departureAirportId: val})}
+                                >
+                                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {airports.map((ap) => (
+                                            <SelectItem key={ap.airportCode} value={ap.airportCode}>
+                                                {ap.airportCode} - {ap.city}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-orange-600 flex items-center gap-2 font-semibold">
+                                    <Anchor className="h-4 w-4" /> Sân bay đến
+                                </Label>
+                                <Select 
+                                    value={formData.arrivalAirportId} 
+                                    onValueChange={(val) => setFormData({...formData, arrivalAirportId: val})}
+                                >
+                                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {airports.map((ap) => (
+                                            <SelectItem key={ap.airportCode} value={ap.airportCode}>
+                                                {ap.airportCode} - {ap.city}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        {/* Arrival Time */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
-                            <Label htmlFor="arrivalTimeLocal" className="text-left md:text-right font-semibold text-gray-700 flex items-center gap-1">
-                                <PlaneLanding className="h-4 w-4 text-primary" /> Hạ cánh
-                            </Label>
-                            <Input
-                                id="arrivalTimeLocal"
-                                name="arrivalTimeLocal"
-                                type="datetime-local"
-                                value={editedFlight.arrivalTimeLocal}
-                                onChange={handleFieldChange('arrivalTimeLocal')}
-                                required
-                                className="col-span-3 border-2 border-border focus:border-primary transition-colors h-10"
-                            />
+                        {/* Hàng 3: Thời gian */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-gray-600 font-medium flex items-center gap-2">
+                                    <Clock className="h-4 w-4" /> Giờ cất cánh
+                                </Label>
+                                <Input 
+                                    type="time" 
+                                    value={formData.departureTime} 
+                                    onChange={(e) => setFormData({...formData, departureTime: e.target.value})} 
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-gray-600 font-medium flex items-center gap-2">
+                                    <Clock className="h-4 w-4" /> Giờ hạ cánh
+                                </Label>
+                                <Input 
+                                    type="time" 
+                                    value={formData.arrivalTime} 
+                                    onChange={(e) => setFormData({...formData, arrivalTime: e.target.value})} 
+                                />
+                            </div>
                         </div>
-                    </div>
-                    
-                    <DialogFooter className="mt-6 border-t pt-4">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-                            Hủy bỏ
-                        </Button>
-                        <Button type="submit" className="bg-primary hover:bg-primary/90 shadow-md" disabled={isSaving}>
-                            <Save className={cn("h-4 w-4 mr-2", isSaving ? 'animate-spin' : '')} />
-                            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-                        </Button>
-                    </DialogFooter>
-                </form>
+
+                        <DialogFooter className="pt-6 border-t gap-2">
+                            <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>Hủy bỏ</Button>
+                            <Button type="submit" disabled={isSaving} className="px-8 bg-primary hover:bg-primary/90">
+                                {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                                Cập nhật lịch trình
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                )}
             </DialogContent>
         </Dialog>
     )

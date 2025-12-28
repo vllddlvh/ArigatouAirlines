@@ -28,16 +28,12 @@ export default function ScheduledFlights() {
         setIsLoading(true);
         try {
             const data = await masterDataService.getAllFlights();
-            console.log('Dữ liệu chuyến bay từ API:', data);
-            setFlights(data || []);
+            // Đảm bảo data là một mảng
+            setFlights(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error("Lỗi khi tải danh sách chuyến bay:", error);
-            console.error("Chi tiết lỗi:", error.response);
-            console.error("URL API:", process.env.NEXT_PUBLIC_API_BASE_URL);
-            console.error("Token trong localStorage:", localStorage.getItem("token"));
             toast({
                 title: "Lỗi",
-                description: `Không thể tải danh sách chuyến bay. ${error.response?.data?.message || error.message}`,
+                description: "Không thể tải danh sách chuyến bay.",
                 variant: "destructive"
             });
         } finally {
@@ -52,10 +48,11 @@ export default function ScheduledFlights() {
     const handleRemove = async (id) => {
         if (!confirm("Bạn có chắc muốn xóa chuyến bay này?")) return;
         try {
-            await masterDataService.deleteFlight(id);
-            toast({ title: "Thành công", description: "Đã xóa chuyến bay." });
+            const res = await masterDataService.deleteFlight(id);
+            toast({ title: "Thành công", description:  `Đã xóa chuyến bay. ${res.body}` });
             fetchFlights();
         } catch (error) {
+            console.log(error)
             toast({ title: "Lỗi", description: "Không thể xóa chuyến bay.", variant: "destructive" });
         }
     };
@@ -65,24 +62,20 @@ export default function ScheduledFlights() {
         setEditingFlight(null);
     };
 
-
     // --- HELPER FUNCTIONS ---
     
-    // Định dạng thời gian
     const formatDateTime = (dateTimeString) => {
         if (!dateTimeString) return 'N/A';
         try {
             const date = new Date(dateTimeString);
             if (isNaN(date.getTime())) return 'N/A';
             
-            // Định dạng giờ:phút (24h)
             const timePart = date.toLocaleTimeString('vi-VN', { 
                 hour: '2-digit', 
                 minute: '2-digit',
                 hour12: false 
             });
             
-            // Định dạng ngày/tháng/năm
             const datePart = date.toLocaleDateString('vi-VN', { 
                 day: '2-digit', 
                 month: '2-digit', 
@@ -100,40 +93,35 @@ export default function ScheduledFlights() {
         }
     };
     
-    // Định dạng giá theo triệu đồng
     const formatPriceInMillions = (price) => {
         if (price === null || price === undefined) return 'N/A';
-        
-        // Nếu giá là chuỗi, xóa các ký tự không phải số
-        const cleanPrice = typeof price === 'string' 
-            ? price.replace(/\D/g, '') 
-            : price;
-        
-        const priceNumber = Number(cleanPrice);
+        const priceNumber = Number(price);
         if (isNaN(priceNumber)) return 'N/A';
-        
-        // Định dạng thành triệu đồng
         return (priceNumber / 1000000).toLocaleString('vi-VN', { 
             minimumFractionDigits: 1, 
             maximumFractionDigits: 1 
         }) + ' triệu';
     };
 
-    // --- FILTER & DISPLAY LOGIC ---
-
-    const filteredFlights = flights.filter(flight => {
-        const flightNumber = flight.flightNumber?.toLowerCase() || '';
-        const aircraftType = flight.aircraftType?.toLowerCase() || '';
-        const departureAirport = flight.departureAirportCode?.toLowerCase() || '';
-        const arrivalAirport = flight.arrivalAirportCode?.toLowerCase() || '';
+    // --- FILTER & DISPLAY LOGIC (FIXED FOR NESTED JSON) ---
+    const filteredFlights = flights.filter(f => {
+        // Truy xuất từ object schedule theo cấu trúc JSON mới
+        const flightNumber = f.schedule?.flightNumber?.toLowerCase() || '';
+        const aircraftTypeName = f.aircraft?.aircraftType?.typeName?.toLowerCase() || '';
+        const depAirport = f.schedule?.departureAirport?.airportCode?.toLowerCase() || '';
+        const arrAirport = f.schedule?.arrivalAirport?.airportCode?.toLowerCase() || '';
+        const airlineName = f.schedule?.airline?.airlineName?.toLowerCase() || '';
+        
         const search = searchQuery.toLowerCase();
         
         const matchesSearch = flightNumber.includes(search) ||
-                              aircraftType.includes(search) ||
-                              departureAirport.includes(search) ||
-                              arrivalAirport.includes(search);
+                             aircraftTypeName.includes(search) ||
+                             depAirport.includes(search) ||
+                             airlineName.includes(search) ||
+                             arrAirport.includes(search);
         
-        const matchesStatus = filterStatus === 'all' || flight.status === filterStatus;
+        // JSON trả về status ở cấp cao nhất
+        const matchesStatus = filterStatus === 'all' || f.status === filterStatus;
 
         return matchesSearch && matchesStatus;
     });
@@ -146,8 +134,8 @@ export default function ScheduledFlights() {
         { value: 'Delayed', label: 'Trì Hoãn' },
     ];
 
-    const getStatusBadge = (flight) => {
-        switch(flight.status) {
+    const getStatusBadge = (status) => {
+        switch(status) {
             case 'OnTime':
                 return <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Đúng giờ</Badge>
             case 'Landed':
@@ -160,18 +148,16 @@ export default function ScheduledFlights() {
         }
     }
 
-        
-    // --- RENDER COMPONENT ---
     return (
         <div className="p-8 lg:pl-64 mx-auto bg-gray-50 min-h-screen">
             
-            {/* 1. Header & Actions */}
+            {/* 1. Header & Actions (Original Design) */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b pb-4">
                 <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
                     <Plane className="h-8 w-8 text-primary" /> Quản Lý Lịch Bay
                 </h1>
                 <div className="mt-4 md:mt-0">
-                    <AddFlightDialog>
+                    <AddFlightDialog onSave={fetchFlights}>
                         <Button className="bg-primary hover:bg-primary/90 shadow-md text-white font-semibold text-base px-6 py-2">
                             <Plus className="h-5 w-5 mr-2" /> Thêm Chuyến Bay Mới
                         </Button>
@@ -179,22 +165,19 @@ export default function ScheduledFlights() {
                 </div>
             </div>
 
-            {/* 2. Search & Filters Bar */}
+            {/* 2. Search & Filters Bar (Original Design) */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                
-                {/* Search Input */}
                 <div className="relative flex-grow max-w-lg">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="text"
-                        placeholder="Tìm kiếm theo số hiệu, loại máy bay, Sân bay đi/đến..."
+                        placeholder="Tìm số hiệu, loại máy bay, sân bay..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 h-11 border-2 border-gray-200 focus:border-primary transition-colors rounded-lg shadow-sm"
                     />
                 </div>
 
-                {/* Status Filter Dropdowns (Styled as buttons) */}
                 <div className="flex flex-wrap gap-2">
                     {statusOptions.map(option => (
                         <Button
@@ -214,113 +197,98 @@ export default function ScheduledFlights() {
                 </div>
             </div>
 
-            {/* 3. Flight Table */}
-            {/* Loading indicator */}
-            {isLoading && (
-                <div className="flex justify-center items-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            )}
-
+            {/* 3. Flight Table (Original Design + New Data Mapping) */}
             <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
                 <Table>
                     <TableHeader className="bg-gray-50 border-b border-gray-200">
                         <TableRow className="hover:bg-gray-50">
                             <TableHead className="w-[100px] text-center font-bold text-gray-600">SỐ HIỆU</TableHead>
-                            <TableHead className="text-center font-bold text-gray-600">MÁY BAY</TableHead>
+                            <TableHead className="text-center font-bold text-gray-600">MÁY BAY & HÃNG</TableHead>
                             <TableHead className="text-center font-bold text-gray-600 min-w-[150px]">KHỞI HÀNH</TableHead>
                             <TableHead className="text-center font-bold text-gray-600 min-w-[150px]">HẠ CÁNH</TableHead>
-                            <TableHead className="text-center font-bold text-gray-600 min-w-[120px]">HẠNG PHỔ THÔNG</TableHead>
-                            <TableHead className="text-center font-bold text-gray-600 min-w-[120px]">HẠNG THƯƠNG GIA</TableHead>
+                            <TableHead className="text-center font-bold text-gray-600">THÔNG TIN GHẾ</TableHead>
                             <TableHead className="w-[150px] text-center font-bold text-gray-600">TRẠNG THÁI & HÀNH ĐỘNG</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {!isLoading && filteredFlights.length > 0 ? (
-                            filteredFlights.map((flight, index) => (
+                        {isLoading ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-10">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredFlights.length > 0 ? (
+                            filteredFlights.map((f, index) => (
                                 <TableRow 
-                                    key={flight.scheduleId} 
+                                    key={f.schedule?.scheduleId} 
                                     className={cn("transition-colors duration-200 hover:bg-blue-50/50", index % 2 === 0 ? "bg-white" : "bg-gray-50")}
                                 >
-                                    {/* Số hiệu */}
+                                    {/* Số hiệu - từ schedule */}
                                     <TableCell className="text-center font-extrabold text-lg text-primary">
-                                        {flight.flightNumber || 'N/A'}
+                                        {f.schedule?.flightNumber || 'N/A'}
                                     </TableCell>
                                     
-                                    {/* Loại máy bay */}
+                                    {/* Máy bay & Hãng - từ aircraft & airline */}
                                     <TableCell className="text-center font-medium text-gray-800">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Plane className="h-4 w-4 text-primary/70" /> 
-                                            {flight.aircraftType || 'N/A'}
-                                        </div>
-                                    </TableCell>
-                                    
-                                    {/* Khởi hành */}
-                                    <TableCell className="text-center">
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="h-4 w-4 text-primary/70" />
-                                                {formatDateTime(flight.departureTime)}
+                                        <div className="flex flex-col items-center">
+                                            <div className="flex items-center gap-1">
+                                                <Plane className="h-3 w-3 text-primary/70" /> 
+                                                {f.aircraft?.aircraftType?.typeName || 'N/A'}
                                             </div>
-                                            <span className="font-semibold text-primary/80">
-                                                {flight.departureCity || ''} ({flight.departureAirportCode || 'N/A'})
+                                            <span className="text-xs text-blue-600 font-bold">
+                                                {f.schedule?.airline?.airlineName}
                                             </span>
                                         </div>
                                     </TableCell>
                                     
-                                    {/* Hạ cánh */}
+                                    {/* Khởi hành - từ top-level & departureAirport */}
                                     <TableCell className="text-center">
                                         <div className="flex flex-col items-center gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-primary/70" />
-                                                {formatDateTime(flight.arrivalTime)}
-                                            </div>
+                                            {formatDateTime(f.departureDateTime)}
                                             <span className="font-semibold text-primary/80">
-                                                {flight.arrivalCity || ''} ({flight.arrivalAirportCode || 'N/A'})
+                                                {f.schedule?.departureAirport?.city} ({f.schedule?.departureAirport?.airportCode})
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    
+                                    {/* Hạ cánh - từ top-level & arrivalAirport */}
+                                    <TableCell className="text-center">
+                                        <div className="flex flex-col items-center gap-1">
+                                            {formatDateTime(f.arrivalDateTime)}
+                                            <span className="font-semibold text-primary/80">
+                                                {f.schedule?.arrivalAirport?.city} ({f.schedule?.arrivalAirport?.airportCode})
                                             </span>
                                         </div>
                                     </TableCell>
 
-                                    {/* Giá hạng phổ thông */}
+                                    {/* Thông tin ghế & Thời gian bay */}
                                     <TableCell className="text-center">
                                         <div className="flex flex-col items-center">
-                                            <span className="font-bold text-green-600">
-                                                {formatPriceInMillions(flight.prices?.ECONOMY || flight.basePrice)}
+                                            <span className="font-bold text-gray-700">
+                                                {f.aircraft?.aircraftType?.totalSeats} Ghế
                                             </span>
-                                            <span className="text-xs text-muted-foreground">Phổ thông</span>
-                                        </div>
-                                    </TableCell>
-
-                                    {/* Giá hạng thương gia */}
-                                    <TableCell className="text-center">
-                                        <div className="flex flex-col items-center">
-                                            <span className="font-bold text-blue-600">
-                                                {flight.prices?.BUSINESS 
-                                                    ? formatPriceInMillions(flight.prices.BUSINESS)
-                                                    : flight.basePrice 
-                                                        ? formatPriceInMillions(flight.basePrice * 1.5)
-                                                        : 'N/A'}
+                                            <span className="text-[10px] text-muted-foreground uppercase">
+                                                Thời lượng: {f.schedule?.durationMinutes} phút
                                             </span>
-                                            <span className="text-xs text-muted-foreground">Thương gia</span>
                                         </div>
                                     </TableCell>
 
                                     {/* Trạng thái & Hành động */}
                                     <TableCell className="text-center">
                                         <div className="flex flex-col items-center gap-2">
-                                            {getStatusBadge(flight)}
+                                            {getStatusBadge(f.status || 'Scheduled')}
                                             <div className="flex gap-2">
                                                 <Button
                                                     size="sm"
                                                     className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs px-3 py-1 h-7"
-                                                    onClick={() => setEditingFlight(flight)}
+                                                    onClick={() => setEditingFlight(f)}
                                                 >
                                                     <Edit3 className="h-4 w-4 mr-1" /> Sửa
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="destructive"
-                                                    onClick={() => handleRemove(flight.scheduleId)}
+                                                    onClick={() => handleRemove(f?.flightId)}
                                                     className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 h-7"
                                                 >
                                                     <XCircle className="h-4 w-4 mr-1" /> Hủy
@@ -330,18 +298,17 @@ export default function ScheduledFlights() {
                                     </TableCell>
                                 </TableRow>
                             ))
-                        ) : !isLoading ? (
+                        ) : (
                             <TableRow>
                                 <TableCell colSpan={6} className="text-center py-10 text-lg text-gray-500">
-                                    Không tìm thấy chuyến bay nào phù hợp với điều kiện tìm kiếm.
+                                    Không tìm thấy chuyến bay nào.
                                 </TableCell>
                             </TableRow>
-                        ) : null}
+                        )}
                     </TableBody>
                 </Table>
             </div>
             
-            {/* Edit Dialog (Modal) */}
             {editingFlight && (
                 <EditFlightDialog
                     flight={editingFlight}
@@ -349,6 +316,7 @@ export default function ScheduledFlights() {
                     onSave={handleEditComplete}
                 />
             )}
+            
         </div>
     )
 }
