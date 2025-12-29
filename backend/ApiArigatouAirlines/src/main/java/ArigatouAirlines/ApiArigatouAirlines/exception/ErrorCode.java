@@ -79,7 +79,8 @@ public enum ErrorCode {
 
     //─────────────── 8xxx: Booking ───────────────
     BOOKING_ID_IS_NOT_EXISTED(8001, "BookingID is not existed!", HttpStatus.BAD_REQUEST),
-    PAYMENT_ID_IS_NOT_EXISTED(8002, "PaymentID is not existed!", HttpStatus.BAD_REQUEST);
+    PAYMENT_ID_IS_NOT_EXISTED(8002, "PaymentID is not existed!", HttpStatus.BAD_REQUEST),
+    BOOKING_WAS_CANCELLED(8002, "Booking was cancelled!", HttpStatus.BAD_REQUEST);
 
 
     int code;

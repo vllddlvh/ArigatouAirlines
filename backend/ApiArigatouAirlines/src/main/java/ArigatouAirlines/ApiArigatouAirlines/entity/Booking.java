@@ -10,7 +10,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-@Entity(name = "booking")
+@Entity
+@Table(name = "booking")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -31,6 +32,7 @@ public class Booking {
     String bookingCode;
 
     @Column(name = "booking_status")
+            @Enumerated(EnumType.STRING)
     StatusBooking statusBooking;
 
     @Enumerated(EnumType.STRING)
@@ -41,8 +43,8 @@ public class Booking {
     BigDecimal totalAmount;
 
     @Column(name = "payment_deadline")
-    Instant paymentDeadline;
+    LocalDateTime paymentDeadline;
 
     @Column(name = "created_at")
-    Instant createdAt;
+    LocalDateTime createdAt;
 }

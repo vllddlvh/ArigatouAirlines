@@ -3,6 +3,10 @@ package ArigatouAirlines.ApiArigatouAirlines.service;
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.BookingRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.BookingResponse;
 import ArigatouAirlines.ApiArigatouAirlines.entity.*;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusTicket;
 import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.BookingMapper;
@@ -16,8 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,10 +52,15 @@ public class BookingService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-        Booking booking = new Booking();
-        booking.setUser(user);
-        booking.setBookingCode(UUID.randomUUID().toString().substring(0,20));
-        booking.setTotalAmount(BigDecimal.ZERO);
+        Booking booking = Booking.builder()
+                .user(user)
+                .bookingCode(UUID.randomUUID().toString().substring(0,20))
+                .totalAmount(BigDecimal.ZERO)
+                .statusBooking(StatusBooking.Pending)
+                .statusPayment(StatusPaymentBooking.Pending)
+                .createdAt(LocalDateTime.now())
+                .paymentDeadline(LocalDateTime.now().plusMinutes(10))
+                .build();
         bookingRepository.save(booking);
 
         List<Passenger> listPassenger = bookingRequest.getListPassengerRequest().stream()
@@ -67,21 +80,23 @@ public class BookingService {
             String ticketNumber = flight.getSchedule().getAirline().getAirlineCode()
                     + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
                     + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            FlightSeat flightSeat = flightSeatRepository.findById(
+                    bookingRequest.getListFlightSeatId().get(i)
+            ).orElseThrow(() -> new AppException(ErrorCode.FLIGHT_SEAT_ID_NOT_EXISTED));
 
             Ticket ticket = Ticket.builder()
                     .booking(booking)
                     .flight(flight)
                     .passenger(listPassenger.get(i))
-                    .flightSeat(
-                            flightSeatRepository.findById(
-                                    bookingRequest.getListFlightSeatId().get(i)
-                            ).orElseThrow(() -> new AppException(ErrorCode.FLIGHT_SEAT_ID_NOT_EXISTED))
-                    )
+                    .flightSeat(flightSeat)
                     .flightPrice(flightPrice)
                     .ticketNumber(ticketNumber)
+                    .status(StatusTicket.Issued)
                     .build();
 
             listTicket.add(ticket);
+            flightSeat.setStatus(StatusFlightSeat.Locked);
+            flightSeatRepository.save(flightSeat);
         }
 
         ticketRepository.saveAll(listTicket);

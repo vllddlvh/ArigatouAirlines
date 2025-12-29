@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -19,5 +20,5 @@ public class TransactionResponse {
     String paymentMethod;
     String transactionId;
     StatusPayment paymentStatus;
-    Instant paymentDate;
+    LocalDateTime paymentDate;
 }

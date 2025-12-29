@@ -14,7 +14,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightScheduleResponse {
-    int flightScheduleId;
+    int scheduleId;
     String flightNumber;
     AirlineResponse airline;
     AirportResponse departureAirport;

@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Entity(name = "ticket")
+@Entity
+@Table(name = "ticket")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -41,5 +42,6 @@ public class Ticket {
     @Column(name = "ticket_number")
     String ticketNumber;
 
+    @Enumerated(EnumType.STRING)
     StatusTicket status;
 }
