@@ -4,70 +4,81 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card" // Thêm CardDescription
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Loader2, User, Key, LogOut, Trash2, Shield, UserCog } from 'lucide-react'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
 
-// --- Dữ liệu Mock ---
-const MOCK_ADMIN_DATA = {
-  uid: 'adm_123456',
-  firstName: 'Quản trị',
-  lastName: 'Viên',
-  email: 'admin@system.com'
-}
+// Import Service API thật
+import { fetchCustomerInfo, updateCustomerInfo } from '@/services/customerService' 
 
 export default function AdminProfilePage() {
   const router = useRouter()
 
   const [admin, setAdmin] = useState({ uid: '', firstName: '', lastName: '', email: '' })
   const [editForm, setEditForm] = useState({ ...admin })
+  
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  
   const [isLoading, setIsLoading] = useState(true)
+  const [isUpdating, setIsUpdating] = useState(false)
 
+  // --- 1. FETCH DATA TỪ API ---
   useEffect(() => {
-    // Giả lập check token
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
-       setIsLoading(false)
-       setAdmin(MOCK_ADMIN_DATA)
-       setEditForm(MOCK_ADMIN_DATA)
+       router.push('/'); // Redirect nếu chưa login
     } else {
-       getAdmin()
+       getAdminInfo();
     }
   }, [])
 
-  const getAdmin = async () => {
+  const getAdminInfo = async () => {
     setIsLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      // Mock data response
-      setAdmin(MOCK_ADMIN_DATA)
-      setEditForm(MOCK_ADMIN_DATA)
+      const data = await fetchCustomerInfo(); // Gọi API thật
+      setAdmin(data); // Cập nhật state với dữ liệu thật
+      setEditForm(data);
     } catch (error) {
-      toast({ title: "Lỗi", description: "Không thể tải thông tin.", variant: "destructive" })
+      console.error(error);
+      toast({ title: "Lỗi tải trang", description: error.message || "Không thể tải thông tin admin.", variant: "destructive" })
     } finally {
       setIsLoading(false)
     }
   }
 
+  // --- 2. UPDATE DATA QUA API ---
   const handleUpdateAdmin = async (e) => {
     e.preventDefault()
-    await new Promise(resolve => setTimeout(resolve, 800)); 
-    setAdmin(editForm)
-    toast({ title: "Thành công", description: "Đã cập nhật hồ sơ." })
-    document.getElementById('close-dialog-update')?.click();
+    setIsUpdating(true)
+    try {
+      // Gọi API update
+      const updatedData = await updateCustomerInfo(editForm);
+      
+      setAdmin(updatedData); // Cập nhật lại UI với data mới nhất từ server trả về
+      toast({ title: "Cập nhật thành công", description: "Hồ sơ của bạn đã được lưu." })
+      
+      // Đóng dialog
+      document.getElementById('close-dialog-update')?.click();
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Lỗi cập nhật", description: error.message, variant: "destructive" })
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
+  // --- 3. CÁC HÀM KHÁC (Logout, Delete...) ---
+  // Lưu ý: Delete Account cần API riêng nếu muốn xóa thật trên DB. Hiện tại giữ logic logout + clear token.
   const handleDeleteAccount = async () => {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // TODO: Gọi API xóa user thật nếu backend hỗ trợ (ví dụ: axios.delete(`${API_BASE_URL}/users/${admin.uid}`))
     localStorage.removeItem('token')
-    toast({ title: "Đã xóa", description: "Tài khoản đã bị xóa." })
-    router.push('/admin')
+    toast({ title: "Đã xóa", description: "Tài khoản đã được xử lý (Giả lập)." })
+    router.push('/')
   }
 
   const handlePasswordReset = async (e) => {
@@ -76,8 +87,10 @@ export default function AdminProfilePage() {
       toast({ title: "Lỗi", description: "Mật khẩu xác nhận không khớp.", variant: "destructive" })
       return
     }
+    // TODO: Cần gọi API changePassword riêng (thường backend tách riêng API đổi pass và update profile)
+    // Tạm thời giả lập thành công để demo UI
     await new Promise(resolve => setTimeout(resolve, 800));
-    toast({ title: "Thành công", description: "Đổi mật khẩu thành công." })
+    toast({ title: "Thành công", description: "Đổi mật khẩu thành công (Demo)." })
     setOldPassword(''); setNewPassword(''); setConfirmPassword('');
   }
 
@@ -141,9 +154,18 @@ export default function AdminProfilePage() {
                                                         <Input value={editForm.firstName} onChange={(e) => setEditForm({...editForm, firstName: e.target.value})} />
                                                     </div>
                                                 </div>
+                                                {/* Thêm các trường khác nếu API hỗ trợ update (SĐT, Email...) */}
+                                                <div className="space-y-2">
+                                                    <Label>Số điện thoại</Label>
+                                                    <Input value={editForm.phoneNumber} onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})} />
+                                                </div>
+
                                                 <DialogFooter>
                                                     <DialogClose asChild><Button type="button" variant="outline" id="close-dialog-update">Hủy</Button></DialogClose>
-                                                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">Lưu</Button>
+                                                    <Button type="submit" disabled={isUpdating} className="bg-blue-600 hover:bg-blue-700">
+                                                        {isUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                                        Lưu
+                                                    </Button>
                                                 </DialogFooter>
                                             </form>
                                         </DialogContent>
@@ -160,13 +182,17 @@ export default function AdminProfilePage() {
                                         <span className="col-span-2 font-semibold text-slate-800">{admin.email}</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-2 text-sm">
-                                        <span className="text-slate-500 font-medium">Mã UID</span>
+                                        <span className="text-slate-500 font-medium">Số điện thoại</span>
+                                        <span className="col-span-2 font-semibold text-slate-800">{admin.phoneNumber || '---'}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 text-sm">
+                                        <span className="text-slate-500 font-medium">User ID</span>
                                         <span className="col-span-2 font-mono text-xs bg-slate-100 w-fit px-2 py-1 rounded text-slate-600">{admin.uid}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* CỘT 2: ĐỔI MẬT KHẨU */}
+                            {/* CỘT 2: ĐỔI MẬT KHẨU (Giữ nguyên UI, chờ API changePass) */}
                             <div className="space-y-6 lg:border-l lg:border-slate-100 lg:pl-10">
                                 <div className="border-b border-slate-100 pb-2">
                                     <h3 className="font-bold text-slate-700 flex items-center gap-2">
@@ -200,7 +226,7 @@ export default function AdminProfilePage() {
                     </CardContent>
                 </Card>
 
-                {/* --- CARD DANGER ZONE --- */}
+                {/* --- CARD DANGER ZONE (Giữ nguyên) --- */}
                 <Card className="border border-red-100 shadow-sm bg-white rounded-2xl overflow-hidden">
                     <CardHeader className="bg-red-50/30 border-b border-red-50 pb-3">
                         <CardTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
