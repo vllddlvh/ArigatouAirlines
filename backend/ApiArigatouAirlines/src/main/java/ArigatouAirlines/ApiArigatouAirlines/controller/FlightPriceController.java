@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/flightPrice")
 @RequiredArgsConstructor
@@ -24,9 +26,9 @@ public class FlightPriceController {
     }
 
     @GetMapping("/{flightId}")
-    ApiResponse<FlightPriceResponse> getFlightPrice(@PathVariable int flightId) {
-        return ApiResponse.<FlightPriceResponse>builder()
-                .body(flightPriceService.getFlightPrice(flightId))
+    ApiResponse<List<FlightPriceResponse>> getFlightPrices(@PathVariable int flightId) {
+        return ApiResponse.<List<FlightPriceResponse>>builder()
+                .body(flightPriceService.getFlightPrices(flightId))
                 .build();
     }
 
@@ -34,6 +36,23 @@ public class FlightPriceController {
     ApiResponse<FlightPriceResponse> updateFlightPrice(@PathVariable int flightPriceId, @RequestBody FlightPriceRequest flightPriceRequest) {
         return ApiResponse.<FlightPriceResponse>builder()
                 .body(flightPriceService.updateFlightPrice(flightPriceId, flightPriceRequest))
+                .build();
+    }
+
+    @PutMapping("/{flightId}/ticket-class/{ticketClassId}")
+    ApiResponse<FlightPriceResponse> updateFlightPriceByClass(
+            @PathVariable int flightId,
+            @PathVariable int ticketClassId,
+            @RequestBody FlightPriceRequest request
+    ) {
+        return ApiResponse.<FlightPriceResponse>builder()
+                .body(
+                        flightPriceService.updateFlightPriceByClass(
+                                flightId,
+                                ticketClassId,
+                                request
+                        )
+                )
                 .build();
     }
 }

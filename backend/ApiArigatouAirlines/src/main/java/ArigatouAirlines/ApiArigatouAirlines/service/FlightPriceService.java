@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -41,14 +43,26 @@ public class FlightPriceService {
         return flightPriceMapper.toFlightPriceResponse(flightPrice);
     }
 
-    public FlightPriceResponse getFlightPrice(int flightId) {
-        if(!flightRepository.existsById(flightId)) {
+//    public FlightPriceResponse getFlightPrice(int flightId) {
+//        if(!flightRepository.existsById(flightId)) {
+//            throw new AppException(ErrorCode.FLIGHT_ID_NOT_EXISTED);
+//        }
+//
+//        FlightPrice flightPrice = flightPriceRepository.findFlightPriceByFlight_FlightId(flightId);
+//
+//        return flightPriceMapper.toFlightPriceResponse(flightPrice);
+//    }
+
+    public List<FlightPriceResponse> getFlightPrices(int flightId) {
+
+        if (!flightRepository.existsById(flightId)) {
             throw new AppException(ErrorCode.FLIGHT_ID_NOT_EXISTED);
         }
 
-        FlightPrice flightPrice = flightPriceRepository.findFlightPriceByFlight_FlightId(flightId);
-
-        return flightPriceMapper.toFlightPriceResponse(flightPrice);
+        return flightPriceRepository.findAllByFlight_FlightId(flightId)
+                .stream()
+                .map(flightPriceMapper::toFlightPriceResponse)
+                .toList();
     }
 
     public FlightPriceResponse updateFlightPrice(int flightPriceId, FlightPriceRequest flightPriceRequest) {
@@ -68,6 +82,22 @@ public class FlightPriceService {
 
         flightPriceMapper.toUpdateFlightPrice(flightPriceRequest, flightPrice);
         flightPriceRepository.save(flightPrice);
+        return flightPriceMapper.toFlightPriceResponse(flightPrice);
+    }
+
+    public FlightPriceResponse updateFlightPriceByClass(
+            int flightId,
+            int ticketClassId,
+            FlightPriceRequest request
+    ) {
+
+        FlightPrice flightPrice = flightPriceRepository
+                .findByFlight_FlightIdAndTicketClass_ClassId(flightId, ticketClassId)
+                .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_PRICE_NOT_FOUND));
+
+        flightPriceMapper.toUpdateFlightPrice(request, flightPrice);
+        flightPriceRepository.save(flightPrice);
+
         return flightPriceMapper.toFlightPriceResponse(flightPrice);
     }
 }

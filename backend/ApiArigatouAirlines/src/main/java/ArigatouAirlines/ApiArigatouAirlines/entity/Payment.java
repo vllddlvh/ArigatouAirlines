@@ -41,5 +41,5 @@ public class Payment {
     StatusPayment paymentStatus;
 
     @Column(name = "payment_date")
-    Instant paymentDate;
+    LocalDateTime paymentDate;
 }

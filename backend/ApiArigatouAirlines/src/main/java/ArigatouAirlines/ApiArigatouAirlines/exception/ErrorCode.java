@@ -76,10 +76,14 @@ public enum ErrorCode {
     CLASS_NAME_IS_AVAILABLE(7001, "ClassName is available!", HttpStatus.BAD_REQUEST),
     TICKET_CLASS_ID_IS_NOT_AVAILABLE(7002, "TicketClassID is not available!", HttpStatus.BAD_REQUEST),
     FLIGHT_PRICE_ID_IS_NOT_AVAILABLE(7003, "FlightPriceID is not available!", HttpStatus.BAD_REQUEST),
+    FLIGHT_PRICE_NOT_FOUND(7004, "Flight price not found!", HttpStatus.NOT_FOUND),
 
     //─────────────── 8xxx: Booking ───────────────
     BOOKING_ID_IS_NOT_EXISTED(8001, "BookingID is not existed!", HttpStatus.BAD_REQUEST),
-    PAYMENT_ID_IS_NOT_EXISTED(8002, "PaymentID is not existed!", HttpStatus.BAD_REQUEST);
+    PAYMENT_ID_IS_NOT_EXISTED(8002, "PaymentID is not existed!", HttpStatus.BAD_REQUEST),
+    BOOKING_WAS_CANCELLED(8002, "Booking was cancelled!", HttpStatus.BAD_REQUEST);
+
+
 
 
     int code;

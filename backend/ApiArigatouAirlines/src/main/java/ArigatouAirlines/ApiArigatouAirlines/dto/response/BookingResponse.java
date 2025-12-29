@@ -27,7 +27,7 @@ public class BookingResponse {
 
     BigDecimal totalAmount;
 
-    Instant paymentDeadline;
+    LocalDateTime paymentDeadline;
 
-    Instant createdAt;
+    LocalDateTime createdAt;
 }

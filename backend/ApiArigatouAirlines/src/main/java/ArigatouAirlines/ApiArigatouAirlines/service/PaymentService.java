@@ -4,13 +4,20 @@ import ArigatouAirlines.ApiArigatouAirlines.configuration.ConfigPayment;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.PaymentResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.TransactionResponse;
 import ArigatouAirlines.ApiArigatouAirlines.entity.Booking;
+import ArigatouAirlines.ApiArigatouAirlines.entity.FlightSeat;
 import ArigatouAirlines.ApiArigatouAirlines.entity.Payment;
+import ArigatouAirlines.ApiArigatouAirlines.entity.Ticket;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat;
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPayment;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking;
 import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.PaymentMapper;
 import ArigatouAirlines.ApiArigatouAirlines.repository.BookingRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.FlightSeatRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.PaymentRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.TicketRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +33,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -35,16 +43,24 @@ public class PaymentService {
     PaymentRepository paymentRepository;
     BookingRepository bookingRepository;
     PaymentMapper paymentMapper;
+    TicketRepository ticketRepository;
+    FlightSeatRepository flightSeatRepository;
 
+    @Transactional
     public PaymentResponse creationPayment(HttpServletRequest request, int bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_ID_IS_NOT_EXISTED));
+
+        if(booking.getStatusBooking().equals(StatusBooking.Cancelled)) {
+            throw new AppException(ErrorCode.BOOKING_WAS_CANCELLED);
+        }
+
         Payment payment = Payment.builder()
                 .booking(booking)
                 .amount(booking.getTotalAmount())
                 .paymentMethod("NCB")
                 .paymentStatus(StatusPayment.Pending)
-                .paymentDate(Instant.now())
+                .paymentDate(LocalDateTime.now())
                 .transactionId(UUID.randomUUID().toString().substring(0, 20))
                 .build();
 
@@ -118,14 +134,33 @@ public class PaymentService {
         payment.setTransactionId(transactionId);
         payment.setAmount(new BigDecimal(amount));
 
+        Booking booking = bookingRepository.findById(payment.getBooking().getBookingId())
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_ID_IS_NOT_EXISTED));
+
+        List<Ticket> ticketList = ticketRepository.findAllByBooking_BookingId(booking.getBookingId());
         if(responseCode.equals("00")) {
             payment.setPaymentStatus(StatusPayment.Success);
-            payment.setPaymentDate(Instant.now());
+            payment.setPaymentDate(LocalDateTime.now());
+            booking.setStatusBooking(StatusBooking.Confirmed);
+            booking.setStatusPayment(StatusPaymentBooking.Paid);
+            for(int i = 0; i < ticketList.size(); i++) {
+                FlightSeat flightSeat = ticketList.get(i).getFlightSeat();
+                flightSeat.setStatus(StatusFlightSeat.Booked);
+                flightSeatRepository.save(flightSeat);
+            }
         } else {
             payment.setPaymentStatus(StatusPayment.Failed);
-            payment.setPaymentDate(Instant.now());
+            payment.setPaymentDate(LocalDateTime.now());
+            booking.setStatusBooking(StatusBooking.Pending);
+            booking.setStatusPayment(StatusPaymentBooking.Failed);
+            for(int i = 0; i < ticketList.size(); i++) {
+                FlightSeat flightSeat = ticketList.get(i).getFlightSeat();
+                flightSeat.setStatus(StatusFlightSeat.Available);
+                flightSeatRepository.save(flightSeat);
+            }
         }
         paymentRepository.save(payment);
+        bookingRepository.save(booking);
 
         return paymentMapper.toTransactionResponse(payment);
     }

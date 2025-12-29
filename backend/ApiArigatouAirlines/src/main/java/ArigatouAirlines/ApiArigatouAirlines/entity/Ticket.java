@@ -5,9 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.UUID;
-
-@Entity(name = "ticket")
+@Entity
+@Table(name = "ticket")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -43,15 +42,6 @@ public class Ticket {
     @Column(name = "ticket_number")
     String ticketNumber;
 
+    @Enumerated(EnumType.STRING)
     StatusTicket status;
-
-    @PrePersist
-    void prePersist() {
-        if (ticketNumber == null || ticketNumber.isBlank()) {
-            ticketNumber = UUID.randomUUID().toString();
-        }
-        if (status == null) {
-            status = StatusTicket.Issued;
-        }
-    }
 }

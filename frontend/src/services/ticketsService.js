@@ -186,3 +186,17 @@ export const updateFlightPrice = async (flightPriceId, data) => {
     throw error.response?.data?.message || "Cập nhật giá vé thất bại.";
   }
 };
+
+export const updateFlightPriceByClass = async (flightId, ticketClassId, data) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/flightPrice/${flightId}/ticket-class/${ticketClassId}`, 
+      data, 
+      { headers: getHeaders() }
+    );
+    return extractBody(response);
+  } catch (error) {
+    console.error(`Lỗi cập nhật giá vé (Flight: ${flightId}, Class: ${ticketClassId}):`, error);
+    throw error.response?.data?.message || "Cập nhật giá vé thất bại.";
+  }
+};

@@ -29,6 +29,6 @@ jwt:
   signerKey: "fAhsFQLtyhPPawzKmGDEU/IDeBpV7nGnIaQIWYZCzh8qGSb+ETsbFOoMfwfNsUgA"
 
 server:
-    port: 8080
-    servlet:
-        context-path: /arigatouAirlines
+  port: 8080
+  servlet:
+    context-path: /arigatouAirlines
