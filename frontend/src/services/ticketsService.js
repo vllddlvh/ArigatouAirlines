@@ -129,15 +129,14 @@ export const createSeatMap = async (data) => {
 
 // GET SeatMap (Placeholder)
 // Backend hiện tại CHỈ CÓ POST. Cần thêm GET để UI hiển thị sơ đồ.
-export const getSeatLayout = async (aircraftId) => {
+export const getAircraftTypeWithLayout = async (aircraftTypeId) => {
   try {
-    // TODO: Implement GET endpoint in Backend e.g., /seatMap/aircraft/{aircraftId}
-    // const response = await axios.get(`${API_BASE_URL}/seatMap/aircraft/${aircraftId}`, { headers: getHeaders() });
-    // return extractBody(response);
-    
-    return null; // Fallback
+    const response = await axios.get(`${API_BASE_URL}/aircraftType/${aircraftTypeId}`, {
+      headers: getHeaders(),
+    });
+    return extractBody(response);
   } catch (error) {
-    console.error(`Lỗi lấy sơ đồ ghế cho tàu bay ${aircraftId}:`, error);
+    console.error(`Lỗi lấy sơ đồ ghế (Type ID: ${aircraftTypeId}):`, error);
     return null;
   }
 };

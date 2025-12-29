@@ -5,7 +5,6 @@ import { Plane, Armchair, DollarSign, LayoutGrid, Ticket, Loader2 } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 
 // --- Services ---
-
 import { getAllTicketClasses } from '@/services/ticketsService';
 import * as masterDataService from "@/services/masterDataService"; 
 
@@ -20,9 +19,10 @@ const TicketManagementDashboard = () => {
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState("flights");
     
-    // Global State (Master Data)
+    // Global State
     const [flights, setFlights] = useState([]);
     const [classes, setClasses] = useState([]);
+    const [aircrafts, setAircrafts] = useState([]); // MỚI: Danh sách máy bay
     const [isLoading, setIsLoading] = useState(true);
 
     // Dialog State
@@ -33,15 +33,16 @@ const TicketManagementDashboard = () => {
     const fetchMasterData = async () => {
         setIsLoading(true);
         try {
-            // Gọi song song API lấy Chuyến bay và Hạng vé
-            const [flightsData, classesData] = await Promise.all([
+            // Gọi song song API lấy Chuyến bay, Hạng vé và Máy bay (MỚI)
+            const [flightsData, classesData, aircraftsData] = await Promise.all([
                 masterDataService.getAllFlights(),
-                getAllTicketClasses()
+                getAllTicketClasses(),
+                masterDataService.getAllAircrafts() // MỚI
             ]);
             
-            // Xử lý dữ liệu trả về (dự phòng mảng rỗng nếu null/undefined)
             setFlights(Array.isArray(flightsData) ? flightsData : []);
             setClasses(Array.isArray(classesData) ? classesData : []);
+            setAircrafts(Array.isArray(aircraftsData) ? aircraftsData : []); // MỚI
         } catch (error) {
             console.error(error);
             toast({ 
@@ -58,13 +59,11 @@ const TicketManagementDashboard = () => {
         fetchMasterData();
     }, []);
 
-    // --- Handlers ---
     const handleFlightClick = (flight) => {
         setSelectedFlight(flight);
         setIsDialogOpen(true);
     };
 
-    // --- Helper Component: Tab Button ---
     const TabBtn = ({ value, icon: Icon, label }) => {
         const isActive = activeTab === value;
         return (
@@ -101,7 +100,6 @@ const TicketManagementDashboard = () => {
                         </p>
                     </div>
                     
-                    {/* Status Badge nhỏ gọn (Optional) */}
                     <div className="flex gap-4 text-sm font-medium bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -124,7 +122,6 @@ const TicketManagementDashboard = () => {
 
                 {/* Main Content Area */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden min-h-[600px] relative">
-                    {/* Loading State */}
                     {isLoading && (
                         <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center text-slate-500">
                             <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-3" />
@@ -133,7 +130,6 @@ const TicketManagementDashboard = () => {
                     )}
 
                     <div className="p-6 md:p-8">
-                        {/* Tab Content: Flights List */}
                         {activeTab === 'flights' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                                 <FlightListManagement 
@@ -144,17 +140,15 @@ const TicketManagementDashboard = () => {
                             </div>
                         )}
 
-                        {/* Tab Content: Ticket Classes */}
                         {activeTab === 'classes' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                                 <FlightClassManagement 
                                     classes={classes} 
-                                    onRefresh={fetchMasterData} // Truyền hàm refresh để cập nhật lại list sau khi thêm/sửa
+                                    onRefresh={fetchMasterData} 
                                 />
                             </div>
                         )}
 
-                        {/* Tab Content: Pricing */}
                         {activeTab === 'pricing' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                                 <PricingManagement 
@@ -164,16 +158,15 @@ const TicketManagementDashboard = () => {
                             </div>
                         )}
 
-                        {/* Tab Content: Seat Layout */}
                         {activeTab === 'layout' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                <SeatLayoutManagement aircraftId="MB001" /> 
+                                {/* Truyền danh sách aircrafts xuống */}
+                                <SeatLayoutManagement aircrafts={aircrafts} /> 
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Dialog Chi tiết vé */}
                 <TicketDetailDialog 
                     flight={selectedFlight} 
                     isOpen={isDialogOpen} 
