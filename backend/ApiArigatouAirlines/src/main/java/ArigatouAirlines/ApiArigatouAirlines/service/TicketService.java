@@ -19,7 +19,7 @@ public class TicketService {
     TicketRepository ticketRepository;
     TicketMapper ticketMapper;
 
-    List<TicketResponse> getTicketByBookingId(int bookingId) {
+    public List<TicketResponse> getTicketByBookingId(int bookingId) {
         List<Ticket> listTickets = ticketRepository.findAllByBooking_BookingId(bookingId);
 
         return listTickets.stream().map(ticketMapper :: toTicketResponse).toList();
