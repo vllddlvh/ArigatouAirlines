@@ -1,7 +1,7 @@
 package ArigatouAirlines.ApiArigatouAirlines.entity;
 
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPayment;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -33,14 +33,15 @@ public class Booking {
     @Column(name = "booking_status")
     StatusBooking statusBooking;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
-    StatusPayment statusPayment;
+    StatusPaymentBooking statusPayment;
 
     @Column(name = "total_amount", precision = 10, scale = 2)
     BigDecimal totalAmount;
 
     @Column(name = "payment_deadline")
-    LocalDateTime paymentDeadline;
+    Instant paymentDeadline;
 
     @Column(name = "created_at")
     Instant createdAt;

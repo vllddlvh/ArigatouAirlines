@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TicketClassResponse {
+    int classId;
     String className;
 
     int baggageAllowanceKg;

@@ -13,6 +13,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @FieldDefaults(level =  AccessLevel.PRIVATE)
 public class PassengerResponse {
+    int passengerId;
+
     String fullName;
 
     LocalDate dateOfBirth;

@@ -12,6 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AircraftTypeResponse {
+    int aircraftTypeId;
     String typeName;
     int totalSeats;
     int numCols;

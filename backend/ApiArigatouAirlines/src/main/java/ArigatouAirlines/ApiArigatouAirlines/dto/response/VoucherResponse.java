@@ -18,6 +18,9 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder
 @FieldDefaults(level = PRIVATE)
 public class VoucherResponse {
+    private int voucherId;
+
+
     String voucherCode;
 
     DiscountType discountType;

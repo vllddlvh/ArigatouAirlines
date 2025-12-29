@@ -26,6 +26,7 @@ public class Passenger {
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
 
+    @Enumerated(EnumType.STRING)
     Gender gender;
 
     String nationality;
