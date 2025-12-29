@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Flight {
     @Id
-            @GeneratedValue(strategy = GenerationType.IDENTITY)
-            @Column(name = "flight_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "flight_id")
     int flightId;
 
     @ManyToOne

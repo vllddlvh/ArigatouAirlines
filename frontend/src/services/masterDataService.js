@@ -248,3 +248,66 @@ export const deleteFlight = async (id) => {
     throw error.response?.data?.message || "Đã xảy ra lỗi khi xóa chuyến bay.";
   }
 };
+
+// ==================== AIRPORT ====================
+
+export const getAllAirports = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/airport`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách sân bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi lấy danh sách sân bay.";
+  }
+};
+
+export const getAirportById = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/airport/${id}`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin sân bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi lấy thông tin sân bay.";
+  }
+};
+
+export const createAirport = async (data) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/airport`, data, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi tạo sân bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi tạo sân bay.";
+  }
+};
+
+export const updateAirport = async (id, data) => {
+  console.log(id)
+  try {
+    const response = await axios.put(`${API_BASE_URL}/airport/${id}`, data, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi cập nhật sân bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi cập nhật sân bay.";
+  }
+};
+
+export const deleteAirport = async (id) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/airport/${id}`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi xóa sân bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi xóa sân bay.";
+  }
+};

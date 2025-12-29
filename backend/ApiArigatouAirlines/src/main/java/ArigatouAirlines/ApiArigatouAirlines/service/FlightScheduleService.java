@@ -34,10 +34,10 @@ public class FlightScheduleService {
             throw new AppException(ErrorCode.DEPARTURE_AND_ARRIVAL_TIME_CANNOT_CONFLICT);
         }
 
-        Airport departureAirport = airportRepository.findById(flightScheduleRequest.getDepartureAirportId())
+        Airport departureAirport = airportRepository.findByAirportCode(flightScheduleRequest.getDepartureAirportId())
                 .orElseThrow(() -> new AppException(ErrorCode.AIRPORTID_NOT_EXISTD));
 
-        Airport arrivalAirport = airportRepository.findById(flightScheduleRequest.getArrivalAirportId())
+        Airport arrivalAirport = airportRepository.findByAirportCode(flightScheduleRequest.getArrivalAirportId())
                 .orElseThrow(() -> new AppException(ErrorCode.AIRPORTID_NOT_EXISTD));
 
         Airline airline = airlineRepository.findById(flightScheduleRequest.getAirlineId())
@@ -69,32 +69,44 @@ public class FlightScheduleService {
         return flightScheduleMapper.toFlightScheduleResponse(flightSchedule);
     }
 
-    public FlightScheduleResponse updateFlightSchedule(FlightScheduleRequest flightScheduleRequest, int flightScheduleId) {
+    public FlightScheduleResponse updateFlightSchedule(
+            FlightScheduleRequest flightScheduleRequest,
+            int flightScheduleId
+    ) {
+
         FlightSchedule flightSchedule = flightScheduleRepository.findById(flightScheduleId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_SCHEDULE_ID_NOT_EXISTED));
 
-        if(airlineRepository.existsById(flightScheduleRequest.getAirlineId())) {
-            Airline airline = airlineRepository.findById(flightScheduleRequest.getAirlineId())
-                    .orElseThrow();
-
-            flightSchedule.setAirline(airline);
+        if (flightScheduleRequest.getArrivalAirportId()
+                .compareTo(flightScheduleRequest.getDepartureAirportId()) == 0) {
+            throw new AppException(ErrorCode.DEPARTURE_AND_ARRIVAL_TIME_CANNOT_CONFLICT);
         }
 
-        if(airportRepository.existsById(flightScheduleRequest.getDepartureAirportId())) {
-            Airport departureAirport = airportRepository.findById(flightScheduleRequest.getDepartureAirportId())
-                    .orElseThrow();
+        Airport departureAirport = airportRepository
+                .findByAirportCode(flightScheduleRequest.getDepartureAirportId())
+                .orElseThrow(() -> new AppException(ErrorCode.AIRPORTID_NOT_EXISTD));
 
-            flightSchedule.setDepartureAirport(departureAirport);
-        }
+        Airport arrivalAirport = airportRepository
+                .findByAirportCode(flightScheduleRequest.getArrivalAirportId())
+                .orElseThrow(() -> new AppException(ErrorCode.AIRPORTID_NOT_EXISTD));
 
-        if(airportRepository.existsById(flightScheduleRequest.getArrivalAirportId())) {
-            Airport arrivalAirport = airportRepository.findById(flightScheduleRequest.getArrivalAirportId())
-                    .orElseThrow();
+        Airline airline = airlineRepository
+                .findById(flightScheduleRequest.getAirlineId())
+                .orElseThrow(() -> new AppException(ErrorCode.AIRLINEID_NOT_EXISTED));
 
-            flightSchedule.setArrivalAirport(arrivalAirport);
-        }
+        long durationMinutes = Math.abs(
+                ChronoUnit.MINUTES.between(
+                        flightScheduleRequest.getDepartureTime(),
+                        flightScheduleRequest.getArrivalTime()
+                )
+        );
 
         flightScheduleMapper.updateFlightSchedule(flightScheduleRequest, flightSchedule);
+        flightSchedule.setAirline(airline);
+        flightSchedule.setDepartureAirport(departureAirport);
+        flightSchedule.setArrivalAirport(arrivalAirport);
+        flightSchedule.setDurationMinutes((int) durationMinutes);
+
         flightScheduleRepository.save(flightSchedule);
 
         return flightScheduleMapper.toFlightScheduleResponse(flightSchedule);

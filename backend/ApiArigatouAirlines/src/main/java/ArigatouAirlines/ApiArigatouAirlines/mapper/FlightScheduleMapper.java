@@ -11,12 +11,14 @@ import org.mapstruct.MappingTarget;
 public interface FlightScheduleMapper {
     FlightScheduleResponse toFlightScheduleResponse(FlightSchedule flightSchedule);
 
+    @Mapping(target = "scheduleId",ignore = true)
     @Mapping(target = "airline", ignore = true)
     @Mapping(target = "departureAirport", ignore = true)
     @Mapping(target = "arrivalAirport", ignore = true)
     @Mapping(target = "durationMinutes", ignore = true)
     FlightSchedule toFlightSchedule(FlightScheduleRequest flightScheduleRequest);
 
+    @Mapping(target = "scheduleId",ignore = true)
     @Mapping(target = "airline", ignore = true)
     @Mapping(target = "departureAirport", ignore = true)
     @Mapping(target = "arrivalAirport", ignore = true)

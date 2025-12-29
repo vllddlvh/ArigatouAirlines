@@ -13,13 +13,6 @@ import * as masterDataService from '@/services/masterDataService';
 
 
 
-
-// --- MOCK DATA (chỉ dùng cho Airport nếu chưa có API) ---
-const MOCK_AIRPORTS = [
-    { id: 'SBA001', code: 'HAN', name: 'Sân bay Nội Bài', city: 'Hà Nội' },
-    { id: 'SBA002', code: 'SGN', name: 'Sân bay Tân Sơn Nhất', city: 'TP. Hồ Chí Minh' },
-];
-
 // Status options cho Aircraft
 const AIRCRAFT_STATUS_OPTIONS = [
     { value: 'ACTIVE', label: 'Đang hoạt động' },
@@ -29,107 +22,221 @@ const AIRCRAFT_STATUS_OPTIONS = [
 // -----------------
 
 // --- 1. Sub-Component: Quản lý Sân bay (Airport) ---
-const AirportManagement = ({ data, onAction }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ id: '', code: '', name: '', city: '' });
-    
-    const filteredData = data.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.city.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+const AirportManagement = ({ data = [], onAction }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        // Basic validation
-        if (!formData.code || !formData.name || !formData.city) {
-            alert('Vui lòng điền đầy đủ thông tin.');
-            return;
-        }
+  const [formData, setFormData] = useState({
+    airportId:"",
+    airportCode: "",
+    airportName: "",
+    city: "",
+    country: "",
+  });
 
-        const payload = { ...formData, code: formData.code.toUpperCase().trim() };
+  // ===== FILTER (SAFE NULL) =====
+  const keyword = searchTerm.toLowerCase();
 
-        onAction({ type: isEditing ? 'UPDATE_AIRPORT' : 'ADD_AIRPORT', payload });
-        setIsDialogOpen(false);
-        setFormData({ id: '', code: '', name: '', city: '' });
-    };
+  console.log(data)
 
-    const handleEdit = (item) => {
-        setIsEditing(true);
-        setFormData(item);
-        setIsDialogOpen(true);
-    };
+  const filteredData = data.filter((item) =>
+    (item.airportCode ?? "").toLowerCase().includes(keyword) ||
+    (item.airportName ?? "").toLowerCase().includes(keyword) ||
+    (item.city ?? "").toLowerCase().includes(keyword)
+  );
 
-    const handleAdd = () => {
-        setIsEditing(false);
-        setFormData({ id: '', code: '', name: '', city: '' });
-        setIsDialogOpen(true);
-    };
+  // ===== SAVE =====
+  const handleSave = (e) => {
+  e.preventDefault();
 
-    return (
-        <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                <Input
-                    placeholder="Tìm kiếm theo tên, mã hoặc thành phố..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-md"
-                />
-                <Button onClick={handleAdd} variant="primary" className="w-full sm:w-auto">
-                    <Plus className="mr-2 h-4 w-4" /> Thêm Sân bay Mới
-                </Button>
-            </div>
-            
-            <div className="border rounded-lg overflow-hidden shadow-sm">
-                <TableHeader className="grid-cols-[1.5fr_2fr_2fr_1.5fr]">
-                    <TableHead>MÃ SÂN BAY</TableHead>
-                    <TableHead>TÊN SÂN BAY</TableHead>
-                    <TableHead>THÀNH PHỐ</TableHead>
-                    <TableHead className="text-center">HÀNH ĐỘNG</TableHead>
-                </TableHeader>
-                <TableBody>
-                    {filteredData.length === 0 ? (
-                        <TableRow className="h-24"><TableCell colSpan={4} className="text-center text-gray-500">Không có dữ liệu sân bay.</TableCell></TableRow>
-                    ) : (
-                        filteredData.map(item => (
-                            <TableRow key={item.id} className="grid-cols-[1.5fr_2fr_2fr_1.5fr]">
-                                <TableCell className="font-semibold text-blue-600">{item.code}</TableCell>
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>{item.city}</TableCell>
-                                <TableCell className="text-center flex space-x-2 m-auto">
-                                    <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button size="sm" variant="destructive" onClick={() => onAction({ type: 'DELETE_AIRPORT', payload: item.id })}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </div>
+  if (!formData.airportCode || !formData.airportName || !formData.city) {
+    alert("Vui lòng điền đầy đủ thông tin.");
+    return;
+  }
 
-            {/* Dialog Thêm/Sửa */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{isEditing ? 'Sửa Thông tin Sân bay' : 'Thêm Sân bay Mới'}</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleSave} className="space-y-4 py-2">
-                        <div><Label htmlFor="code">Mã (Code)</Label><Input id="code" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} required disabled={isEditing} placeholder="VD: HAN" /></div>
-                        <div><Label htmlFor="name">Tên Sân bay</Label><Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required placeholder="VD: Sân bay Quốc tế Nội Bài" /></div>
-                        <div><Label htmlFor="city">Thành phố</Label><Input id="city" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} required placeholder="VD: Hà Nội" /></div>
-                        <DialogFooter><Button type="submit" variant="primary">{isEditing ? 'Lưu Thay Đổi' : 'Thêm Mới'}</Button></DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-        </div>
-    );
+  const payload = {
+    airportCode: formData.airportCode.toUpperCase().trim(),
+    airportName: formData.airportName.trim(),
+    city: formData.city.trim(),
+    country: formData.country?.trim() || null,
+  };
+
+  onAction({
+    type: isEditing ? "UPDATE_AIRPORT" : "ADD_AIRPORT",
+    payload: isEditing
+      ? { id: formData.airportId, data: payload }
+      : payload,
+  });
+
+  setIsDialogOpen(false);
+  resetForm();
 };
 
+  const resetForm = () => {
+    setFormData({
+       airportId:"", 
+      airportCode: "",
+      airportName: "",
+      city: "",
+      country: "",
+    });
+    setIsEditing(false);
+  };
+
+  // ===== EDIT =====
+  const handleEdit = (item) => {
+    setIsEditing(true);
+    setFormData({
+      airportId: item.airportId,
+      airportCode: item.airportCode,
+      airportName: item.airportName,
+      city: item.city,
+      country: item.country ?? "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  // ===== ADD =====
+  const handleAdd = () => {
+    resetForm();
+    setIsDialogOpen(true);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Search + Add */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <Input
+          placeholder="Tìm theo mã, tên sân bay hoặc thành phố..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md"
+        />
+        <Button onClick={handleAdd} variant="primary">
+          <Plus className="mr-2 h-4 w-4" /> Thêm Sân bay
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="border rounded-lg overflow-hidden shadow-sm">
+        <TableHeader className="grid-cols-[1.5fr_2fr_2fr_1.5fr]">
+          <TableHead>MÃ SÂN BAY</TableHead>
+          <TableHead>TÊN SÂN BAY</TableHead>
+          <TableHead>THÀNH PHỐ</TableHead>
+          <TableHead className="text-center">HÀNH ĐỘNG</TableHead>
+        </TableHeader>
+
+        <TableBody>
+          {filteredData.length === 0 ? (
+            <TableRow className="h-24">
+              <TableCell colSpan={4} className="text-center text-gray-500">
+                Không có dữ liệu sân bay.
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredData.map((item) => (
+              <TableRow
+                key={item.airportCode}
+                className="grid-cols-[1.5fr_2fr_2fr_1.5fr]"
+              >
+                <TableCell className="font-semibold text-blue-600">
+                  {item.airportCode}
+                </TableCell>
+                <TableCell>{item.airportName}</TableCell>
+                <TableCell>{item.city}</TableCell>
+                <TableCell className="flex justify-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(item)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() =>
+                      onAction({
+                        type: "DELETE_AIRPORT",
+                        payload: item.airportId,
+                      })
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </div>
+
+      {/* Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? "Sửa Sân bay" : "Thêm Sân bay"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSave} className="space-y-4">
+            <div>
+              <Label>Mã sân bay</Label>
+              <Input
+                value={formData.airportCode}
+                onChange={(e) =>
+                  setFormData({ ...formData, airportCode: e.target.value })
+                }
+                disabled={isEditing}
+                required
+              />
+            </div>
+
+            <div>
+              <Label>Tên sân bay</Label>
+              <Input
+                value={formData.airportName}
+                onChange={(e) =>
+                  setFormData({ ...formData, airportName: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            <div>
+              <Label>Thành phố</Label>
+              <Input
+                value={formData.city}
+                onChange={(e) =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            <div>
+              <Label>Quốc gia</Label>
+              <Input
+                value={formData.country}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
+              />
+            </div>
+
+            <DialogFooter>
+              <Button type="submit" variant="primary">
+                {isEditing ? "Lưu thay đổi" : "Thêm mới"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 // --- 2. Sub-Component: Quản lý Hãng hàng không (Airline) ---
 const AirlineManagement = ({ data, onAction }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -455,7 +562,7 @@ const AircraftManagement = ({ data, airlinesData, aircraftTypesData, onAction })
 
 function MasterDataManagementDashboard() {
     const { toast } = useToast();
-    const [airports, setAirports] = useState(MOCK_AIRPORTS);
+    const [airports, setAirports] = useState([]);
     const [airlines, setAirlines] = useState([]);
     const [aircrafts, setAircrafts] = useState([]);
     const [aircraftTypes, setAircraftTypes] = useState([]);
@@ -463,29 +570,37 @@ function MasterDataManagementDashboard() {
     const [isLoading, setIsLoading] = useState(false);
 
     // --- Fetch data từ backend khi component mount ---
+
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [airlinesRes, aircraftsRes, aircraftTypesRes] = await Promise.all([
-                masterDataService.getAllAirlines(),
-                masterDataService.getAllAircrafts(),
-                masterDataService.getAllAircraftTypes(),
+            const [
+            airportRes,
+            airlineRes,
+            aircraftRes,
+            aircraftTypeRes,
+            ] = await Promise.all([
+            masterDataService.getAllAirports(),
+            masterDataService.getAllAirlines(),
+            masterDataService.getAllAircrafts(),
+            masterDataService.getAllAircraftTypes(),
             ]);
-            setAirlines(airlinesRes || []);
-            setAircrafts(aircraftsRes || []);
-            setAircraftTypes(aircraftTypesRes || []);
+
+            setAirports(airportRes || []);
+            setAirlines(airlineRes || []);
+            setAircrafts(aircraftRes || []);
+            setAircraftTypes(aircraftTypeRes || []);
         } catch (error) {
             console.error("Lỗi khi tải dữ liệu:", error);
-            toast({ 
-                title: "Lỗi", 
-                description: "Không thể tải dữ liệu từ server. Vui lòng thử lại.", 
-                variant: "destructive" 
+            toast({
+            title: "Lỗi",
+            description: "Không thể tải dữ liệu từ server.",
+            variant: "destructive",
             });
         } finally {
             setIsLoading(false);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        }, [toast]);
 
     useEffect(() => {
         fetchAllData();
@@ -499,19 +614,21 @@ function MasterDataManagementDashboard() {
 
         try {
             switch (type) {
-                // Airport (vẫn dùng mock vì chưa có API)
-                case 'DELETE_AIRPORT':
-                    setAirports(airports.filter(a => a.id !== payload));
-                    description = "Đã xóa sân bay thành công (MOCK).";
-                    break;
-                case 'ADD_AIRPORT':
-                    setAirports([...airports, { ...payload, id: `SBA${Date.now()}` }]);
-                    description = `Đã thêm sân bay ${payload.code} mới (MOCK).`;
-                    break;
-                case 'UPDATE_AIRPORT':
-                    setAirports(airports.map(a => a.id === payload.id ? payload : a));
-                    description = `Đã cập nhật sân bay ${payload.code} (MOCK).`;
-                    break;
+                /// ================= AIRPORT =================
+                case "ADD_AIRPORT":
+                await masterDataService.createAirport(payload);
+                description = "Đã thêm sân bay.";
+                break;
+
+                case "UPDATE_AIRPORT":
+                await masterDataService.updateAirport(payload.id, payload.data);
+                description = "Đã cập nhật sân bay.";
+                break;
+
+                case "DELETE_AIRPORT":
+                await masterDataService.deleteAirport(payload);
+                description = "Đã xóa sân bay.";
+                break;
 
                 // Airline (vẫn dùng mock vì cấu trúc frontend khác backend)
                 case 'DELETE_AIRLINE':
@@ -555,6 +672,10 @@ function MasterDataManagementDashboard() {
             console.error("Lỗi xử lý hành động:", error);
         }
 
+        if (success) {
+            await fetchAllData(); 
+            }
+
         toast({ 
             title: success ? "Thành công" : "Lỗi", 
             description: description, 
@@ -563,7 +684,7 @@ function MasterDataManagementDashboard() {
         setIsLoading(false);
     };
 
-    // --- Cải tiến TabsTrigger Mock để sử dụng state nội bộ cho active style ---
+   
     const CustomTabsTrigger = ({ children, value, icon: Icon }) => (
         <button 
             className={`flex-grow py-2 h-auto px-4 rounded-lg text-gray-700 font-semibold transition-all duration-200 flex items-center justify-center space-x-2 

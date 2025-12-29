@@ -49,7 +49,8 @@ export default function ScheduledFlights() {
         if (!confirm("Bạn có chắc muốn xóa chuyến bay này?")) return;
         try {
             const res = await masterDataService.deleteFlight(id);
-            toast({ title: "Thành công", description:  `Đã xóa chuyến bay. ${res.body}` });
+            console.log(res)
+            toast({ title: "Thành công", description:  `Đã xóa chuyến bay` });
             fetchFlights();
         } catch (error) {
             console.log(error)
