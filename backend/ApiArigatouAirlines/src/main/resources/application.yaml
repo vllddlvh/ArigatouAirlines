@@ -1,8 +1,12 @@
 spring:
   datasource:
+<<<<<<< HEAD
     url: jdbc:mysql://127.0.0.1:3307/arigatouAirlines?serverTimezone=Asia/Ho_Chi_Minh&useLegacyDatetimeCode=false&useUnicode=true&characterEncoding=UTF-8
+=======
+    url: jdbc:mysql://127.0.0.1:3306/arigatouAirlines
+>>>>>>> f80c5a943e5cbc0c778f59d2ec492a0f39de89e9
     username: root
-    password: Daolelongvu2005
+    password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jackson:
@@ -14,9 +18,13 @@ spring:
     show-sql: true
     properties:
       hibernate:
+<<<<<<< HEAD
         jdbc:
           time_zone: Asia/Ho_Chi_Minh
         dialect: org.hibernate.dialect.MySQLDialect  # 🟢 Thêm dòng này
+=======
+        dialect: org.hibernate.dialect.MySQLDialect
+>>>>>>> f80c5a943e5cbc0c778f59d2ec492a0f39de89e9
   mail:
     host: smtp.gmail.com
     port: 587
