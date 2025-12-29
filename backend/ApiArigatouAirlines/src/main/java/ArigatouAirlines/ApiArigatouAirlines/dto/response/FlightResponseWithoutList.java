@@ -22,7 +22,7 @@ import java.util.List;
 public class FlightResponseWithoutList {
     int flightId;
     FlightSchedule schedule;
-    AircraftResponse  aircraft;
+    AircraftResponse aircraft;
     LocalDate flightDate;
     LocalDateTime departureDateTime;
     LocalDateTime arrivalDateTime;

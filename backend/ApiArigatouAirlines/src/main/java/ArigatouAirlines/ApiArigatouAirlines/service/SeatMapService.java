@@ -32,4 +32,9 @@ public class SeatMapService {
         seatMapRepository.save(seatMap);
         return seatMapMapper.toSeatMapResponse(seatMap);
     }
+
+    public SeatMapResponse getSeatMap(int seatMapId) {
+        return seatMapMapper.toSeatMapResponse(seatMapRepository.findById(seatMapId)
+                .orElseThrow(() -> new AppException(ErrorCode.SEAT_ID_NOT_EXSITED)));
+    }
 }
