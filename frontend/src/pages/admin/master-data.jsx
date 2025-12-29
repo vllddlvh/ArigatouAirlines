@@ -38,8 +38,6 @@ const AirportManagement = ({ data = [], onAction }) => {
   // ===== FILTER (SAFE NULL) =====
   const keyword = searchTerm.toLowerCase();
 
-  console.log(data)
-
   const filteredData = data.filter((item) =>
     (item.airportCode ?? "").toLowerCase().includes(keyword) ||
     (item.airportName ?? "").toLowerCase().includes(keyword) ||

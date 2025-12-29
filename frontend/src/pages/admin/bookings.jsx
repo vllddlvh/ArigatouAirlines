@@ -374,5 +374,5 @@ const DetailItem = ({ label, value, isBadge = false }) => (
 );
 
 
-// Export as App is required for the single-file React component convention
+
 export default BookingManagementDashboard;
