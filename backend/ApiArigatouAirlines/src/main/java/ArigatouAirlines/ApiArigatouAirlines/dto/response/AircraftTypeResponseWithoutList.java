@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AircraftTypeResponseWithoutList {
+    int aircraftTypeId;
     String typeName;
     int totalSeats;
     int numCols;

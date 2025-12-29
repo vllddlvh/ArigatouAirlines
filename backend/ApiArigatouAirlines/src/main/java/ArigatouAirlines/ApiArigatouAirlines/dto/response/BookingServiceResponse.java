@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingServiceResponse {
+    int bookingServiceId;
     TicketResponse ticket;
     AncillaryServiceResponse ancillaryService;
     BigDecimal priceAtPurchase;
