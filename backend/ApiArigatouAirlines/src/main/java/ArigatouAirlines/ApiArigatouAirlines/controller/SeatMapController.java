@@ -8,10 +8,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/seatMap")
@@ -25,6 +22,13 @@ public class SeatMapController {
     ApiResponse<SeatMapResponse> creationSeatMap(@RequestBody SeatMapRequest seatMapRequest) {
         return ApiResponse.<SeatMapResponse>builder()
                 .body(seatMapService.creationSeatMap(seatMapRequest))
+                .build();
+    }
+
+    @GetMapping("/{seatMapId}")
+    ApiResponse<SeatMapResponse> getSeatMap(@PathVariable int seatMapId) {
+        return ApiResponse.<SeatMapResponse>builder()
+                .body(seatMapService.getSeatMap(seatMapId))
                 .build();
     }
 }
