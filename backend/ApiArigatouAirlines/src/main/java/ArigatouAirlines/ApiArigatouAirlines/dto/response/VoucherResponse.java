@@ -2,6 +2,8 @@ package ArigatouAirlines.ApiArigatouAirlines.dto.response;
 
 import ArigatouAirlines.ApiArigatouAirlines.enums.DiscountType;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,15 +20,11 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder
 @FieldDefaults(level = PRIVATE)
 public class VoucherResponse {
+    int voucherId;
     String voucherCode;
-
     DiscountType discountType;
-
     BigDecimal discountValue;
-
     BigDecimal maxDiscountAmount;
-
     BigDecimal minOrderAmount;
-
     int usageLimit;
 }

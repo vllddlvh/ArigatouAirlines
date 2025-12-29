@@ -23,6 +23,7 @@ public class Voucher {
     @Column(name = "voucher_code")
     String voucherCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "discount_type")
     DiscountType discountType;
 

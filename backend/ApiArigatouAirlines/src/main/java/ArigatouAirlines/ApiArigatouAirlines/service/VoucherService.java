@@ -37,11 +37,20 @@ public class VoucherService {
     }
 
     public VoucherResponse updateVoucher(int voucherId, VoucherRequest voucherRequest) {
-        Voucher voucher = voucherRepository.findById(voucherId).orElseThrow();
-        voucher = voucherMapper.toVoucher(voucherRequest);
-        voucherRepository.save(voucher);
 
-        return voucherMapper.toVoucherResponse(voucher);
+        Voucher voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new RuntimeException("Voucher không tồn tại với id = " + voucherId));
+
+        voucher.setDiscountType(voucherRequest.getDiscountType());
+        voucher.setDiscountValue(voucherRequest.getDiscountValue());
+        voucher.setMaxDiscountAmount(voucherRequest.getMaxDiscountAmount());
+        voucher.setMinOrderAmount(voucherRequest.getMinOrderAmount());
+        voucher.setUsageLimit(voucherRequest.getUsageLimit());
+
+
+        Voucher saved = voucherRepository.save(voucher);
+
+        return voucherMapper.toVoucherResponse(saved);
     }
 
     public String deleteVoucher(int voucherId) {

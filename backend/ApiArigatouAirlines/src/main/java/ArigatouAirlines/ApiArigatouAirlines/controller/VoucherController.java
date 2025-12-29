@@ -35,7 +35,7 @@ public class VoucherController {
     }
 
     @GetMapping("/{id}")
-            @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<VoucherResponse> getVoucher(@PathVariable int id) {
         return ApiResponse.<VoucherResponse>builder()
                 .body(voucherService.getVoucher(id))
