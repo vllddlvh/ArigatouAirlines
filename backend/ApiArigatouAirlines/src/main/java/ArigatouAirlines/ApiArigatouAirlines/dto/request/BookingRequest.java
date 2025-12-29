@@ -1,6 +1,7 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.request;
 
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.UserResponse;
+import ArigatouAirlines.ApiArigatouAirlines.entity.Passenger;
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPayment;
 import lombok.*;
@@ -9,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,17 +18,13 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingRequest {
-    int userId;
+//    int userId;
 
-    String bookingCode;
+//    BigDecimal totalAmount;
 
-    StatusBooking statusBooking;
+    int flightId;
 
-    StatusPayment statusPayment;
+    List<Integer> listFlightSeatId;
 
-    BigDecimal totalAmount;
-
-    LocalDateTime paymentDeadline;
-
-    Instant createdAt;
+    List<PassengerRequest> listPassengerRequest;
 }

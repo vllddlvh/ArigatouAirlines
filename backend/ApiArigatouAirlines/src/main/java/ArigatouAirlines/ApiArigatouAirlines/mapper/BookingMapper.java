@@ -4,9 +4,11 @@ import ArigatouAirlines.ApiArigatouAirlines.dto.request.BookingRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.BookingResponse;
 import ArigatouAirlines.ApiArigatouAirlines.entity.Booking;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface BookingMapper {
+    @Mapping(target = "user", ignore = true)
     Booking toBooking(BookingRequest bookingRequest);
 
     BookingResponse toBookingResponse(Booking booking);

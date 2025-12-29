@@ -1,6 +1,5 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.response;
 
-import ArigatouAirlines.ApiArigatouAirlines.entity.Permission;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,5 +13,5 @@ import java.util.Set;
 public class RoleResponse {
     String roleName;
     String description;
-    Set<Permission> permissions;
+    Set<String> permissions;
 }

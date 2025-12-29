@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -11,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AircraftTypeResponse {
-    int aircraftTypeId;
     String typeName;
     int totalSeats;
     int numCols;

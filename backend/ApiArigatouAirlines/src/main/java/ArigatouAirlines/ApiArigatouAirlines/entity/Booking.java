@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity(name = "booking")
 @Getter
@@ -44,4 +45,14 @@ public class Booking {
 
     @Column(name = "created_at")
     Instant createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (bookingCode == null || bookingCode.isBlank()) {
+            bookingCode = UUID.randomUUID().toString();
+        }
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 }

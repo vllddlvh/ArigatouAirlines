@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FlightPriceRepository extends JpaRepository<FlightPrice, Integer> {
+    FlightPrice findFlightPriceByFlight_FlightId(int flightId);
 }

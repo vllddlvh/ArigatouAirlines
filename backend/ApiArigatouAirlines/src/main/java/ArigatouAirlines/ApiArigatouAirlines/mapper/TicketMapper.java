@@ -6,7 +6,7 @@ import ArigatouAirlines.ApiArigatouAirlines.entity.Ticket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {BookingMapper.class})
 public interface TicketMapper {
     @Mapping(target = "booking", ignore = true)
     @Mapping(target = "flight", ignore = true)

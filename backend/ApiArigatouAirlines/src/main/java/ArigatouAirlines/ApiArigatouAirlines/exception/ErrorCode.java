@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.lang.NonNull;
 
 @Getter
 @AllArgsConstructor
@@ -70,9 +69,16 @@ public enum ErrorCode {
     //─────────────── 6xxx: Flight ───────────────
     DEPARTURE_AND_ARRIVAL_TIME_CANNOT_CONFLICT(6001, "Departure and arrival time can't conflict", HttpStatus.BAD_REQUEST),
     FLIGHT_SCHEDULE_ID_NOT_EXISTED(6002, "FlightScheduleId doesn't existed!", HttpStatus.BAD_REQUEST),
-    FLIGHT_ID_NOT_EXISTED(6003, "FlightId doesn't existed!", HttpStatus.BAD_REQUEST);
+    FLIGHT_ID_NOT_EXISTED(6003, "FlightId doesn't existed!", HttpStatus.BAD_REQUEST),
+    FLIGHT_SEAT_ID_NOT_EXISTED(6004, "FlightSeatId doesn't existed!", HttpStatus.BAD_REQUEST),
+
+    //─────────────── 7xxx: Ticket ───────────────
+    CLASS_NAME_IS_AVAILABLE(7001, "ClassName is available!", HttpStatus.BAD_REQUEST),
+    TICKET_CLASS_ID_IS_NOT_AVAILABLE(7002, "TicketClassID is not available!", HttpStatus.BAD_REQUEST),
+    FLIGHT_PRICE_ID_IS_NOT_AVAILABLE(7003, "FlightPriceID is not available!", HttpStatus.BAD_REQUEST);
+
 
     int code;
     String message;
-    @NonNull HttpStatusCode httpStatusCode;
+    HttpStatusCode httpStatusCode;
 }

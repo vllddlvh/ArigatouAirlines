@@ -1,15 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { sendChatMessage } from "../services/chatbotService";
 
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]); // { role: "user" | "model", text: string }
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
   const handleToggle = () => {
     setIsOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -27,8 +32,8 @@ const ChatbotWidget = () => {
       const historyForApi = newHistory.map((m) => ({ role: m.role, text: m.text }));
       const data = await sendChatMessage(trimmed, historyForApi);
 
-      if (data?.reply) {
-        setMessages((prev) => [...prev, { role: "model", text: data.reply }]);
+      if (data?.response) {
+        setMessages((prev) => [...prev, { role: "model", text: data.response }]);
       }
     } catch (error) {
       console.error(error);
@@ -40,7 +45,6 @@ const ChatbotWidget = () => {
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      {/* Bong bóng khi thu gọn */}
       {!isOpen && (
         <button
           type="button"
@@ -52,7 +56,6 @@ const ChatbotWidget = () => {
         </button>
       )}
 
-      {/* Khung chat khi mở */}
       {isOpen && (
         <div className="w-80 sm:w-96 h-[420px] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
           <div className="px-3 py-2 border-b bg-slate-100 flex items-center justify-between">
@@ -101,6 +104,7 @@ const ChatbotWidget = () => {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           <form onSubmit={handleSend} className="border-t px-3 py-2 bg-white flex items-center gap-2">

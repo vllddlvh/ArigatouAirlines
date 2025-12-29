@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,7 +52,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     @PostAuthorize("hasRole('ADMIN') || returnObject.body.username == authentication.name")
-    public ApiResponse<UserResponse> get(@PathVariable("userId") String id) {
+    public ApiResponse<UserResponse> get(@PathVariable("userId") int id) {
         return ApiResponse.<UserResponse>builder()
                 .body(userService.getById(id))
                 .build();
@@ -61,7 +60,7 @@ public class UserController {
 
     @PutMapping("/{userId}")
     @PostAuthorize("hasRole('ADMIN') || returnObject.body.username == authentication.name")
-    public ApiResponse<UserResponse> update(@RequestBody @Valid UserUpdateRequest request, @PathVariable("userId") String id) {
+    public ApiResponse<UserResponse> update(@RequestBody @Valid UserUpdateRequest request, @PathVariable("userId") int id) {
         return ApiResponse.<UserResponse>builder()
                 .body(userService.update(request, id))
                 .build();
@@ -69,7 +68,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Void> delete(@PathVariable("userId") String id) {
+    public ApiResponse<Void> delete(@PathVariable("userId") int id) {
         userService.delete(id);
         return new ApiResponse<>();
     }

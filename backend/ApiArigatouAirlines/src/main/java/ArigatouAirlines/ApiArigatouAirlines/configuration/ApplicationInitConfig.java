@@ -3,7 +3,6 @@ package ArigatouAirlines.ApiArigatouAirlines.configuration;
 import ArigatouAirlines.ApiArigatouAirlines.entity.Role;
 import ArigatouAirlines.ApiArigatouAirlines.entity.User;
 import ArigatouAirlines.ApiArigatouAirlines.enums.Gender;
-import ArigatouAirlines.ApiArigatouAirlines.enums.Roles;
 import ArigatouAirlines.ApiArigatouAirlines.repository.RoleRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.UserRepository;
 import lombok.AccessLevel;
@@ -17,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -46,7 +44,8 @@ public class ApplicationInitConfig {
                 roleRepository.save(userRole);
 
 
-                var roles = new HashSet<>(roleRepository.findAllById(List.of(Roles.ADMIN.name())));
+                var roles = new HashSet<Role>();
+                roles.add(adminRole);
                 User user = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))

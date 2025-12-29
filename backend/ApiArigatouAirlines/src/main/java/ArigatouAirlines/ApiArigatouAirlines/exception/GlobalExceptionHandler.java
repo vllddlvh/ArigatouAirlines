@@ -9,7 +9,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.transaction.TransactionSystemException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -62,15 +61,9 @@ public class GlobalExceptionHandler {
     // Validation nhập liệu từ client
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponseError> handlingMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        FieldError fieldError = e.getFieldError();
+        String errorKey = e.getFieldError().getDefaultMessage();
 
-        ErrorCode errorCode;
-        if (fieldError != null) {
-            String errorKey = fieldError.getDefaultMessage();
-            errorCode = ErrorCode.valueOf(errorKey);
-        } else {
-            errorCode = ErrorCode.RUNTIME_EXCEPTION;
-        }
+        ErrorCode errorCode = ErrorCode.valueOf(errorKey);
 
         ApiResponseError apiResponseError = ApiResponseError.builder()
                 .code(errorCode.getCode())

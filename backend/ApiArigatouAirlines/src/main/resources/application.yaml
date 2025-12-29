@@ -4,6 +4,7 @@ spring:
     username: root
     password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     show-sql: true
     properties:
@@ -26,10 +27,6 @@ spring:
 
 jwt:
   signerKey: "fAhsFQLtyhPPawzKmGDEU/IDeBpV7nGnIaQIWYZCzh8qGSb+ETsbFOoMfwfNsUgA"
-
-gemini:
-  api-key: AIzaSyCg-P6IjWEsC53j_0UGvZkBCpt5-Fc8PCo
-  model: "gemini-1.5-flash-latest"
 
 server:
     port: 8080

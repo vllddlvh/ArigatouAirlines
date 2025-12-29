@@ -10,7 +10,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AircraftResponse {
-    int aircraftId;
     String registrationNumber;
     StatusAircraft statusAircraft;
     AircraftTypeResponse aircraftType;
