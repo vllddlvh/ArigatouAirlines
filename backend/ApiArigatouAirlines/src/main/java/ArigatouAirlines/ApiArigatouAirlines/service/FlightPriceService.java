@@ -3,19 +3,24 @@ package ArigatouAirlines.ApiArigatouAirlines.service;
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.FlightPriceRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightPriceResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightResponse;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightSeatResponse;
 import ArigatouAirlines.ApiArigatouAirlines.entity.Flight;
 import ArigatouAirlines.ApiArigatouAirlines.entity.FlightPrice;
 import ArigatouAirlines.ApiArigatouAirlines.entity.TicketClass;
 import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.FlightPriceMapper;
+import ArigatouAirlines.ApiArigatouAirlines.mapper.FlightSeatMapper;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightPriceRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.FlightSeatRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.TicketClassRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -25,6 +30,8 @@ public class FlightPriceService {
     FlightPriceMapper flightPriceMapper;
     FlightRepository flightRepository;
     TicketClassRepository ticketClassRepository;
+    FlightSeatRepository flightSeatRepository;
+    FlightSeatMapper flightSeatMapper;
 
     public FlightPriceResponse creationFlightPrice(FlightPriceRequest flightPriceRequest) {
         Flight fLight = flightRepository.findById(flightPriceRequest.getFlightId())
@@ -47,8 +54,13 @@ public class FlightPriceService {
         }
 
         FlightPrice flightPrice = flightPriceRepository.findFlightPriceByFlight_FlightId(flightId);
+        List<FlightSeatResponse> flightSeatResponses = flightSeatRepository.findAllByFlight_FlightId(flightId)
+                .stream().map(flightSeatMapper :: toFlightSeatResponse).toList();
 
-        return flightPriceMapper.toFlightPriceResponse(flightPrice);
+        FlightPriceResponse flightPriceResponse = flightPriceMapper.toFlightPriceResponse(flightPrice);
+        flightPriceResponse.getFlight().setFlightSeatList(flightSeatResponses);
+
+        return flightPriceResponse;
     }
 
     public FlightPriceResponse updateFlightPrice(int flightPriceId, FlightPriceRequest flightPriceRequest) {
