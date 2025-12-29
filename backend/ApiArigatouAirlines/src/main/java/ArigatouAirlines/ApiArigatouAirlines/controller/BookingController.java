@@ -40,4 +40,11 @@ public class BookingController {
                 .body(bookingService.getBooking(id))
                 .build();
     }
+
+    @GetMapping("/myBooking")
+    ApiResponse<List<BookingResponse>> getMyBooking() {
+        return ApiResponse.<List<BookingResponse>>builder()
+                .body(bookingService.getMyBooking())
+                .build();
+    }
 }

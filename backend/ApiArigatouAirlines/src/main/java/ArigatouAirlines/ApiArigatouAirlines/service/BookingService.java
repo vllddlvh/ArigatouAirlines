@@ -107,4 +107,15 @@ public class BookingService {
 
         return bookingMapper.toBookingResponse(booking);
     }
+
+    public List<BookingResponse> getMyBooking() {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+
+        List<Booking> bookingList = bookingRepository.findAllByUser_UserId(user.getUserId());
+
+        return bookingList.stream().map(bookingMapper :: toBookingResponse).toList();
+    }
 }
