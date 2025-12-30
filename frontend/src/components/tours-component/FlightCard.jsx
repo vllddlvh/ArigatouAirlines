@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plane, Info, RefreshCw, Luggage, Clock, Check, X, ChevronRight, Users, Shield, Award,CheckCircle2,BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as masterDataService from "@/services/masterDataService";
-
+import Link from "next/link";
 // --- SUB-COMPONENTS ---
 
 // Component cho phần giá (Price Pill/Card) - Thiết kế mới
@@ -322,70 +322,12 @@ export function FlightCard({ flights, passengerCount, onSelectFlight }) {
 
                                         </div>
 
-                                        <Dialog>
-                                            <DialogTrigger asChild>
-                                                <Button variant="outline" size="sm" className="gap-2">
-                                                    <Info className="h-4 w-4" />
-                                                    Chi tiết chuyến bay
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[600px] rounded-2xl">
-                                                <DialogHeader>
-                                                    <DialogTitle className="flex items-center gap-2 text-xl">
-                                                        <Plane className="h-6 w-6 text-blue-600" />
-                                                        Chi tiết hành trình
-                                                    </DialogTitle>
-                                                </DialogHeader>
-                                                <div className="space-y-6 mt-4">
-                                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="text-center">
-                                                                <div className="text-3xl font-bold text-blue-700">{flight.departureTime}</div>
-                                                                <div className="text-lg font-semibold mt-2">{flight.departureCode}</div>
-                                                                <div className="text-sm text-gray-600">{flight.departureAirport}</div>
-                                                            </div>
-                                                            <div className="flex flex-col items-center">
-                                                                <div className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-lg">
-                                                                    <Plane className="h-6 w-6 text-blue-600" />
-                                                                </div>
-                                                                <div className="mt-2 text-sm font-medium text-blue-700">{flight.duration}</div>
-                                                            </div>
-                                                            <div className="text-center">
-                                                                <div className="text-3xl font-bold text-blue-700">{flight.arrivalTime}</div>
-                                                                <div className="text-lg font-semibold mt-2">{flight.arrivalCode}</div>
-                                                                <div className="text-sm text-gray-600">{flight.arrivalAirport}</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                                <span className="font-medium">Hãng hàng không:</span>
-                                                                <span className="ml-auto">{flight.airline}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                                <span className="font-medium">Số hiệu:</span>
-                                                                <span className="ml-auto font-mono">{flight.flightNumber}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                                <span className="font-medium">Loại máy bay:</span>
-                                                                <span className="ml-auto">{flight.aircraft}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                                <span className="font-medium">Ngày bay:</span>
-                                                                <span className="ml-auto">{flight.departureDate}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </DialogContent>
-                                        </Dialog>
+                                        <Button variant="outline" size="sm" className="gap-2" asChild>
+                                            <Link href={`/flights/${flight.id}`}>
+                                                <Info className="h-4 w-4" />
+                                                Chi tiết chuyến bay
+                                            </Link>
+                                            </Button>
                                     </div>
                                 </div>
 
