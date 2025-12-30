@@ -25,9 +25,9 @@ public enum ErrorCode {
     POINT_IS_NULL(1006, "User's point must not be null!", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1007, "Email already exists!", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1008, "Invalid email format!", HttpStatus.BAD_REQUEST),
-    USER_UPDATE_ROLE(1010, "User cannot update role!", HttpStatus.BAD_REQUEST),
+    PHONE_EXISTED(1009, "Phone already exists", HttpStatus.BAD_REQUEST),
+    USER_CANNOT_UPDATE_ROLE(1010, "User cannot update role!", HttpStatus.BAD_REQUEST),
     INVALID_GENDER(1011, "Invalid Gender value!", HttpStatus.BAD_REQUEST),
-
     // ─────────────── 2xxx: Authentication & Authorization ───────────────
     UNAUTHENTICATED(2001, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002, "You do not have permission!", HttpStatus.FORBIDDEN),
@@ -47,13 +47,16 @@ public enum ErrorCode {
 
     // ─────────────── 4xxx: Input Field Validation Errors ───────────────
     USERNAME_IS_NULL(4001, "Username must not be null!", HttpStatus.BAD_REQUEST),
-    INVALID_USERNAME(4002, "Username must be at least 6 characters!", HttpStatus.BAD_REQUEST),
+    INVALID_USERNAME_MIN(4002, "Username must be at least 6 characters!", HttpStatus.BAD_REQUEST),
     PASSWORD_IS_NULL(4003, "Password must not be null!", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(4004, "Password must be at least 8 characters!", HttpStatus.BAD_REQUEST),
     EMAIL_IS_NULL(4005, "Email must not be null!", HttpStatus.BAD_REQUEST),
     DOB_IS_NULL(4006, "Date of birth must not be null!", HttpStatus.BAD_REQUEST),
     CONFIRM_PASSWORD_FAIL(4007, "New password and confirm password do not match!", HttpStatus.BAD_REQUEST),
-    DOB_IS_THE_PAST(4011, "Date of birth must be in\n" + "the past", HttpStatus.BAD_REQUEST),
+    INVALID_USERNAME_MAX(4008, "Username must be at less than 20 characters!", HttpStatus.BAD_REQUEST),
+    FULLNAME_IS_NULL(4009, "Fullname must not be null!", HttpStatus.BAD_REQUEST),
+    PHONE_NULL(4010, "Phone must not be null!", HttpStatus.BAD_REQUEST),
+    DOB_IS_THE_PAST(4011, "Date of birth must be in " + "the past", HttpStatus.BAD_REQUEST),
 
 
     //─────────────── 5xxx: Airport & Airline Error & aircraft ───────────────

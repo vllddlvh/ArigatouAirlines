@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 
@@ -67,6 +68,12 @@ public class UserService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+        if(userRepository.existsByPhone(request.getPhone())) {
+            throw new AppException(ErrorCode.PHONE_EXISTED);
+        }
+        if(request.getEmail().compareTo("") == 0) {
+            throw new AppException(ErrorCode.INVALID_EMAIL);
+        }
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         var roles = roleRepository.findAllById(List.of(Roles.USER.name()));
@@ -77,17 +84,52 @@ public class UserService {
     public UserResponse update(UserUpdateRequest request, String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
-        if (request.getPassword() != null)
-            request.setPassword(passwordEncoder.encode(request.getPassword()));
-        userMapper.UpdateUser(request, user);
-        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-            var roles = roleRepository.findAllById(request.getRoles());
-            if (roles.isEmpty())
-                throw new AppException(ErrorCode.INVALID_ROLE);
-            user.setRoles(new HashSet<>(roles));
+
+        // Validate Email
+        if (request.getEmail() != null) {
+            if (request.getEmail().isEmpty()) {
+                throw new AppException(ErrorCode.INVALID_EMAIL);
+            }
+            if (userRepository.existsByEmail(request.getEmail()) &&
+                    !user.getEmail().equals(request.getEmail())) {
+                throw new AppException(ErrorCode.EMAIL_EXISTED);
+            }
         }
+
+        // Validate Phone
+        if (request.getPhone() != null) {
+            if (userRepository.existsByPhone(request.getPhone()) &&
+                    !user.getPhone().equals(request.getPhone())) {
+                throw new AppException(ErrorCode.PHONE_EXISTED);
+            }
+        }
+
+        // Validate Date of Birth
+        if (request.getDateOfBirth() != null) {
+            if (request.getDateOfBirth().isAfter(LocalDate.now())) {
+                throw new AppException(ErrorCode.DOB_IS_THE_PAST);
+            }
+        }
+
+        // Validate Password
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            request.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Validate Roles - User không được tự update role
+        var context = SecurityContextHolder.getContext();
+        boolean isAdmin = context.getAuthentication().getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        System.out.println(isAdmin);
+        System.out.println(request.getRoles());
+        if (request.getRoles() != null && !isAdmin) {
+            throw new AppException(ErrorCode.USER_CANNOT_UPDATE_ROLE);
+        }
+
+        userMapper.UpdateUser(request, user);
         return userMapper.toUserResponse(userRepository.save(user));
     }
+
 
     public void delete(String id) {
         if (!userRepository.existsById(id))
