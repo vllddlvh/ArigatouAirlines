@@ -3,32 +3,25 @@ package ArigatouAirlines.ApiArigatouAirlines.service;
 import ArigatouAirlines.ApiArigatouAirlines.configuration.ConfigPayment;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.PaymentResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.TransactionResponse;
-import ArigatouAirlines.ApiArigatouAirlines.entity.Booking;
-import ArigatouAirlines.ApiArigatouAirlines.entity.FlightSeat;
-import ArigatouAirlines.ApiArigatouAirlines.entity.Payment;
-import ArigatouAirlines.ApiArigatouAirlines.entity.Ticket;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPayment;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking;
+import ArigatouAirlines.ApiArigatouAirlines.entity.*;
+import ArigatouAirlines.ApiArigatouAirlines.enums.*;
 import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.PaymentMapper;
-import ArigatouAirlines.ApiArigatouAirlines.repository.BookingRepository;
-import ArigatouAirlines.ApiArigatouAirlines.repository.FlightSeatRepository;
-import ArigatouAirlines.ApiArigatouAirlines.repository.PaymentRepository;
-import ArigatouAirlines.ApiArigatouAirlines.repository.TicketRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -45,9 +38,13 @@ public class PaymentService {
     PaymentMapper paymentMapper;
     TicketRepository ticketRepository;
     FlightSeatRepository flightSeatRepository;
+    VoucherRepository voucherRepository;
+    UserRepository userRepository;
+    VoucherUsageRepository voucherUsageRepository;
+
 
     @Transactional
-    public PaymentResponse creationPayment(HttpServletRequest request, int bookingId) {
+    public PaymentResponse creationPayment(HttpServletRequest request, int bookingId, Integer voucherId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_ID_IS_NOT_EXISTED));
 
@@ -55,9 +52,40 @@ public class PaymentService {
             throw new AppException(ErrorCode.BOOKING_WAS_CANCELLED);
         }
 
+        BigDecimal amountBooking = booking.getTotalAmount();
+
+        Voucher voucher = new Voucher();
+        if(voucherId != null) {
+            voucher = voucherRepository.findById(voucherId)
+                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_ID_IS_NOT_EXISTED));
+            if(voucher.getUsageLimit() == 0) {
+                throw new AppException(ErrorCode.VOUCHER_WAS_USED_USAGE_LIMIT);
+            }
+            BigDecimal discountAmount = calAmountVoucher(voucher, amountBooking);
+            amountBooking = amountBooking.subtract(discountAmount);
+
+            var context = SecurityContextHolder.getContext();
+            String username = context.getAuthentication().getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+            VoucherUsage voucherUsage = VoucherUsage.builder()
+                    .voucher(voucher)
+                    .booking(booking)
+                    .user(user)
+                    .discountAmount(discountAmount)
+                    .usedAt(LocalDateTime.now())
+                    .build();
+            voucher.setUsageLimit(voucher.getUsageLimit() - 1);
+            if(voucher.getUsageLimit() == 0) {
+                voucher.setActive(false);
+            }
+            voucherUsageRepository.save(voucherUsage);
+            voucherRepository.save(voucher);
+        }
+
         Payment payment = Payment.builder()
                 .booking(booking)
-                .amount(booking.getTotalAmount())
+                .amount(amountBooking)
                 .paymentMethod("NCB")
                 .paymentStatus(StatusPayment.Pending)
                 .paymentDate(LocalDateTime.now())
@@ -163,5 +191,23 @@ public class PaymentService {
         bookingRepository.save(booking);
 
         return paymentMapper.toTransactionResponse(payment);
+    }
+
+    public static BigDecimal calAmountVoucher(Voucher voucher, BigDecimal amountBooking) {
+        DiscountType discountType = voucher.getDiscountType();
+        BigDecimal amount = BigDecimal.ZERO;
+        BigDecimal maxDiscountAmount = voucher.getMaxDiscountAmount();
+        if(amountBooking.compareTo(voucher.getMinOrderAmount()) < 0) {
+            throw new AppException(ErrorCode.AMOUNT_BOOKING_MORE_THAN_MIN_ORDER_AMOUNT);
+        }
+        if(discountType.equals(DiscountType.PERCENTAGE)) {
+            amount = amountBooking.multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            if(amount.compareTo(maxDiscountAmount) > 0) {
+                amount = maxDiscountAmount;
+            }
+        } else {
+            amount = voucher.getDiscountValue();
+        }
+        return amount;
     }
 }

@@ -27,10 +27,12 @@ import java.util.*;
 public class PaymentController {
     PaymentService paymentService;
 
-    @GetMapping("/create_payment/{bookingId}")
-    public ApiResponse<PaymentResponse> createPayment(HttpServletRequest request,@PathVariable int bookingId) {
+    @GetMapping("/create_payment")
+    public ApiResponse<PaymentResponse> createPayment(HttpServletRequest request,
+                                                      @RequestParam(value = "bookingId") int bookingId,
+                                                      @RequestParam(value = "voucherId", required = false) Integer voucherId) {
         return ApiResponse.<PaymentResponse>builder()
-                .body(paymentService.creationPayment(request, bookingId))
+                .body(paymentService.creationPayment(request, bookingId, voucherId))
                 .build();
     }
 

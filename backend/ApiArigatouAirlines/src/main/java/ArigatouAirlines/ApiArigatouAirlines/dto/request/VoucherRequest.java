@@ -2,6 +2,7 @@ package ArigatouAirlines.ApiArigatouAirlines.dto.request;
 
 import ArigatouAirlines.ApiArigatouAirlines.enums.DiscountType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -29,4 +31,10 @@ public class VoucherRequest {
     BigDecimal minOrderAmount;
 
     int usageLimit;
+
+    LocalDateTime validFrom;
+
+    LocalDateTime validTo;
+
+
 }

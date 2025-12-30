@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity(name = "voucher")
 @Getter
@@ -37,4 +38,13 @@ public class Voucher {
 
     @Column(name = "usage_limit")
     int usageLimit;
+
+    @Column(name = "valid_from")
+    LocalDateTime validFrom;
+
+    @Column(name = "valid_to")
+    LocalDateTime validTo;
+
+    @Column(name = "is_active")
+    boolean active;
 }

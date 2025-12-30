@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SeatMapResponse {
     int seatMapId;
-
     String seatNumber;
     SeatClass seatClass;
     SeatType seatType;
