@@ -239,7 +239,7 @@ export default function AdminProfilePage() {
                                 <h4 className="font-semibold text-slate-800">Đăng xuất</h4>
                                 <p className="text-sm text-slate-500">Kết thúc phiên làm việc hiện tại trên thiết bị này.</p>
                             </div>
-                            <Button onClick={handleLogout} variant="outline" className="border-slate-300 hover:bg-slate-100 text-slate-700 min-w-[120px]">
+                            <Button onClick={handleLogout} variant="outline" className="border-slate-300 hover:bg-slate-100 text-slate-700 hover:text-red-700 min-w-[120px]">
                                 <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
                             </Button>
                         </div>
