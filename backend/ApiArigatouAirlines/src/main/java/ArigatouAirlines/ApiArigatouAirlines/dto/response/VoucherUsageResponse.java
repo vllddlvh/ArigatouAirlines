@@ -23,6 +23,4 @@ public class VoucherUsageResponse {
     UserResponse user;
     BigDecimal discountAmount;;
     LocalDateTime usedAt;
-
-
 }
