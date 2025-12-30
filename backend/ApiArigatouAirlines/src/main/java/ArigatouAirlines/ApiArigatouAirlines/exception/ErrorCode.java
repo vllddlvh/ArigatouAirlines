@@ -28,6 +28,8 @@ public enum ErrorCode {
     PHONE_EXISTED(1009, "Phone already exists", HttpStatus.BAD_REQUEST),
     USER_CANNOT_UPDATE_ROLE(1010, "User cannot update role!", HttpStatus.BAD_REQUEST),
     INVALID_GENDER(1011, "Invalid Gender value!", HttpStatus.BAD_REQUEST),
+    POSTID_IS_NOT_EXISTED(1012, "PostID is not existed", HttpStatus.BAD_REQUEST),
+
     // ─────────────── 2xxx: Authentication & Authorization ───────────────
     UNAUTHENTICATED(2001, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002, "You do not have permission!", HttpStatus.FORBIDDEN),
