@@ -1,6 +1,7 @@
 // jsconfig.json
 {
   "compilerOptions": {
+    "jsx": "react",
     "baseUrl": "src", // Thiết lập thư mục gốc là `src`
     "paths": {
       "@/*": ["./*"], // Alias cho thư mục gốc

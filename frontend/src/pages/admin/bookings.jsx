@@ -177,7 +177,7 @@ function BookingManagementDashboard() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8 lg:pl-64 mx-auto">
+        <div className="min-h-screen max-w-[1280px] bg-gray-50 p-8 lg:pl-64 mx-auto">
             <div className="container mx-auto max-w-7xl pt-4">
                 
                 {/* Header */}
