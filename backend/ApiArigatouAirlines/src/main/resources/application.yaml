@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/arigatouAirlines
     username: root
-    password: Thang2005
+    password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
