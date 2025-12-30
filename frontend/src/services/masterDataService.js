@@ -214,6 +214,34 @@ export const getFlightById = async (id) => {
   }
 };
 
+export const getFlightPriceById = async (flightId, ticketClassName) => {
+  try {
+    const params = {};
+    const className = Array.isArray(ticketClassName) ? ticketClassName[0] : ticketClassName;
+    if (className) params.ticketClassName = className;
+    const response = await axios.get(`${API_BASE_URL}/flightPrice/${flightId}`, {
+      headers: getAuthHeader(),
+      params,
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi lấy giá chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi lấy giá chuyến bay.";
+  }
+};
+
+export const getFlightPricesByFlightId = async (flightId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/flightPrice/byFlight/${flightId}`, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi lấy tất cả giá chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi lấy giá chuyến bay.";
+  }
+};
+
 export const createFlight = async (data) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/flights`, data, {

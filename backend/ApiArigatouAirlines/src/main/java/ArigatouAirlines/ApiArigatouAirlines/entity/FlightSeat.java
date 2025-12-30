@@ -5,8 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Entity
-@Table(name = "flight_seat")
+@Entity(name = "flight_seat")
 @Getter
 @Setter
 @AllArgsConstructor

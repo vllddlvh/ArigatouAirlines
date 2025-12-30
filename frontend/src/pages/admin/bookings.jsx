@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// Icons from Lucide
 import { Search, Loader2, Plane, CheckCircle, XCircle, DollarSign, RotateCcw, Ticket, UserX } from 'lucide-react';
 import { Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription } from '@/components/ui/dialog-admin';
 import { Table,TableHead,TableHeader } from '@/components/ui/table-admin';
@@ -7,54 +6,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { getAllBookings, confirmPayment, cancelBooking } from '@/services/bookingService';
 
 
 
 
 // ===========================================
-// MOCK DATA & MAIN COMPONENT
+// MAIN COMPONENT
 // ===========================================
-
-// --- Dữ liệu Mock (Giả) ---
-const MOCK_BOOKINGS = [
-    {
-        id: 'BKG001',
-        flightNumber: 'VN1234',
-        customerName: 'Nguyễn Văn An',
-        customerEmail: 'an.nv@example.com',
-        totalPrice: 4700000,
-        status: 'Pending', // Trạng thái: Pending, Confirmed, Cancelled
-        paymentMethod: 'Bank Transfer',
-        bookingDate: '2025-10-20',
-        tickets: [
-            { id: 'T1', seat: 'A01', class: 'Business', price: 3500000 },
-            { id: 'T2', seat: 'B02', class: 'Economy', price: 1200000 }
-        ]
-    },
-    {
-        id: 'BKG002',
-        flightNumber: 'VJ5678',
-        customerName: 'Trần Thị Bình',
-        customerEmail: 'binh.tt@example.com',
-        totalPrice: 1550000,
-        status: 'Confirmed',
-        paymentMethod: 'Credit Card',
-        bookingDate: '2025-10-25',
-        tickets: [{ id: 'T3', seat: 'C10', class: 'Economy', price: 1550000 }]
-    },
-    {
-        id: 'BKG003',
-        flightNumber: 'QH9012',
-        customerName: 'Lê Văn Cường',
-        customerEmail: 'cuong.lv@example.com',
-        totalPrice: 2000000,
-        status: 'Cancelled',
-        paymentMethod: 'Cash',
-        bookingDate: '2025-10-18',
-        tickets: [{ id: 'T4', seat: 'D05', class: 'Economy', price: 2000000 }]
-    }
-];
-// ----------------------------
 
 function BookingManagementDashboard() {
     const { toast } = useToast();
@@ -65,53 +24,75 @@ function BookingManagementDashboard() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    // --- Mock: Lấy danh sách Booking ---
-    const getAllBookings = useCallback(async () => {
+    // --- Lấy danh sách Booking từ Backend ---
+    const fetchAllBookings = useCallback(async () => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500)); 
-        
         try {
-            setBookings(MOCK_BOOKINGS);
+            const data = await getAllBookings();
+            setBookings(data || []);
         } catch (error) {
             toast({
                 title: "Có lỗi khi lấy dữ liệu!",
-                description: "Xin vui lòng thử lại trong giây lát",
+                description: error.response?.data?.message || "Xin vui lòng thử lại trong giây lát",
+                variant: "destructive"
             })
         } finally {
             setIsLoading(false);
         }
     }, [toast]);
 
-    // --- Mock: Hủy Booking ---
-    const handleCancelBooking = async (bookingId) => {
-        if (!window.confirm(`Bạn có chắc chắn muốn HỦY Booking ${bookingId}? Thao tác này không thể hoàn tác.`)) return;
+    // --- Hủy Booking ---
+    const handleCancelBooking = async (bookingCode) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn HỦY Booking ${bookingCode}? Thao tác này không thể hoàn tác.`)) return;
         
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        setBookings(prev => prev.map(b => 
-            b.id === bookingId ? { ...b, status: 'Cancelled' } : b
-        ));
-        setSelectedBooking(prev => ({ ...prev, status: 'Cancelled' }));
-
-        toast({ title: "Thành công", description: `Booking ${bookingId} đã được hủy.`, variant: "destructive" })
+        try {
+            const booking = bookings.find(b => b.bookingCode === bookingCode);
+            if (!booking) return;
+            
+            await cancelBooking(booking.bookingId || booking.id);
+            await fetchAllBookings();
+            
+            toast({ 
+                title: "Thành công", 
+                description: `Booking ${bookingCode} đã được hủy.`, 
+                variant: "destructive" 
+            });
+        } catch (error) {
+            toast({
+                title: "Lỗi",
+                description: error.response?.data?.message || "Không thể hủy booking",
+                variant: "destructive"
+            });
+        }
     };
 
-    // --- Mock: Xác nhận Thanh toán ---
-    const handleConfirmPayment = async (bookingId) => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        setBookings(prev => prev.map(b => 
-            b.id === bookingId ? { ...b, status: 'Confirmed' } : b
-        ));
-        setSelectedBooking(prev => ({ ...prev, status: 'Confirmed' }));
-
-        toast({ title: "Thành công", description: `Booking ${bookingId} đã được xác nhận thanh toán .`, variant: "success" });
+    // --- Xác nhận Thanh toán ---
+    const handleConfirmPayment = async (bookingCode) => {
+        try {
+            const booking = bookings.find(b => b.bookingCode === bookingCode);
+            if (!booking) return;
+            
+            await confirmPayment(booking.bookingId || booking.id);
+            await fetchAllBookings();
+            
+            toast({ 
+                title: "Thành công", 
+                description: `Booking ${bookingCode} đã được xác nhận thanh toán.`, 
+                variant: "success" 
+            });
+        } catch (error) {
+            toast({
+                title: "Lỗi",
+                description: error.response?.data?.message || "Không thể xác nhận thanh toán",
+                variant: "destructive"
+            });
+        }
     };
     
     // --- Logic UI ---
     useEffect(() => {
-        getAllBookings();
-    }, [getAllBookings]);
+        fetchAllBookings();
+    }, [fetchAllBookings]);
 
     const handleViewDetails = (booking) => {
         setSelectedBooking(booking);
@@ -119,42 +100,41 @@ function BookingManagementDashboard() {
     };
 
     const filteredBookings = bookings.filter(b => 
-        b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.flightNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        (b.bookingCode || b.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.user?.fullName || b.customerName || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Confirmed':
-                return <Badge variant="success">Đã xác nhận</Badge>;
-            case 'Pending':
-                return <Badge variant="warning">Chờ thanh toán</Badge>;
-            case 'Cancelled':
-                return <Badge variant="destructive">Đã hủy</Badge>;
-            default:
-                return <Badge variant="default">{status}</Badge>;
+    const getStatusBadge = (statusBooking, statusPayment) => {
+        if (statusBooking === 'Cancelled') {
+            return <Badge variant="destructive">Đã hủy</Badge>;
         }
+        if (statusBooking === 'Confirmed' && statusPayment === 'Paid') {
+            return <Badge variant="success">Đã xác nhận</Badge>;
+        }
+        if (statusBooking === 'Pending' || statusPayment === 'Pending') {
+            return <Badge variant="warning">Chờ thanh toán</Badge>;
+        }
+        return <Badge variant="default">{statusBooking}</Badge>;
     };
     
     // Custom Table Row component
     const BookingTableRow = ({ booking }) => {
-        const isCancelled = booking.status === 'Cancelled';
-        const isConfirmed = booking.status === 'Confirmed';
+        const isCancelled = booking.statusBooking === 'Cancelled';
+        const isConfirmed = booking.statusBooking === 'Confirmed' && booking.statusPayment === 'Paid';
         
         return (
             <div 
-                key={booking.id}
+                key={booking.bookingCode || booking.id}
                 className={`grid grid-cols-[1.5fr_2fr_1.5fr_1.5fr_1fr_1.5fr] items-center p-4 border-b transition-colors text-sm
                     ${isCancelled ? 'bg-red-50 opacity-80' : 'hover:bg-indigo-50'}`}
             >
-                <div className={`font-semibold ${isCancelled ? 'text-red-600' : 'text-indigo-700'}`}>{booking.id}</div>
-                <div className="text-gray-700 truncate">{booking.customerName}</div>
-                <div className="text-gray-600 font-medium">{booking.flightNumber}</div>
+                <div className={`font-semibold ${isCancelled ? 'text-red-600' : 'text-indigo-700'}`}>{booking.bookingCode || booking.id}</div>
+                <div className="text-gray-700 truncate">{booking.user?.fullName || booking.customerName || 'N/A'}</div>
+                <div className="text-gray-600 font-medium">{booking.user?.email || booking.customerEmail || 'N/A'}</div>
                 <div className="font-bold text-green-700">
-                    {booking.totalPrice?.toLocaleString('vi-VN')}₫
+                    {Number(booking.totalAmount || booking.totalPrice || 0).toLocaleString('vi-VN')}₫
                 </div>
-                <div className="flex justify-center">{getStatusBadge(booking.status)}</div>
+                <div className="flex justify-center">{getStatusBadge(booking.statusBooking || booking.status, booking.statusPayment)}</div>
                 
                 {/* Actions Cell */}
                 <div className="flex space-x-2 justify-center">
@@ -168,24 +148,24 @@ function BookingManagementDashboard() {
                     </Button>
                     
                     {/* Hành động chính trong bảng */}
-                    {booking.status === 'Pending' && (
+                    {(booking.statusBooking === 'Pending' || booking.status === 'Pending') && (
                         <Button 
                             variant="success" 
                             size="sm"
                             title="Xác nhận thanh toán"
-                            onClick={() => handleConfirmPayment(booking.id)}
+                            onClick={() => handleConfirmPayment(booking.bookingCode || booking.id)}
                         >
                             <CheckCircle className="w-4 h-4" />
                         </Button>
                     )}
                     
-                    {booking.status !== 'Cancelled' && (
+                    {(booking.statusBooking !== 'Cancelled' && booking.status !== 'Cancelled') && (
                         <Button 
                             variant="destructive" 
                             size="sm"
                             title="Hủy Booking"
-                            onClick={() => handleCancelBooking(booking.id)}
-                            className={booking.status === 'Confirmed' ? 'bg-red-500' : ''}
+                            onClick={() => handleCancelBooking(booking.bookingCode || booking.id)}
+                            className={(booking.statusBooking === 'Confirmed' || booking.status === 'Confirmed') ? 'bg-red-500' : ''}
                         >
                             <XCircle className="w-4 h-4" />
                         </Button>
@@ -239,7 +219,7 @@ function BookingManagementDashboard() {
                                 <TableHeader>
                                     <TableHead className="w-[15%]">MÃ BOOKING</TableHead>
                                     <TableHead className="w-[20%]">KHÁCH HÀNG</TableHead>
-                                    <TableHead className="w-[15%]">SỐ HIỆU BAY</TableHead>
+                                    <TableHead className="w-[15%]">EMAIL</TableHead>
                                     <TableHead className="w-[15%]">TỔNG TIỀN</TableHead>
                                     <TableHead className="w-[15%] text-center">TRẠNG THÁI</TableHead>
                                     <TableHead className="w-[20%] text-center">THAO TÁC</TableHead>
@@ -266,9 +246,9 @@ function BookingManagementDashboard() {
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle className="text-2xl">Chi tiết Booking: {selectedBooking?.id}</DialogTitle>
+                            <DialogTitle className="text-2xl">Chi tiết Booking: {selectedBooking?.bookingCode || selectedBooking?.id}</DialogTitle>
                             <DialogDescription>
-                                Số hiệu bay: <span className="font-semibold text-indigo-600">{selectedBooking?.flightNumber}</span> | Ngày booking: {selectedBooking?.bookingDate}
+                                Mã booking: <span className="font-semibold text-indigo-600">{selectedBooking?.bookingCode || selectedBooking?.id}</span> | Ngày tạo: {selectedBooking?.createdAt ? new Date(selectedBooking.createdAt).toLocaleDateString('vi-VN') : selectedBooking?.bookingDate}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -276,44 +256,44 @@ function BookingManagementDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t mt-4">
                                 {/* Cột 1: Thông tin khách hàng */}
                                 <DetailCard title="Thông tin Khách hàng">
-                                    <DetailItem label="Tên" value={selectedBooking.customerName} />
-                                    <DetailItem label="Email" value={selectedBooking.customerEmail} />
-                                    <DetailItem label="Trạng thái" value={getStatusBadge(selectedBooking.status)} isBadge={true} />
+                                    <DetailItem label="Tên" value={selectedBooking.user?.fullName || selectedBooking.customerName || 'N/A'} />
+                                    <DetailItem label="Email" value={selectedBooking.user?.email || selectedBooking.customerEmail || 'N/A'} />
+                                    <DetailItem label="Trạng thái" value={getStatusBadge(selectedBooking.statusBooking || selectedBooking.status, selectedBooking.statusPayment)} isBadge={true} />
                                 </DetailCard>
 
                                 {/* Cột 2: Thông tin thanh toán */}
                                 <DetailCard title="Thông tin Thanh toán">
                                     <DetailItem 
                                         label="Tổng tiền" 
-                                        value={<span className="text-xl font-bold text-green-600">{selectedBooking.totalPrice?.toLocaleString('vi-VN')}₫</span>} 
+                                        value={<span className="text-xl font-bold text-green-600">{Number(selectedBooking.totalAmount || selectedBooking.totalPrice || 0).toLocaleString('vi-VN')}₫</span>} 
                                     />
-                                    <DetailItem label="P/Thức" value={selectedBooking.paymentMethod} />
+                                    <DetailItem label="Hạn thanh toán" value={selectedBooking.paymentDeadline ? new Date(selectedBooking.paymentDeadline).toLocaleString('vi-VN') : 'N/A'} />
                                     <DetailItem 
                                         label="Tình trạng" 
-                                        value={selectedBooking.status === 'Confirmed' ? 'Đã thanh toán' : selectedBooking.status === 'Pending' ? 'Chưa thanh toán' : 'Đã hủy'} 
+                                        value={selectedBooking.statusPayment === 'Paid' ? 'Đã thanh toán' : selectedBooking.statusPayment === 'Pending' ? 'Chưa thanh toán' : selectedBooking.statusPayment === 'Refunded' ? 'Đã hoàn tiền' : 'Thất bại'} 
                                     />
                                 </DetailCard>
 
                                 {/* Cột 3: Hành động */}
                                 <DetailCard title="Hành động Quản lý">
                                     <div className="space-y-3">
-                                        {selectedBooking.status === 'Pending' && (
+                                        {(selectedBooking.statusBooking === 'Pending' || selectedBooking.status === 'Pending') && (
                                             <Button 
                                                 className="w-full bg-green-600 hover:bg-green-700"
-                                                onClick={() => handleConfirmPayment(selectedBooking.id)}
+                                                onClick={() => handleConfirmPayment(selectedBooking.bookingCode || selectedBooking.id)}
                                             >
                                                 <CheckCircle className="w-4 h-4 mr-2" /> Xác nhận Thanh toán
                                             </Button>
                                         )}
-                                        {selectedBooking.status !== 'Cancelled' && (
+                                        {(selectedBooking.statusBooking !== 'Cancelled' && selectedBooking.status !== 'Cancelled') && (
                                             <Button 
                                                 className="w-full bg-red-600 hover:bg-red-700"
-                                                onClick={() => handleCancelBooking(selectedBooking.id)}
+                                                onClick={() => handleCancelBooking(selectedBooking.bookingCode || selectedBooking.id)}
                                             >
                                                 <XCircle className="w-4 h-4 mr-2" /> Hủy Booking
                                             </Button>
                                         )}
-                                        {selectedBooking.status === 'Cancelled' && (
+                                        {(selectedBooking.statusBooking === 'Cancelled' || selectedBooking.status === 'Cancelled') && (
                                             <p className="text-red-500 font-medium p-2 bg-red-50 rounded-lg border border-red-200">
                                                 <RotateCcw className="w-4 h-4 inline mr-2"/> Không thể thao tác trên Booking đã hủy.
                                             </p>
@@ -323,34 +303,62 @@ function BookingManagementDashboard() {
                             </div>
                         )}
                         
-                        {/* Bảng chi tiết vé */}
-                        <div className="mt-6 border-t pt-4 max-h-[40vh] overflow-y-auto">
-                            <h3 className="font-bold text-lg text-gray-700 mb-3 flex items-center space-x-2 border-b pb-2">
-                                <Ticket className="w-5 h-5 text-indigo-600" />
-                                <span>Danh sách Vé ({selectedBooking?.tickets?.length})</span>
-                            </h3>
-                            <Table>
-                                <div className="min-w-[400px]">
-                                    {/* Sub-Table Header */}
-                                    <div className="grid grid-cols-4 p-3 font-semibold text-xs uppercase tracking-wider text-gray-700 bg-gray-50">
-                                        <div className="truncate">MÃ VÉ</div>
-                                        <div className="truncate">GHẾ</div>
-                                        <div className="truncate">HẠNG</div>
-                                        <div className="truncate text-right">GIÁ VÉ</div>
-                                    </div>
-                                </div>
-                                <div className="min-w-[400px]">
-                                    {selectedBooking?.tickets?.map(ticket => (
-                                        <div key={ticket.id} className="grid grid-cols-4 p-3 border-b hover:bg-gray-100 transition-colors text-sm">
-                                            <div className="font-mono text-gray-600">{ticket.id}</div>
-                                            <div className="font-medium text-gray-800">{ticket.seat}</div>
-                                            <div className="font-medium">{ticket.class}</div>
-                                            <div className="text-green-600 font-semibold text-right">{ticket.price.toLocaleString('vi-VN')}₫</div>
+                        {/* Ticket Details Section */}
+                        {selectedBooking?.tickets && selectedBooking.tickets.length > 0 && (
+                            <div className="mt-6 border-t pt-4">
+                                <h3 className="font-bold text-lg text-indigo-700 mb-3">Chi tiết vé</h3>
+                                <div className="space-y-3">
+                                    {selectedBooking.tickets.map((ticket, idx) => (
+                                        <div key={ticket.ticketId || idx} className="bg-gray-50 p-3 rounded-lg border">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                                                <div>
+                                                    <span className="text-gray-500">Hành khách:</span>
+                                                    <div className="font-semibold">{ticket.passengerName || 'N/A'}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Chuyến bay:</span>
+                                                    <div className="font-semibold">{ticket.flightNumber || 'N/A'}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Hạng vé:</span>
+                                                    <div className="font-semibold text-indigo-600">
+                                                        {ticket.ticketClassName === 'ECONOMY' ? 'Phổ thông' : 
+                                                         ticket.ticketClassName === 'PREMIUM_ECONOMY' ? 'Premium Economy' : 
+                                                         ticket.ticketClassName === 'BUSINESS' ? 'Thương gia' : ticket.ticketClassName}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Ghế:</span>
+                                                    <div className="font-semibold">{ticket.seatNumber || 'N/A'}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Giá vé:</span>
+                                                    <div className="font-bold text-green-600">
+                                                        {Number(ticket.basePrice || 0).toLocaleString('vi-VN')}₫
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Thuế/phí:</span>
+                                                    <div className="font-semibold">
+                                                        {Number(ticket.tax || 0).toLocaleString('vi-VN')}₫
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Tổng:</span>
+                                                    <div className="font-bold text-blue-600">
+                                                        {(Number(ticket.basePrice || 0) + Number(ticket.tax || 0)).toLocaleString('vi-VN')}₫
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Trạng thái:</span>
+                                                    <div className="font-semibold">{ticket.status || 'N/A'}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
-                            </Table>
-                        </div>
+                            </div>
+                        )}
                     </DialogContent>
                 </Dialog>
             </div>
@@ -374,5 +382,5 @@ const DetailItem = ({ label, value, isBadge = false }) => (
 );
 
 
-
+// Export as App is required for the single-file React component convention
 export default BookingManagementDashboard;

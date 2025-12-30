@@ -3,6 +3,7 @@ package ArigatouAirlines.ApiArigatouAirlines.exception;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.ApiResponseError;
 import jakarta.transaction.RollbackException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -41,6 +42,18 @@ public class GlobalExceptionHandler {
                 .status(ErrorCode.RUNTIME_EXCEPTION.getHttpStatusCode())
                 .body(apiResponseError);
 
+    }
+
+    @ExceptionHandler(value = DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponseError> handlingDataIntegrityViolationException(DataIntegrityViolationException e) {
+        ApiResponseError apiResponseError = ApiResponseError.builder()
+                .code(ErrorCode.RUNTIME_EXCEPTION.getCode())
+                .message("Data integrity violation")
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(apiResponseError);
     }
 
 

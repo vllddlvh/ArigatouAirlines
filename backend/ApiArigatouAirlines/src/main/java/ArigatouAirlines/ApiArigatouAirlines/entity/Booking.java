@@ -1,7 +1,9 @@
 package ArigatouAirlines.ApiArigatouAirlines.entity;
 
+import ArigatouAirlines.ApiArigatouAirlines.converter.StatusBookingConverter;
+import ArigatouAirlines.ApiArigatouAirlines.converter.StatusPaymentConverter;
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking;
+import ArigatouAirlines.ApiArigatouAirlines.enums.StatusPayment;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,9 +11,9 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Entity
-@Table(name = "booking")
+@Entity(name = "booking")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -24,7 +26,7 @@ public class Booking {
     @Column(name = "booking_id")
     int bookingId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     User user;
 
@@ -32,12 +34,12 @@ public class Booking {
     String bookingCode;
 
     @Column(name = "booking_status")
-            @Enumerated(EnumType.STRING)
+    @Convert(converter = StatusBookingConverter.class)
     StatusBooking statusBooking;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
-    StatusPaymentBooking statusPayment;
+    @Convert(converter = StatusPaymentConverter.class)
+    StatusPayment statusPayment;
 
     @Column(name = "total_amount", precision = 10, scale = 2)
     BigDecimal totalAmount;
@@ -46,5 +48,15 @@ public class Booking {
     LocalDateTime paymentDeadline;
 
     @Column(name = "created_at")
-    LocalDateTime createdAt;
+    Instant createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (bookingCode == null || bookingCode.isBlank()) {
+            bookingCode = UUID.randomUUID().toString();
+        }
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
 }

@@ -21,7 +21,18 @@ public class TicketService {
 
     public List<TicketResponse> getTicketByBookingId(int bookingId) {
         List<Ticket> listTickets = ticketRepository.findAllByBooking_BookingId(bookingId);
-
         return listTickets.stream().map(ticketMapper :: toTicketResponse).toList();
+    }
+
+    public List<TicketResponse> getAllTickets() {
+        return ticketRepository.findAll().stream()
+                .map(ticketMapper::toTicketResponse)
+                .toList();
+    }
+
+    public TicketResponse getTicketById(int ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        return ticketMapper.toTicketResponse(ticket);
     }
 }

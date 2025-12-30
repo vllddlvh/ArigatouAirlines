@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils"; // Giả định utility cn có sẵn
  */
 export function FlightSideFilter({ filters, setFilters }) {
   // Giá trị mặc định (Nên được truyền từ prop hoặc định nghĩa rõ ràng)
-  const defaultMinBudget = 100000;
-  const defaultMaxBudget = 6400000;
+  const defaultMinBudget = 0;
+  const defaultMaxBudget = 1000000000;
   const defaultBudgetRange = [defaultMinBudget, defaultMaxBudget];
   const defaultDepartureTime = "all";
 

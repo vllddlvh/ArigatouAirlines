@@ -23,7 +23,7 @@ public class FlightPrice {
             @JoinColumn(name = "flight_id")
     Flight flight;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "class_id")
     TicketClass ticketClass;
 

@@ -1,7 +1,9 @@
 package ArigatouAirlines.ApiArigatouAirlines.controller;
 
+import ArigatouAirlines.ApiArigatouAirlines.dto.request.VoucherValidateRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.VoucherRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.ApiResponse;
+import ArigatouAirlines.ApiArigatouAirlines.dto.response.VoucherValidateResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.VoucherResponse;
 import ArigatouAirlines.ApiArigatouAirlines.service.VoucherService;
 import lombok.AccessLevel;
@@ -34,8 +36,16 @@ public class VoucherController {
                 .build();
     }
 
+    @PostMapping("/validate")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    ApiResponse<VoucherValidateResponse> validateVoucher(@RequestBody VoucherValidateRequest request) {
+        return ApiResponse.<VoucherValidateResponse>builder()
+                .body(voucherService.validateVoucher(request))
+                .build();
+    }
+
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+            @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<VoucherResponse> getVoucher(@PathVariable int id) {
         return ApiResponse.<VoucherResponse>builder()
                 .body(voucherService.getVoucher(id))
@@ -51,6 +61,7 @@ public class VoucherController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<String> deleteVoucher(@PathVariable int id) {
         return ApiResponse.<String>builder()
                 .body(voucherService.deleteVoucher(id))

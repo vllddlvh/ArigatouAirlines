@@ -15,9 +15,9 @@ import * as masterDataService from '@/services/masterDataService';
 
 // Status options cho Aircraft
 const AIRCRAFT_STATUS_OPTIONS = [
-    { value: 'ACTIVE', label: 'Đang hoạt động' },
-    { value: 'INACTIVE', label: 'Ngừng hoạt động' },
-    { value: 'MAINTENANCE', label: 'Đang bảo trì' },
+    { value: 'Active', label: 'Đang hoạt động' },
+    { value: 'Maintenance', label: 'Đang bảo trì' },
+    { value: 'Retired', label: 'Ngừng hoạt động' },
 ];
 // -----------------
 
@@ -37,6 +37,8 @@ const AirportManagement = ({ data = [], onAction }) => {
 
   // ===== FILTER (SAFE NULL) =====
   const keyword = searchTerm.toLowerCase();
+
+  console.log(data)
 
   const filteredData = data.filter((item) =>
     (item.airportCode ?? "").toLowerCase().includes(keyword) ||
@@ -349,7 +351,7 @@ const AircraftManagement = ({ data, airlinesData, aircraftTypesData, onAction })
     const [editingAircraftId, setEditingAircraftId] = useState(null);
     const [formData, setFormData] = useState({ 
         registrationNumber: '', 
-        statusAircraft: 'ACTIVE', 
+        statusAircraft: 'Active', 
         aircraftTypeId: '', 
         airlineId: '' 
     });
@@ -369,9 +371,9 @@ const AircraftManagement = ({ data, airlinesData, aircraftTypesData, onAction })
 
     const getStatusBadgeClass = (status) => {
         switch(status) {
-            case 'ACTIVE': return 'bg-green-100 text-green-700';
-            case 'INACTIVE': return 'bg-red-100 text-red-700';
-            case 'MAINTENANCE': return 'bg-yellow-100 text-yellow-700';
+            case 'Active': return 'bg-green-100 text-green-700';
+            case 'Retired': return 'bg-red-100 text-red-700';
+            case 'Maintenance': return 'bg-yellow-100 text-yellow-700';
             default: return 'bg-gray-100 text-gray-700';
         }
     };
@@ -399,7 +401,7 @@ const AircraftManagement = ({ data, airlinesData, aircraftTypesData, onAction })
     const resetForm = () => {
         setFormData({ 
             registrationNumber: '', 
-            statusAircraft: 'ACTIVE', 
+            statusAircraft: 'Active', 
             aircraftTypeId: aircraftTypesData[0]?.aircraftTypeId || '', 
             airlineId: airlinesData[0]?.airlineId || '' 
         });
@@ -411,7 +413,7 @@ const AircraftManagement = ({ data, airlinesData, aircraftTypesData, onAction })
         setEditingAircraftId(item.aircraftId);
         setFormData({
             registrationNumber: item.registrationNumber || '',
-            statusAircraft: item.statusAircraft || 'ACTIVE',
+            statusAircraft: item.statusAircraft || 'Active',
             aircraftTypeId: item.aircraftType?.aircraftTypeId || '',
             airlineId: item.airline?.airlineId || '',
         });
@@ -628,18 +630,21 @@ function MasterDataManagementDashboard() {
                 description = "Đã xóa sân bay.";
                 break;
 
-                // Airline (vẫn dùng mock vì cấu trúc frontend khác backend)
+                // ================= AIRLINE =================
                 case 'DELETE_AIRLINE':
-                    setAirlines(airlines.filter(a => a.airlineId !== payload));
-                    description = "Đã xóa hãng hàng không thành công (MOCK).";
+                    await masterDataService.deleteAirline(payload);
+                    description = "Đã xóa hãng hàng không thành công.";
+                    await fetchAllData();
                     break;
                 case 'ADD_AIRLINE':
-                    setAirlines([...airlines, { ...payload, airlineId: Date.now() }]);
-                    description = `Đã thêm hãng ${payload.airlineCode} mới (MOCK).`;
+                    await masterDataService.createAirline(payload);
+                    description = `Đã thêm hãng ${payload.airlineCode} mới.`;
+                    await fetchAllData();
                     break;
                 case 'UPDATE_AIRLINE':
-                    setAirlines(airlines.map(a => a.airlineId === payload.airlineId ? payload : a));
-                    description = `Đã cập nhật hãng ${payload.airlineCode} (MOCK).`;
+                    await masterDataService.updateAirline(payload.airlineId, payload);
+                    description = `Đã cập nhật hãng ${payload.airlineCode}.`;
+                    await fetchAllData();
                     break;
 
                 // Aircraft - Gọi API Backend

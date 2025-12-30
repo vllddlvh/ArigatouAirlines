@@ -49,7 +49,7 @@ public class AirportController {
                 .build();
     }
 
-    @DeleteMapping("{airportId}")
+    @DeleteMapping("/{airportId}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Void> deleteAirport(@PathVariable String airportId) {
         airportService.deleteAirport(airportId);

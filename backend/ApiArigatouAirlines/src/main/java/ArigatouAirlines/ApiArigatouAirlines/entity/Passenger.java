@@ -31,3 +31,4 @@ public class Passenger {
 
     String nationality;
 }
+

@@ -17,8 +17,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightPriceResponse {
-    int priceId;
-    FlightResponse flight;
+    Flight flight;
     TicketClass ticketClass;
     BigDecimal basePrice;
     BigDecimal tax;

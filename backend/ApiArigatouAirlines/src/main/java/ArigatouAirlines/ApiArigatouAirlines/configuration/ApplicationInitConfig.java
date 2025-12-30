@@ -1,9 +1,11 @@
 package ArigatouAirlines.ApiArigatouAirlines.configuration;
 
 import ArigatouAirlines.ApiArigatouAirlines.entity.Role;
+import ArigatouAirlines.ApiArigatouAirlines.entity.TicketClass;
 import ArigatouAirlines.ApiArigatouAirlines.entity.User;
 import ArigatouAirlines.ApiArigatouAirlines.enums.Gender;
 import ArigatouAirlines.ApiArigatouAirlines.repository.RoleRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.TicketClassRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Objects;
 
 @Configuration
 @RequiredArgsConstructor
@@ -25,10 +28,40 @@ public class ApplicationInitConfig {
 
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
+    TicketClassRepository ticketClassRepository;
+    UserRepository userRepository;
 
     @Bean
-    public ApplicationRunner applicationRunner(UserRepository userRepository) {
+    public ApplicationRunner applicationRunner() {
         return args -> {
+
+            if (!ticketClassRepository.existsByClassName("ECONOMY")) {
+                TicketClass economy = Objects.requireNonNull(TicketClass.builder()
+                        .className("ECONOMY")
+                        .baggageAllowanceKg(20)
+                        .refundable(false)
+                        .changeable(true)
+                        .build());
+                ticketClassRepository.save(economy);
+            }
+            if (!ticketClassRepository.existsByClassName("PREMIUM_ECONOMY")) {
+                TicketClass premiumEconomy = Objects.requireNonNull(TicketClass.builder()
+                        .className("PREMIUM_ECONOMY")
+                        .baggageAllowanceKg(25)
+                        .refundable(false)
+                        .changeable(true)
+                        .build());
+                ticketClassRepository.save(premiumEconomy);
+            }
+            if (!ticketClassRepository.existsByClassName("BUSINESS")) {
+                TicketClass business = Objects.requireNonNull(TicketClass.builder()
+                        .className("BUSINESS")
+                        .baggageAllowanceKg(30)
+                        .refundable(true)
+                        .changeable(true)
+                        .build());
+                ticketClassRepository.save(business);
+            }
 
             if (!userRepository.existsByUsername("admin")) {
 

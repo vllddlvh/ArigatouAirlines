@@ -798,7 +798,34 @@ LOCK TABLES `voucher_usage` WRITE;
 /*!40000 ALTER TABLE `voucher_usage` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+-- ========================================
+-- DATABASE SCHEMA FIXES FOR ENUM COLUMNS
+-- ========================================
 
+-- Fix booking table - Increase column lengths for enum strings
+ALTER TABLE booking MODIFY COLUMN booking_code VARCHAR(255);
+ALTER TABLE booking MODIFY COLUMN booking_status VARCHAR(20);
+ALTER TABLE booking MODIFY COLUMN payment_status VARCHAR(20);
+
+-- Fix ticket table - Increase column lengths for enum strings
+ALTER TABLE ticket MODIFY COLUMN status VARCHAR(20);
+ALTER TABLE ticket MODIFY COLUMN ticket_number VARCHAR(255);
+
+-- Fix passenger table - Increase column length for gender enum
+ALTER TABLE passenger MODIFY COLUMN gender VARCHAR(20);
+
+-- Fix flight table - Increase column length for status enum
+ALTER TABLE flight MODIFY COLUMN status VARCHAR(20);
+
+-- Fix aircraft table - Increase column length for status enum
+ALTER TABLE aircraft MODIFY COLUMN status VARCHAR(20);
+
+-- Note: flight_schedule table doesn't have status column, only is_active (boolean)
+-- ALTER TABLE flight_schedule MODIFY COLUMN status VARCHAR(20);
+
+-- ========================================
+-- END OF SCHEMA FIXES
+-- ========================================
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;

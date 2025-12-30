@@ -1,79 +1,64 @@
-import axios from "axios";
-import { API_BASE_URL, extractBody, getAuthHeader } from "@/lib/api";
+import axios from 'axios';
+import { API_BASE_URL, getAuthHeader } from '@/lib/api';
 
-// ==================== VOUCHER ====================
+export const validateVoucher = async ({ voucherCode, orderAmount }) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/vouchers/validate`,
+      { voucherCode, orderAmount },
+      { headers: getAuthHeader() }
+    );
+    return response.data.body;
+  } catch (error) {
+    console.error('Error validating voucher:', error);
+    throw error;
+  }
+};
 
 export const getAllVouchers = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/vouchers`, {
       headers: getAuthHeader(),
     });
-    return extractBody(response);
+    return response.data.body;
   } catch (error) {
-    console.error("Lỗi khi lấy danh sách voucher:", error);
-    throw (
-      error.response?.data?.message ||
-      "Đã xảy ra lỗi khi lấy danh sách voucher."
-    );
+    console.error('Error fetching vouchers:', error);
+    throw error;
   }
 };
 
-export const getVoucherById = async (id) => {
+export const createVoucher = async (payload) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/vouchers/${id}`, {
+    const response = await axios.post(`${API_BASE_URL}/vouchers`, payload, {
       headers: getAuthHeader(),
     });
-    return extractBody(response);
+    return response.data.body;
   } catch (error) {
-    console.error("Lỗi khi lấy thông tin voucher:", error);
-    throw (
-      error.response?.data?.message ||
-      "Đã xảy ra lỗi khi lấy thông tin voucher."
-    );
+    console.error('Error creating voucher:', error);
+    throw error;
   }
 };
 
-export const createVoucher = async (data) => {
+export const updateVoucher = async (voucherId, payload) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/vouchers`, data, {
+    const response = await axios.put(`${API_BASE_URL}/vouchers/${voucherId}`, payload, {
       headers: getAuthHeader(),
     });
-    return extractBody(response);
+    return response.data.body;
   } catch (error) {
-    console.error("Lỗi khi tạo voucher:", error);
-    throw (
-      error.response?.data?.message ||
-      "Đã xảy ra lỗi khi tạo voucher."
-    );
+    console.error('Error updating voucher:', error);
+    throw error;
   }
 };
 
-export const updateVoucher = async (id, data) => {
+export const deleteVoucher = async (voucherId) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/vouchers/${id}`, data, {
+    const response = await axios.delete(`${API_BASE_URL}/vouchers/${voucherId}`, {
       headers: getAuthHeader(),
     });
-    return extractBody(response);
+    return response.data.body;
   } catch (error) {
-    console.error("Lỗi khi cập nhật voucher:", error);
-    throw (
-      error.response?.data?.message ||
-      "Đã xảy ra lỗi khi cập nhật voucher."
-    );
-  }
-};
-
-export const deleteVoucher = async (id) => {
-  try {
-    const response = await axios.delete(`${API_BASE_URL}/vouchers/${id}`, {
-      headers: getAuthHeader(),
-    });
-    return extractBody(response);
-  } catch (error) {
-    console.error("Lỗi khi xóa voucher:", error);
-    throw (
-      error.response?.data?.message ||
-      "Đã xảy ra lỗi khi xóa voucher."
-    );
+    console.error('Error deleting voucher:', error);
+    throw error;
   }
 };

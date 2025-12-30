@@ -11,5 +11,6 @@ public interface BookingMapper {
     @Mapping(target = "user", ignore = true)
     Booking toBooking(BookingRequest bookingRequest);
 
+    @Mapping(target = "tickets", ignore = true)
     BookingResponse toBookingResponse(Booking booking);
 }

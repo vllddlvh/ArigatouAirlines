@@ -7,7 +7,7 @@ import ArigatouAirlines.ApiArigatouAirlines.entity.Flight;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {FlightScheduleMapper.class, AircraftMapper.class})
 public interface FlightMapper {
 
     @Mapping(target = "flightSeatList", ignore = true)
@@ -18,6 +18,5 @@ public interface FlightMapper {
     @Mapping(source = "departureTime", target = "departureDateTime", ignore = true)
     Flight toFlight(FlightRequest flightRequest);
 
-    @Mapping(source = "flightId", target = "flightId")
     FlightResponseWithoutList toFlightResponseWithoutList(Flight flight);
 }

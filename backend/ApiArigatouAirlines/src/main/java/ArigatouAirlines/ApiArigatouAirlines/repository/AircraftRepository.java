@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AircraftRepository extends JpaRepository<Aircraft, Integer> {
-
+    long countByAirline_AirlineId(int airlineId);
 }
 

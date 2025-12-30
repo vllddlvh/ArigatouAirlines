@@ -10,6 +10,7 @@ import ArigatouAirlines.ApiArigatouAirlines.repository.AirportRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -58,6 +59,13 @@ public class AirportService {
     }
 
     public void deleteAirport(String airportId) {
-        airportRepository.deleteById(airportId);
+        if (!airportRepository.existsById(airportId)) {
+            throw new AppException(ErrorCode.AIRPORTID_NOT_EXISTD);
+        }
+        try {
+            airportRepository.deleteById(airportId);
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(ErrorCode.AIRPORT_IN_USE);
+        }
     }
 }

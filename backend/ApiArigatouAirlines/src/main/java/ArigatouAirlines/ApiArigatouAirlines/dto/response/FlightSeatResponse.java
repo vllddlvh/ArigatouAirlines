@@ -1,6 +1,7 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.response;
 
 import ArigatouAirlines.ApiArigatouAirlines.entity.FlightSeat;
+import ArigatouAirlines.ApiArigatouAirlines.enums.SeatClass;
 import ArigatouAirlines.ApiArigatouAirlines.enums.SeatType;
 import ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat;
 import jakarta.persistence.Column;
@@ -20,6 +21,7 @@ public class FlightSeatResponse {
     int flightSeatId;
     StatusFlightSeat status;
     String seatNumber;
+    SeatClass seatClass;
     SeatType seatType;
     int visualRow;
     int visualCol;

@@ -35,8 +35,8 @@ public class SeatMap {
     AircraftType aircraftType;
 
     @Column(name = "visual_row")
-    int visualRow;
+    Integer visualRow;
 
     @Column(name = "visual_col")
-    int visualCol;
+    Integer visualCol;
 }

@@ -6,22 +6,36 @@ import ArigatouAirlines.ApiArigatouAirlines.service.TicketService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/ticket")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequestMapping("/tickets")
 public class TicketController {
     TicketService ticketService;
 
-    @GetMapping("/{bookingId}")
-    ApiResponse<List<TicketResponse>> getAllTicketByBookingId(@PathVariable int bookingId) {
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<TicketResponse>> getAllTickets() {
+        return ApiResponse.<List<TicketResponse>>builder()
+                .body(ticketService.getAllTickets())
+                .build();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<TicketResponse> getTicketById(@PathVariable int id) {
+        return ApiResponse.<TicketResponse>builder()
+                .body(ticketService.getTicketById(id))
+                .build();
+    }
+
+    @GetMapping("/booking/{bookingId}")
+    ApiResponse<List<TicketResponse>> getTicketsByBookingId(@PathVariable int bookingId) {
         return ApiResponse.<List<TicketResponse>>builder()
                 .body(ticketService.getTicketByBookingId(bookingId))
                 .build();

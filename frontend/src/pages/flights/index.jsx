@@ -12,12 +12,13 @@ import { FlightCard } from "@/components/tours-component/FlightCard";
 import { SkeletonFlightCard } from "@/components/tours-component/SkeletonFlightCard";
 import { FlightSelectionNotice } from "@/components/tours-component/FlightSelectionNotice";
 import { Button } from "@/components/ui/button";
+import { CreditCard } from "lucide-react";
 
 // import { useFlightData } from "@/hooks/useFlightData";
 import airportsData from "@/data/airports_data.json";
 import * as masterDataService from "@/services/masterDataService";
 
-const getCityByCode = (code) => {
+const getCityByCodeStatic = (code) => {
   for (const region of airportsData) {
     const airport = region.airports.find((airport) => airport.code === code);
     if (airport) return airport.city;
@@ -51,9 +52,11 @@ export default function FlightBooking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    budget: [100000, 6400000],
+    budget: [0, 1000000000],
     departureTime: "all",
   });
+
+  const [airportCityMap, setAirportCityMap] = useState({});
 
   const formatTimeHHmm = (dateTimeString) => {
     if (!dateTimeString) return "N/A";
@@ -88,28 +91,35 @@ export default function FlightBooking() {
   };
 
   const mapApiFlightToUi = (flight) => {
-    const economyPriceRaw = flight?.prices?.ECONOMY ?? flight?.basePrice;
+    const basePrice = Number(flight?.basePrice ?? 0);
+    const tax = Number(flight?.tax ?? 0);
+    const economyPriceRaw = flight?.prices?.ECONOMY ?? (flight?.basePrice !== undefined && flight?.basePrice !== null ? basePrice + tax : undefined);
     const economyPrice = Number(economyPriceRaw ?? 0);
-    const businessPriceRaw = flight?.prices?.BUSINESS ?? (Number.isFinite(economyPrice) ? Math.round(economyPrice * 1.5) : undefined);
+    const businessPriceRaw = flight?.prices?.BUSINESS ?? (Number.isFinite(economyPrice) ? Math.round(economyPrice * 2) : undefined);
+    const hasPrice = economyPriceRaw !== undefined && economyPriceRaw !== null;
+
+    const departureDateTime = flight?.departureDateTime ?? flight?.departureTime;
+    const arrivalDateTime = flight?.arrivalDateTime ?? flight?.arrivalTime;
 
     const departureCode = flight?.departureAirportCode ?? flight?.departureAirport ?? "";
     const arrivalCode = flight?.arrivalAirportCode ?? flight?.arrivalAirport ?? "";
 
     return {
-      id: flight?.scheduleId ?? flight?.id ?? flight?.flightId,
-      departureTime: formatTimeHHmm(flight?.departureTime),
-      arrivalTime: formatTimeHHmm(flight?.arrivalTime),
+      id: flight?.flightId ?? flight?.id ?? flight?.scheduleId,
+      departureTime: formatTimeHHmm(departureDateTime),
+      arrivalTime: formatTimeHHmm(arrivalDateTime),
       departureCode,
       arrivalCode,
-      duration: formatDuration(flight?.departureTime, flight?.arrivalTime),
-      airline: flight?.airline || "Arigatou Airlines",
+      duration: formatDuration(departureDateTime, arrivalDateTime),
+      airline: flight?.airline || flight?.schedule?.airline?.airlineName || "Arigatou Airlines",
       economyPrice: Number.isFinite(economyPrice) ? economyPrice : 0,
       businessPrice: Number(businessPriceRaw ?? 0),
+      hasPrice,
       seatsLeft: null,
-      flightNumber: flight?.flightNumber,
+      flightNumber: flight?.flightNumber || flight?.schedule?.flightNumber,
       departureAirport: flight?.departureAirport || departureCode,
       arrivalAirport: flight?.arrivalAirport || arrivalCode,
-      departureDate: formatLongVietnameseDate(flight?.departureTime),
+      departureDate: formatLongVietnameseDate(departureDateTime),
       aircraft: flight?.aircraftType || "",
       economyOptions: [
         {
@@ -161,6 +171,22 @@ export default function FlightBooking() {
   useEffect(() => {
     if (!router.isReady) return;
 
+    const fetchAirports = async () => {
+      try {
+        const data = await masterDataService.getAllAirports();
+        const list = Array.isArray(data) ? data : [];
+        const next = {};
+        list.forEach((a) => {
+          const code = String(a?.airportCode || "").toUpperCase();
+          if (!code) return;
+          next[code] = a?.city || "";
+        });
+        setAirportCityMap(next);
+      } catch (e) {
+        setAirportCityMap({});
+      }
+    };
+
     const fetchFlights = async () => {
       setLoading(true);
       setError(null);
@@ -168,7 +194,11 @@ export default function FlightBooking() {
         const data = await masterDataService.getAllFlights();
         const mapped = (Array.isArray(data) ? data : []).map((f) => {
           const ui = mapApiFlightToUi(f);
-          return { ...ui, rawDepartureTime: f?.departureTime, rawArrivalTime: f?.arrivalTime };
+          return {
+            ...ui,
+            rawDepartureTime: f?.departureDateTime ?? f?.departureTime,
+            rawArrivalTime: f?.arrivalDateTime ?? f?.arrivalTime,
+          };
         });
 
         setAllFlights(mapped);
@@ -193,6 +223,7 @@ export default function FlightBooking() {
     };
 
     fetchFlights();
+    fetchAirports();
   }, [router.isReady, fromAirport, toAirport, departureDate, isUrlDataMissing]);
 
   useEffect(() => {
@@ -201,6 +232,8 @@ export default function FlightBooking() {
     if (filters.budget) {
       filtered = filtered.filter(
         (flight) =>
+          // Nếu backend chưa trả giá (economyPrice=0 do default), vẫn cho hiển thị để user thấy chuyến bay
+          !flight?.hasPrice ||
           flight.economyPrice >= filters.budget[0] &&
           flight.economyPrice <= filters.budget[1]
       );
@@ -227,6 +260,11 @@ export default function FlightBooking() {
     setReturnFlights(result);
   };
 
+  const getCityByCode = (code) => {
+    const key = String(code || "").toUpperCase();
+    return airportCityMap?.[key] || getCityByCodeStatic(code);
+  };
+
   const departureCity = fromAirport ? getCityByCode(fromAirport) : "Tất cả";
   const arrivalCity = toAirport ? getCityByCode(toAirport) : "Tất cả";
   const formattedDepartureDate = departureDate ? formatDateToVietnamese(departureDate) : "N/A";
@@ -234,26 +272,33 @@ export default function FlightBooking() {
 
   const [isSelectingReturn, setIsSelectingReturn] = useState(false);
   const [selectedDepartureFlight, setSelectedDepartureFlight] = useState(null);
+  const [selectedReturnFlight, setSelectedReturnFlight] = useState(null);
 
   const handleSelectDepartureFlight = (flight) => {
     setSelectedDepartureFlight(flight);
+    setSelectedReturnFlight(null); // Reset chuyến về khi chọn lại chuyến đi
 
-    if (tripType === "roundTrip") {
-      setIsSelectingReturn(true);
-      fetchReturnFlights(toAirport, fromAirport, returnDate);
-    } else {
+    if (flight?.autoNavigate) {
       router.push({
         pathname: "/confirm",
         query: {
           departureFlightId: flight.id,
           departureOptionId: flight.selectedOptionId,
+          ticketClassName: flight.ticketClassName,
           passengerCount,
         },
       });
+      return;
     }
+
+    // Backend hiện tại chỉ hỗ trợ đặt vé cho 1 flightId.
+    // Do đó, luôn để user bấm nút "Mua vé" ở cuối trang để chuyển qua /confirm.
+    setIsSelectingReturn(false);
+    setReturnFlights([]);
   };
 
   const handleSelectReturnFlight = (flight) => {
+    setSelectedReturnFlight(flight);
     router.push({
       pathname: "/confirm",
       query: {
@@ -321,11 +366,33 @@ export default function FlightBooking() {
             )}
           </div>
 
-          <Link href="/">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
-              Quay lại trang chủ
+          {/* Nút hành động: Mua vé khi đã chọn chuyến bay, Quay lại trang chủ khi chưa chọn */}
+          {selectedDepartureFlight ? (
+            <Button
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 text-lg"
+              onClick={() => {
+                router.push({
+                  pathname: "/confirm",
+                  query: {
+                    departureFlightId: selectedDepartureFlight.id,
+                    departureOptionId: selectedDepartureFlight.selectedOptionId,
+                    ticketClassName: selectedDepartureFlight.ticketClassName,
+                    passengerCount,
+                  },
+                });
+              }}
+              disabled={loading}
+            >
+              <CreditCard className="w-5 h-5 mr-2" />
+              Mua vé
             </Button>
-          </Link>
+          ) : (
+            <Link href="/">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
+                Quay lại trang chủ
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </div>

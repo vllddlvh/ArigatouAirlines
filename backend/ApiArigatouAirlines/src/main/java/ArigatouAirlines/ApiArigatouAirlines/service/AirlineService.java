@@ -7,6 +7,7 @@ import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.AirlineMapper;
 import ArigatouAirlines.ApiArigatouAirlines.repository.AirlineRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.AircraftRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +21,7 @@ import java.util.List;
 public class AirlineService {
     AirlineMapper airlineMapper;
     AirlineRepository airlineRepository;
+    AircraftRepository aircraftRepository;
 
     public AirlineResponse creationAirline(AirlineRequest airlineRequest) {
         if(airlineRepository.existsAirlineByAirlineCode(airlineRequest.getAirlineCode())) {
@@ -58,6 +60,17 @@ public class AirlineService {
     }
 
     public void deleteAirline(int airlineId) {
+        // Check if airline exists
+        if (!airlineRepository.existsById(airlineId)) {
+            throw new AppException(ErrorCode.AIRLINEID_NOT_EXISTED);
+        }
+        
+        // Check if airline has associated aircrafts
+        long aircraftCount = aircraftRepository.countByAirline_AirlineId(airlineId);
+        if (aircraftCount > 0) {
+            throw new RuntimeException("Cannot delete airline. There are " + aircraftCount + " aircraft(s) associated with this airline. Please delete or reassign the aircraft first.");
+        }
+        
         airlineRepository.deleteById(airlineId);
     }
 }

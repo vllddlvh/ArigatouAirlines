@@ -57,14 +57,14 @@ public enum ErrorCode {
 
 
     //─────────────── 5xxx: Airport & Airline Error & aircraft ───────────────
-    AIRPORTCODE_EXISTED(5001, "AirportCode doesn't existed!", HttpStatus.BAD_REQUEST),
-    AIRPORTID_NOT_EXISTD(5002, "AiportId doesn't exiseted!", HttpStatus.BAD_REQUEST),
-    AIRLINECODE_EXISTED(5003, "AirlineCode doesn't  existed!", HttpStatus.BAD_REQUEST),
-    AIRLINEID_NOT_EXISTED(5004, "AirlineId doesn't existed!", HttpStatus.BAD_REQUEST),
+    AIRPORTCODE_EXISTED(5001, "Airport code already exists!", HttpStatus.BAD_REQUEST),
+    AIRPORTID_NOT_EXISTD(5002, "Airport ID does not exist!", HttpStatus.BAD_REQUEST),
+    AIRPORT_IN_USE(5008, "Airport is in use and cannot be deleted!", HttpStatus.CONFLICT),
+    AIRLINECODE_EXISTED(5003, "Airline code already exists!", HttpStatus.BAD_REQUEST),
+    AIRLINEID_NOT_EXISTED(5004, "Airline ID does not exist!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_TYPE_ID_NOT_EXSITED(5005, "AircraftTypeId doesn't existed!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_ID_NOT_EXSITED(5006, "AircraftId  doesn't existed!", HttpStatus.BAD_REQUEST),
     SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST),
-    SEAT_ID_NOT_EXSITED(5008, "SeatId doesn't existed!", HttpStatus.BAD_REQUEST),
 
 
     //─────────────── 6xxx: Flight ───────────────
@@ -77,14 +77,23 @@ public enum ErrorCode {
     CLASS_NAME_IS_AVAILABLE(7001, "ClassName is available!", HttpStatus.BAD_REQUEST),
     TICKET_CLASS_ID_IS_NOT_AVAILABLE(7002, "TicketClassID is not available!", HttpStatus.BAD_REQUEST),
     FLIGHT_PRICE_ID_IS_NOT_AVAILABLE(7003, "FlightPriceID is not available!", HttpStatus.BAD_REQUEST),
-    FLIGHT_PRICE_NOT_FOUND(7004, "Flight price not found!", HttpStatus.NOT_FOUND),
 
     //─────────────── 8xxx: Booking ───────────────
-    BOOKING_ID_IS_NOT_EXISTED(8001, "BookingID is not existed!", HttpStatus.BAD_REQUEST),
-    PAYMENT_ID_IS_NOT_EXISTED(8002, "PaymentID is not existed!", HttpStatus.BAD_REQUEST),
-    BOOKING_WAS_CANCELLED(8002, "Booking was cancelled!", HttpStatus.BAD_REQUEST);
+    BOOKING_NOT_FOUND(8001, "Booking not found!", HttpStatus.NOT_FOUND),
+    BOOKING_ALREADY_CANCELLED(8002, "Booking has already been cancelled!", HttpStatus.BAD_REQUEST),
+    SEAT_NOT_AVAILABLE(8010, "Seat is not available!", HttpStatus.CONFLICT),
+    SEAT_CLASS_MISMATCH(8011, "Selected seat does not match ticket class!", HttpStatus.BAD_REQUEST),
+    NOT_ENOUGH_SEATS(8012, "Not enough seats available for the selected class!", HttpStatus.CONFLICT),
 
+    VOUCHER_NOT_FOUND(8003, "Voucher not found!", HttpStatus.NOT_FOUND),
+    VOUCHER_INACTIVE(8004, "Voucher is inactive!", HttpStatus.BAD_REQUEST),
+    VOUCHER_EXPIRED(8005, "Voucher is expired!", HttpStatus.BAD_REQUEST),
+    VOUCHER_MIN_ORDER_NOT_MET(8006, "Order amount does not meet voucher minimum requirement!", HttpStatus.BAD_REQUEST),
+    VOUCHER_USAGE_LIMIT_REACHED(8007, "Voucher usage limit reached!", HttpStatus.BAD_REQUEST),
+    VOUCHER_CODE_REQUIRED(8008, "Voucher code is required!", HttpStatus.BAD_REQUEST),
+    VOUCHER_CODE_EXISTED(8009, "Voucher code already exists!", HttpStatus.CONFLICT),
 
+    FLIGHT_AIRCRAFT_REQUIRED(8013, "Flight must have an aircraft to generate seat map!", HttpStatus.BAD_REQUEST);
 
 
     int code;

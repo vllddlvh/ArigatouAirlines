@@ -12,8 +12,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AncillaryServiceResponse {
-    int AncillaryServiceId;
-
     String serviceName;
 
     String description;

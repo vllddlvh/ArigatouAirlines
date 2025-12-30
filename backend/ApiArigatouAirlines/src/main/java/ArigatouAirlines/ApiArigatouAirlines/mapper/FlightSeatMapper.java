@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface FlightSeatMapper {
     @Mapping(source = "seatMap.seatNumber", target = "seatNumber")
+    @Mapping(source = "seatMap.seatClass", target = "seatClass")
     @Mapping(source = "seatMap.seatType", target = "seatType")
     @Mapping(source = "seatMap.visualRow", target = "visualRow")
     @Mapping(source = "seatMap.visualCol", target = "visualCol")

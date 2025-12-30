@@ -220,20 +220,23 @@ export default function ScheduledFlights() {
                             </TableRow>
                         ) : filteredFlights.length > 0 ? (
                             filteredFlights.map((f, index) => (
-                                <TableRow 
-                                    key={f.schedule?.scheduleId} 
-                                    className={cn("transition-colors duration-200 hover:bg-blue-50/50", index % 2 === 0 ? "bg-white" : "bg-gray-50")}
+                                <TableRow
+                                    key={f.flightId}
+                                    className={cn(
+                                        "transition-colors duration-200 hover:bg-blue-50/50",
+                                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                    )}
                                 >
                                     {/* Số hiệu - từ schedule */}
                                     <TableCell className="text-center font-extrabold text-lg text-primary">
                                         {f.schedule?.flightNumber || 'N/A'}
                                     </TableCell>
-                                    
+
                                     {/* Máy bay & Hãng - từ aircraft & airline */}
                                     <TableCell className="text-center font-medium text-gray-800">
                                         <div className="flex flex-col items-center">
                                             <div className="flex items-center gap-1">
-                                                <Plane className="h-3 w-3 text-primary/70" /> 
+                                                <Plane className="h-3 w-3 text-primary/70" />
                                                 {f.aircraft?.aircraftType?.typeName || 'N/A'}
                                             </div>
                                             <span className="text-xs text-blue-600 font-bold">
@@ -241,7 +244,7 @@ export default function ScheduledFlights() {
                                             </span>
                                         </div>
                                     </TableCell>
-                                    
+
                                     {/* Khởi hành - từ top-level & departureAirport */}
                                     <TableCell className="text-center">
                                         <div className="flex flex-col items-center gap-1">
@@ -251,7 +254,7 @@ export default function ScheduledFlights() {
                                             </span>
                                         </div>
                                     </TableCell>
-                                    
+
                                     {/* Hạ cánh - từ top-level & arrivalAirport */}
                                     <TableCell className="text-center">
                                         <div className="flex flex-col items-center gap-1">

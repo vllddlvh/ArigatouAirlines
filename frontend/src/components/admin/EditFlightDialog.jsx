@@ -24,6 +24,7 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
         airlineId: currentSchedule.airline?.airlineId?.toString() || '',
         departureAirportId: currentSchedule.departureAirport?.airportCode || '',
         arrivalAirportId: currentSchedule.arrivalAirport?.airportCode || '',
+        // Format LocalTime "16:51:00" -> "16:51" cho input time
         departureTime: currentSchedule.departureTime ? currentSchedule.departureTime.substring(0, 5) : '',
         arrivalTime: currentSchedule.arrivalTime ? currentSchedule.arrivalTime.substring(0, 5) : '',
         active: currentSchedule.active ?? true

@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {AirlineMapper.class, AirportMapper.class})
 public interface FlightScheduleMapper {
     FlightScheduleResponse toFlightScheduleResponse(FlightSchedule flightSchedule);
 

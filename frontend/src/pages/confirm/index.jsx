@@ -22,7 +22,16 @@ export default function ConfirmationPage() {
     isPassengerInfoOpen,
     bookingId,
     totalAmount,
+    isCreatingBooking,
     passengerCount,
+    flightSeats,
+    selectedSeatIds,
+    isSeatSelectionOpen,
+    setIsSeatSelectionOpen,
+    toggleSeatSelection,
+    confirmSeatSelection,
+    aircraftNumCols,
+    allowedSeatClass,
     handlePassengerInfoFilled,
     handleConfirmPayment,
     handleReturnHome,
@@ -31,6 +40,9 @@ export default function ConfirmationPage() {
     setIsPaymentConfirmed,
     setIsPassengerInfoOpen,
   } = useFlightConfirmation();
+
+  const expectedSeatCount = parseInt(passengerCount || 1, 10);
+  const areSeatsSelected = Array.isArray(selectedSeatIds) && selectedSeatIds.length === expectedSeatCount;
 
   const formatTime = (seconds) => {
     return new Date(seconds * 1000).toLocaleTimeString("vi-VN", {
@@ -71,8 +83,22 @@ export default function ConfirmationPage() {
         calculateFlightDuration={calculateFlightDuration}
         passengerCount={passengerCount}
       />
+      <SeatSelectionSection
+        passengerCount={expectedSeatCount}
+        flightSeats={flightSeats}
+        selectedSeatIds={selectedSeatIds}
+        areSeatsSelected={areSeatsSelected}
+        isSeatSelectionOpen={isSeatSelectionOpen}
+        setIsSeatSelectionOpen={setIsSeatSelectionOpen}
+        toggleSeatSelection={toggleSeatSelection}
+        confirmSeatSelection={confirmSeatSelection}
+        numCols={aircraftNumCols}
+        allowedSeatClass={allowedSeatClass}
+      />
       <TotalAndActions
         totalAmount={totalAmount}
+        isCreatingBooking={isCreatingBooking}
+        areSeatsSelected={areSeatsSelected}
         isPassengerInfoFilled={isPassengerInfoFilled}
         handleOpenPassengerInfo={handleOpenPassengerInfo}
         handleConfirmPayment={handleConfirmPayment}
@@ -286,7 +312,14 @@ function FlightCard({ flightData, option, title, formatTime, calculateFlightDura
   );
 }
 
-function TotalAndActions({ totalAmount, isPassengerInfoFilled, handleOpenPassengerInfo, handleConfirmPayment }) {
+function TotalAndActions({
+  totalAmount,
+  isCreatingBooking,
+  areSeatsSelected,
+  isPassengerInfoFilled,
+  handleOpenPassengerInfo,
+  handleConfirmPayment,
+}) {
   return (
     <div className="border-t border-gray-200 pt-6 pb-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -295,8 +328,10 @@ function TotalAndActions({ totalAmount, isPassengerInfoFilled, handleOpenPasseng
             <div className="text-lg font-semibold text-gray-800">Tổng cộng</div>
             <div className="text-sm text-gray-500">Đã bao gồm thuế và phí</div>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold text-orange">
-            {totalAmount.toLocaleString()} VND
+          <div className="text-right">
+            <div className="text-2xl sm:text-3xl font-bold text-orange">
+              {Number(totalAmount || 0).toLocaleString()} VND
+            </div>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
@@ -304,19 +339,201 @@ function TotalAndActions({ totalAmount, isPassengerInfoFilled, handleOpenPasseng
             variant="outline"
             className="w-full sm:w-auto"
             onClick={handleOpenPassengerInfo}
+            disabled={!areSeatsSelected || isCreatingBooking}
           >
             Nhập thông tin hành khách
           </Button>
           <Button
             variant="orange"
-            className={`w-full sm:w-auto text-white ${!isPassengerInfoFilled && "opacity-50 cursor-not-allowed"}`}
+            className={`w-full sm:w-auto text-white ${(!isPassengerInfoFilled || isCreatingBooking) && "opacity-50 cursor-not-allowed"}`}
             onClick={handleConfirmPayment}
-            disabled={!isPassengerInfoFilled}
+            disabled={!areSeatsSelected || !isPassengerInfoFilled || isCreatingBooking}
           >
-            Xác nhận và thanh toán
+            {isCreatingBooking ? "Đang đặt vé..." : "Xác nhận và thanh toán"}
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SeatSelectionSection({
+  passengerCount,
+  flightSeats,
+  selectedSeatIds,
+  areSeatsSelected,
+  isSeatSelectionOpen,
+  setIsSeatSelectionOpen,
+  toggleSeatSelection,
+  confirmSeatSelection,
+  numCols = 6,
+  allowedSeatClass = "ECONOMY",
+}) {
+  const seats = Array.isArray(flightSeats) ? flightSeats : [];
+  const selectedIds = Array.isArray(selectedSeatIds) ? selectedSeatIds : [];
+  const selectedSeatNumbers = selectedIds
+    .map((id) => seats.find((s) => s?.flightSeatId === id)?.seatNumber)
+    .filter(Boolean);
+
+  // Use visualRow/visualCol from backend (already 1-based and consistent)
+  const rowKeys = Array.from(new Set(seats.map((s) => s.visualRow))).filter(Boolean).sort((a, b) => a - b);
+  const colKeys = Array.from(new Set(seats.map((s) => s.visualCol))).filter(Boolean).sort((a, b) => a - b);
+
+  // Build seat map by [visualRow][visualCol]
+  const seatByRowCol = seats.reduce((acc, s) => {
+    if (!s.visualRow || !s.visualCol) return acc;
+    acc[s.visualRow] = acc[s.visualRow] || {};
+    acc[s.visualRow][s.visualCol] = s;
+    return acc;
+  }, {});
+
+  // Calculate split for aisle: for 6 cols split at 3 (A,B,C | D,E,F), for 4 cols split at 2 (A,B | C,D)
+  const actualNumCols = colKeys.length || numCols;
+  const splitIndex = Math.ceil(actualNumCols / 2);
+  const leftCols = colKeys.slice(0, splitIndex);
+  const rightCols = colKeys.slice(splitIndex);
+
+  // Seat class colors
+  const seatClassColors = {
+    BUSINESS_PREMIER: { available: "bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300", label: "Business" },
+    PREMIUM_ECONOMY: { available: "bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300", label: "Premium" },
+    ECONOMY: { available: "bg-yellow-100 hover:bg-yellow-200 text-yellow-900 border-yellow-300", label: "Phổ thông" },
+  };
+
+  const allowedLabel = seatClassColors[allowedSeatClass]?.label || "Phổ thông";
+
+  const renderSeatCell = (r, c) => {
+    const seat = seatByRowCol?.[r]?.[c];
+    if (!seat) return <div key={`${r}-${c}`} />;
+
+    const seatId = seat.flightSeatId;
+    const isSelected = selectedIds.includes(seatId);
+    const isAvailable = String(seat.status || "").toUpperCase() === "AVAILABLE";
+    const seatClassKey = seat.seatClass || "ECONOMY";
+    const matchesClass = seatClassKey === allowedSeatClass;
+    const disabled = (!isAvailable && !isSelected) || (!matchesClass && !isSelected);
+
+    const baseClass =
+      "h-10 rounded-lg border text-sm font-semibold transition-colors flex items-center justify-center";
+    
+    const classColor = seatClassColors[seatClassKey]?.available || seatClassColors.ECONOMY.available;
+    
+    const stateClass = isSelected
+      ? "bg-blue-600 text-white border-blue-700"
+      : !matchesClass
+        ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+        : isAvailable
+          ? classColor
+          : "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed";
+
+    return (
+      <button
+        key={seatId}
+        disabled={disabled}
+        onClick={() => toggleSeatSelection(seatId)}
+        className={`${baseClass} ${stateClass}`}
+        title={`${seat.seatNumber} - ${seatClassColors[seatClassKey]?.label || "Phổ thông"}${seatClassKey !== allowedSeatClass ? " (không đúng hạng vé)" : ""} - ${seat.seatType || ""}`}
+      >
+        {seat.seatNumber || `#${seatId}`}
+      </button>
+    );
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <Card className="shadow-lg border-orange mb-4">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="text-lg font-semibold text-gray-800">Chọn ghế</div>
+              <div className="text-sm text-gray-500">
+                Đã chọn {selectedIds.length}/{passengerCount} ghế
+              </div>
+              {selectedSeatNumbers.length > 0 ? (
+                <div className="text-sm text-gray-700 mt-1">
+                  {selectedSeatNumbers.join(", ")}
+                </div>
+              ) : null}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setIsSeatSelectionOpen(true)}
+            >
+              {areSeatsSelected ? "Đổi ghế" : "Chọn ghế"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isSeatSelectionOpen} onOpenChange={setIsSeatSelectionOpen}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>Chọn ghế ({selectedIds.length}/{passengerCount})</DialogTitle>
+            <DialogDescription>
+              Vui lòng chọn đủ số ghế tương ứng với số hành khách.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-xs text-gray-600">
+            Chỉ được chọn ghế hạng: <span className="font-semibold">{allowedLabel}</span>
+          </div>
+          <div className="flex flex-wrap gap-3 text-xs text-gray-700">
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-amber-100 border border-amber-300" />
+              Business
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-blue-100 border border-blue-300" />
+              Premium
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-yellow-100 border border-yellow-300" />
+              Phổ thông
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-blue-600 border border-blue-700" />
+              Đang chọn
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 rounded bg-gray-200 border border-gray-300" />
+              Đã đặt
+            </div>
+          </div>
+          <div className="overflow-auto max-h-[60vh]">
+            <div className="min-w-[720px] mx-auto">
+              <div className="bg-slate-50 border border-slate-200 rounded-[32px] p-4 sm:p-6">
+                {rowKeys.length === 0 ? (
+                  <div className="text-sm text-gray-600">Không có dữ liệu ghế cho chuyến bay này.</div>
+                ) : (
+                  <div className="grid gap-3">
+                    {rowKeys.map((r) => (
+                      <div
+                        key={r}
+                        className="grid gap-2 items-center"
+                        style={{
+                          gridTemplateColumns: `56px repeat(${leftCols.length}, minmax(0, 1fr)) 36px repeat(${rightCols.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        <div className="text-sm text-gray-500 flex items-center justify-end pr-2">{r}</div>
+                        {leftCols.map((c) => renderSeatCell(r, c))}
+                        <div />
+                        {rightCols.map((c) => renderSeatCell(r, c))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsSeatSelectionOpen(false)}>
+              Đóng
+            </Button>
+            <Button variant="orange" className="text-white" onClick={confirmSeatSelection}>
+              Xác nhận ghế
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,11 +10,8 @@ import java.util.Optional;
 @Repository
 public interface FlightPriceRepository extends JpaRepository<FlightPrice, Integer> {
     FlightPrice findFlightPriceByFlight_FlightId(int flightId);
+
     List<FlightPrice> findAllByFlight_FlightId(int flightId);
 
-    Optional<FlightPrice> findByFlight_FlightIdAndTicketClass_ClassId(
-            int flightId,
-            int ticketClassId
-    );
-
+    Optional<FlightPrice> findFirstByFlight_FlightIdAndTicketClass_ClassNameIgnoreCase(int flightId, String className);
 }

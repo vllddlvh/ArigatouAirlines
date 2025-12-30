@@ -1,11 +1,13 @@
 package ArigatouAirlines.ApiArigatouAirlines.entity;
 
+import ArigatouAirlines.ApiArigatouAirlines.converter.DiscountTypeConverter;
 import ArigatouAirlines.ApiArigatouAirlines.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity(name = "voucher")
 @Getter
@@ -23,8 +25,8 @@ public class Voucher {
     @Column(name = "voucher_code")
     String voucherCode;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "discount_type")
+    @Convert(converter = DiscountTypeConverter.class)
     DiscountType discountType;
 
     @Column(name = "discount_value", precision = 10, scale = 2)
@@ -38,4 +40,16 @@ public class Voucher {
 
     @Column(name = "usage_limit")
     int usageLimit;
+
+    @Column(name = "used_count")
+    int usedCount;
+
+    @Column(name = "valid_from")
+    LocalDateTime validFrom;
+
+    @Column(name = "valid_to")
+    LocalDateTime validTo;
+
+    @Column(name = "is_active")
+    Boolean isActive;
 }

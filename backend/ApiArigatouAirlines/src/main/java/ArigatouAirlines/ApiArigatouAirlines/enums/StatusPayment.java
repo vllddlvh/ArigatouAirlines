@@ -1,7 +1,8 @@
 package ArigatouAirlines.ApiArigatouAirlines.enums;
 
 public enum StatusPayment {
-    Success,
-    Failed,
-    Pending
+    Pending,
+    Paid,
+    Refunded,
+    Failed
 }

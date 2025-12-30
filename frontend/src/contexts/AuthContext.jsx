@@ -65,7 +65,11 @@ export const AuthProvider = ({ children }) => {
       if (isAdminUser) {
         router.push("/admin");
       } else {
-        router.push("/");
+        const redirectTo = typeof window === "undefined" ? null : localStorage.getItem("postLoginRedirect");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("postLoginRedirect");
+        }
+        router.push(redirectTo || "/");
       }
 
       return data;
