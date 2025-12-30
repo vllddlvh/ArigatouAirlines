@@ -100,6 +100,7 @@ export default function FlightBooking() {
 
     const departureDateTime = flight?.departureDateTime ?? flight?.departureTime;
     const arrivalDateTime = flight?.arrivalDateTime ?? flight?.arrivalTime;
+    const schedule = flight?.schedule;
 
     const departureCode = flight?.departureAirportCode ?? flight?.departureAirport ?? "";
     const arrivalCode = flight?.arrivalAirportCode ?? flight?.arrivalAirport ?? "";
