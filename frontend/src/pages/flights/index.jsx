@@ -281,7 +281,7 @@ export default function FlightBooking() {
 
     if (flight?.autoNavigate) {
       router.push({
-        pathname: "/confirm",
+        pathname: "/check-in",
         query: {
           departureFlightId: flight.id,
           departureOptionId: flight.selectedOptionId,
@@ -301,7 +301,7 @@ export default function FlightBooking() {
   const handleSelectReturnFlight = (flight) => {
     setSelectedReturnFlight(flight);
     router.push({
-      pathname: "/confirm",
+      pathname: "/check-in",
       query: {
         departureFlightId: selectedDepartureFlight.id,
         departureOptionId: selectedDepartureFlight.selectedOptionId,
@@ -373,7 +373,7 @@ export default function FlightBooking() {
               className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 text-lg"
               onClick={() => {
                 router.push({
-                  pathname: "/confirm",
+                  pathname: "/check-in",
                   query: {
                     departureFlightId: selectedDepartureFlight.id,
                     departureOptionId: selectedDepartureFlight.selectedOptionId,
