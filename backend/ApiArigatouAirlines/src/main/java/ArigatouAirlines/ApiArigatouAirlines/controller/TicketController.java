@@ -40,4 +40,12 @@ public class TicketController {
                 .body(ticketService.getTicketByBookingId(bookingId))
                 .build();
     }
+
+    @GetMapping("/flight/{flightId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<List<TicketResponse>> getTicketsByFlightId(@PathVariable int flightId) {
+        return ApiResponse.<List<TicketResponse>>builder()
+                .body(ticketService.getTicketsByFlightId(flightId))
+                .build();
+    }
 }

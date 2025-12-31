@@ -242,6 +242,18 @@ export const getFlightPricesByFlightId = async (flightId) => {
   }
 };
 
+export const updateFlightPrice = async (priceId, data) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/flightPrice/${priceId}`, data, {
+      headers: getAuthHeader(),
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giá vé:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi cập nhật giá vé.";
+  }
+};
+
 export const createFlight = async (data) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/flights`, data, {
