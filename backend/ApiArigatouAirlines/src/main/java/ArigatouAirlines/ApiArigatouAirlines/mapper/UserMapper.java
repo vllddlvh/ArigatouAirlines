@@ -28,8 +28,6 @@ public interface UserMapper {
     }
 
     @Mapping(target = "roles", ignore = true)
-    @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "username", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void UpdateUser(UserUpdateRequest request, @MappingTarget User user);
 }

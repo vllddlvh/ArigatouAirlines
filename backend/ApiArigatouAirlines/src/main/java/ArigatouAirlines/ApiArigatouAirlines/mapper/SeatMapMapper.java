@@ -11,6 +11,5 @@ public interface SeatMapMapper {
     SeatMapResponse toSeatMapResponse(SeatMap seatMap);
 
     @Mapping(target = "aircraftType", ignore = true)
-    @Mapping(target = "seatMapId", ignore = true)
     SeatMap toSeatMap(SeatMapRequest seatMapRequest);
 }

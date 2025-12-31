@@ -14,11 +14,7 @@ public interface AircraftTypeMapper {
 
     AircraftTypeResponseWithoutList toAircraftTypeResponseWithoutList(AircraftType aircraftType);
 
-    @Mapping(target = "aircraftTypeId", ignore = true)
-    @Mapping(target = "listSeatMap", ignore = true)
     AircraftType toAircraftType(AircraftTypeRequest aircraftTypeRequest);
 
-    @Mapping(target = "aircraftTypeId", ignore = true)
-    @Mapping(target = "listSeatMap", ignore = true)
     void updateAircraftType(AircraftTypeRequest aircraftTypeRequest, @MappingTarget AircraftType aircraftType);
 }

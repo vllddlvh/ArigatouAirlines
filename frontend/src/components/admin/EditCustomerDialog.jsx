@@ -10,12 +10,6 @@ import { API_BASE_URL } from '@/lib/api'
 export function EditCustomerDialog({ customer, onClose, onSave }) {
   const [editedCustomer, setEditedCustomer] = useState(customer)
 
-  const normalizedDateOfBirth = (() => {
-    const raw = editedCustomer?.dateOfBirth
-    if (!raw) return ''
-    return String(raw).split('T')[0]
-  })()
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setEditedCustomer(prev => ({ ...prev, [name]: value }))
@@ -39,7 +33,6 @@ export function EditCustomerDialog({ customer, onClose, onSave }) {
           gender: editedCustomer.gender
             ? String(editedCustomer.gender).replace(/^./, (c) => c.toUpperCase())
             : undefined,
-          dateOfBirth: normalizedDateOfBirth || undefined,
         }
 
         const response = await fetch(updateCustomerApi, {
@@ -79,7 +72,6 @@ export function EditCustomerDialog({ customer, onClose, onSave }) {
           firstName,
           lastName,
           phoneNumber: updatedFromApi?.phone ?? payload.phone ?? editedCustomer.phoneNumber,
-          dateOfBirth: updatedFromApi?.dateOfBirth ?? payload.dateOfBirth ?? editedCustomer.dateOfBirth,
         }
 
         toast({
@@ -141,20 +133,6 @@ export function EditCustomerDialog({ customer, onClose, onSave }) {
                 className="col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="dateOfBirth" className="text-right">
-                Ngày sinh
-              </Label>
-              <Input
-                id="dateOfBirth"
-                name="dateOfBirth"
-                type="date"
-                value={normalizedDateOfBirth}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
-            </div>
-
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="gender" className="text-right">
                 Giới tính

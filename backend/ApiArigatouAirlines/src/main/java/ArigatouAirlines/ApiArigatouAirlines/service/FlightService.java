@@ -7,7 +7,6 @@ import ArigatouAirlines.ApiArigatouAirlines.dto.response.FlightSeatResponse;
 import ArigatouAirlines.ApiArigatouAirlines.entity.*;
 import ArigatouAirlines.ApiArigatouAirlines.enums.SeatClass;
 import ArigatouAirlines.ApiArigatouAirlines.enums.SeatType;
-import ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat;
 import ArigatouAirlines.ApiArigatouAirlines.repository.SeatMapRepository;
 import ArigatouAirlines.ApiArigatouAirlines.exception.AppException;
 import ArigatouAirlines.ApiArigatouAirlines.exception.ErrorCode;
@@ -125,17 +124,6 @@ public class FlightService {
                     response.setAirline(flight.getSchedule().getAirline().getAirlineName());
                 }
             }
-
-            long totalSeats = flightSeatRepository.countByFlight_FlightId(flight.getFlightId());
-            if (totalSeats <= 0
-                    && flight.getAircraft() != null
-                    && flight.getAircraft().getAircraftType() != null
-                    && flight.getAircraft().getAircraftType().getTotalSeats() > 0) {
-                totalSeats = flight.getAircraft().getAircraftType().getTotalSeats();
-            }
-            long bookedSeats = flightSeatRepository.countByFlight_FlightIdAndStatus(flight.getFlightId(), StatusFlightSeat.Booked);
-            response.setTotalSeats((int) totalSeats);
-            response.setBookedSeats((int) bookedSeats);
 
             FlightPrice flightPrice = getDefaultFlightPrice(flight.getFlightId());
             if (flightPrice != null) {

@@ -36,15 +36,3 @@ export const getTicketsByBookingId = async (bookingId) => {
         throw error;
     }
 };
-
-export const getTicketsByFlightId = async (flightId) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/tickets/flight/${flightId}`, {
-            headers: getAuthHeader()
-        });
-        return response.data.body;
-    } catch (error) {
-        console.error('Error fetching tickets by flight:', error);
-        throw error;
-    }
-};

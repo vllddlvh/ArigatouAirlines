@@ -53,7 +53,7 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        var user = userRepository.findByUsernameAndIsActiveTrue(request.getUsername())
+        var user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
@@ -96,8 +96,7 @@ public class AuthenticationService {
 
     @Transactional(rollbackFor = Exception.class)
     public String getPasswordToken(String email) {
-        User user = userRepository.findByEmailAndIsActiveTrue(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
         if (passwordOtpRepository.countOtp(user.getUserId()) > 0) {
             throw new AppException(ErrorCode.WAIT_OTP);
@@ -162,7 +161,7 @@ public class AuthenticationService {
 
         invalidatedTokenRepository.save(invalidatedToken);
         String username = signedJWT.getJWTClaimsSet().getSubject();
-        User user = userRepository.findByUsernameAndIsActiveTrue(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
         String newToken = generateToken(user);

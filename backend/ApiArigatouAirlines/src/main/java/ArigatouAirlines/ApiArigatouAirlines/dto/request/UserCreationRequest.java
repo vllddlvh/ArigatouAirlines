@@ -42,6 +42,5 @@ public class UserCreationRequest {
     @NotNull(message = "GENDER_NULL")
     Gender gender;
 
-    @Builder.Default
     String avatar = "default avatar";
 }

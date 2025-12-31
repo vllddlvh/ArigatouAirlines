@@ -31,9 +31,6 @@ public class FlightResponseWithoutList {
     BigDecimal basePrice;
     BigDecimal tax;
     
-    int totalSeats;
-    int bookedSeats;
-    
     // Flattened fields for easier frontend consumption
     String flightNumber;
     String departureAirportCode;

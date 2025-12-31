@@ -9,11 +9,9 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface AirlineMapper {
-    @Mapping(target = "airlineId", ignore = true)
     Airline toAirline(AirlineRequest airlineRequest);
 
     AirlineResponse toAirlineResponse(Airline airline);
 
-    @Mapping(target = "airlineId", ignore = true)
     void updateAirline(AirlineRequest airlineRequest, @MappingTarget Airline airline);
 }

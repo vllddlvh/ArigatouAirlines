@@ -1,10 +1,13 @@
 package ArigatouAirlines.ApiArigatouAirlines.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.sql.Time;
 import java.time.LocalTime;
 
 @Entity(name = "flight_schedule")
