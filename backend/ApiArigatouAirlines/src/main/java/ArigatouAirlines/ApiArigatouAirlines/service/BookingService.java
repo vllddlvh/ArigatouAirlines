@@ -120,7 +120,8 @@ public class BookingService {
     public BookingResponse creationBooking(BookingRequest bookingRequest) {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        User user = userRepository.findByUsernameAndIsActiveTrue(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setStatusBooking(StatusBooking.Pending);
@@ -240,7 +241,7 @@ public class BookingService {
     public List<BookingResponse> getMyBookings() {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameAndIsActiveTrue(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
         // Use custom query with FETCH JOIN to properly load User
@@ -298,7 +299,7 @@ public class BookingService {
         // Get current user
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username)
+        User currentUser = userRepository.findByUsernameAndIsActiveTrue(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         
         Booking booking = bookingRepository.findById(id)
@@ -367,6 +368,16 @@ public class BookingService {
         
         if (booking.getStatusBooking() == StatusBooking.Cancelled) {
             throw new AppException(ErrorCode.BOOKING_ALREADY_CANCELLED);
+        }
+        
+        // Release all seats associated with this booking
+        List<Ticket> tickets = ticketRepository.findAllByBooking_BookingId(booking.getBookingId());
+        for (Ticket ticket : tickets) {
+            if (ticket.getFlightSeat() != null) {
+                FlightSeat seat = ticket.getFlightSeat();
+                seat.setStatus(StatusFlightSeat.Available);
+                flightSeatRepository.save(seat);
+            }
         }
         
         booking.setStatusBooking(StatusBooking.Cancelled);

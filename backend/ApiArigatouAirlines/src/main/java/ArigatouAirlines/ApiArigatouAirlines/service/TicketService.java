@@ -35,4 +35,9 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
         return ticketMapper.toTicketResponse(ticket);
     }
+
+    public List<TicketResponse> getTicketsByFlightId(int flightId) {
+        List<Ticket> listTickets = ticketRepository.findAllByFlight_FlightId(flightId);
+        return listTickets.stream().map(ticketMapper::toTicketResponse).toList();
+    }
 }

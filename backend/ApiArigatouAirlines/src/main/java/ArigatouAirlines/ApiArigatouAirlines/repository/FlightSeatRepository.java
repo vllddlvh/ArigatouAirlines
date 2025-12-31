@@ -15,6 +15,10 @@ import java.util.List;
 public interface FlightSeatRepository extends JpaRepository<FlightSeat, Integer> {
     List<FlightSeat> findAllByFlight_FlightId(int flightId);
 
+    long countByFlight_FlightId(int flightId);
+
+    long countByFlight_FlightIdAndStatus(int flightId, StatusFlightSeat status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select fs from flight_seat fs where fs.flight.flightId = ?1 and fs.status = ?2 order by fs.flightSeatId asc")
     List<FlightSeat> findAllByFlight_FlightIdAndStatusForUpdate(int flightId, StatusFlightSeat status);

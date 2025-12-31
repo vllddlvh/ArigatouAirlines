@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
     Search, Loader2, Plane, Ticket, X, Plus, Edit, Trash2, DollarSign, LayoutGrid, Armchair, CheckCircle, XCircle, Eye 
 } from 'lucide-react';
-import { getAllFlights, getFlightById, getFlightPricesByFlightId } from '@/services/masterDataService';
+import { getAllFlights, getFlightById, getFlightPricesByFlightId, updateFlightPrice } from '@/services/masterDataService';
+import { getTicketsByFlightId } from '@/services/ticketService';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -37,7 +38,10 @@ const formatDate = (dateString) => {
     return `${datePart} ${timePart}`;
 };
 const formatCurrency = (amount) => {
-    return amount ? amount.toLocaleString('vi-VN') + '₫' : '0₫';
+    if (amount === null || amount === undefined) return '0₫';
+    const value = typeof amount === 'string' ? Number(amount) : amount;
+    if (!Number.isFinite(value)) return '0₫';
+    return value.toLocaleString('vi-VN') + '₫';
 };
 
 // ===========================================
@@ -99,7 +103,7 @@ const FlightListManagement = ({ flights, onFlightClick, isLoading, calculateSold
                                 <TableCell className="text-sm">{flight.departure}</TableCell>
                                 <TableCell className="text-sm">{flight.arrival}</TableCell>
                                 <TableCell className="text-center font-bold text-gray-700">
-                                    {calculateSoldTickets(flight).sold} / {calculateSoldTickets(flight).total}
+                                    {calculateSoldTickets(flight).booked} / {calculateSoldTickets(flight).total}
                                 </TableCell>
                                 <TableCell className="text-center">
                                     <Button variant="purple" size="default" className="text-sm h-9 px-3" onClick={() => onFlightClick(flight)}>
@@ -198,6 +202,9 @@ const PricingManagement = ({ flights, toast }) => {
     const [selectedFlightId, setSelectedFlightId] = useState('');
     const [flightPrices, setFlightPrices] = useState([]);
     const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+    const [editingPrice, setEditingPrice] = useState(null);
+    const [editForm, setEditForm] = useState({ basePrice: '', tax: '' });
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     const flightInfo = flights.find(f => String(f.id) === String(selectedFlightId));
 
@@ -239,14 +246,51 @@ const PricingManagement = ({ flights, toast }) => {
         }
     }, [selectedFlightId, fetchPricesForFlight]);
 
+    // Xử lý edit giá vé
+    const handleEditPrice = (priceEntry) => {
+        setEditingPrice(priceEntry);
+        setEditForm({
+            basePrice: String(priceEntry.basePrice || 0),
+            tax: String(priceEntry.tax || 0)
+        });
+        setIsEditDialogOpen(true);
+    };
+
+    const handleSavePrice = async () => {
+        if (!editingPrice) return;
+        try {
+            const updateData = {
+                flightId: editingPrice.flightId,
+                ticketClassId: editingPrice.ticketClass?.classId,
+                basePrice: Number(editForm.basePrice),
+                tax: Number(editForm.tax),
+                totalSeats: editingPrice.totalSeats || 0,
+                availableSeats: editingPrice.availableSeats || 0
+            };
+            await updateFlightPrice(editingPrice.priceId, updateData);
+            toast({ title: "Thành công", description: "Đã cập nhật giá vé thành công!" });
+            setIsEditDialogOpen(false);
+            setEditingPrice(null);
+            fetchPricesForFlight(selectedFlightId);
+        } catch (error) {
+            console.error("Lỗi cập nhật giá:", error);
+            toast({ title: "Lỗi", description: "Không thể cập nhật giá vé.", variant: "destructive" });
+        }
+    };
+
     // Hàm format tên hạng vé
     const getTicketClassName = (ticketClass) => {
         if (!ticketClass) return 'N/A';
         const className = ticketClass.className || ticketClass;
         switch (className?.toUpperCase()) {
             case 'ECONOMY': return 'Economy (Phổ thông)';
-            case 'PREMIUM_ECONOMY': return 'Premium Economy (Phổ thông đặc biệt)';
-            case 'BUSINESS': return 'Business (Thương gia)';
+            case 'PREMIUM_ECONOMY':
+            case 'PREMIUM':
+                return 'Premium Economy (Phổ thông đặc biệt)';
+            case 'BUSINESS':
+            case 'BUSINESS_CLASS':
+            case 'BUSINESS_PREMIER':
+                return 'Business (Thương gia)';
             default: return className;
         }
     };
@@ -255,8 +299,13 @@ const PricingManagement = ({ flights, toast }) => {
     const getClassBadgeColor = (ticketClass) => {
         const className = ticketClass?.className || ticketClass;
         switch (className?.toUpperCase()) {
-            case 'BUSINESS': return 'bg-amber-100 text-amber-800';
-            case 'PREMIUM_ECONOMY': return 'bg-blue-100 text-blue-800';
+            case 'BUSINESS':
+            case 'BUSINESS_CLASS':
+            case 'BUSINESS_PREMIER':
+                return 'bg-amber-100 text-amber-800';
+            case 'PREMIUM_ECONOMY':
+            case 'PREMIUM':
+                return 'bg-blue-100 text-blue-800';
             case 'ECONOMY': return 'bg-green-100 text-green-800';
             default: return 'bg-gray-100 text-gray-800';
         }
@@ -292,20 +341,21 @@ const PricingManagement = ({ flights, toast }) => {
                         </div>
                     ) : (
                         <div className="border rounded-xl overflow-hidden shadow-md">
-                            <TableHeader className="grid-cols-[2fr_2fr_2fr_2fr]">
+                            <TableHeader className="grid-cols-[2fr_2fr_2fr_2fr_1fr]">
                                 <TableHead>HẠNG VÉ</TableHead>
                                 <TableHead>GIÁ CƠ SỞ</TableHead>
                                 <TableHead>THUẾ</TableHead>
                                 <TableHead>TỔNG GIÁ VÉ</TableHead>
+                                <TableHead>THAO TÁC</TableHead>
                             </TableHeader>
                             <TableBody>
                                 {flightPrices.map((priceEntry, index) => {
-                                    const basePrice = priceEntry.basePrice || 0;
-                                    const tax = priceEntry.tax || 0;
+                                    const basePrice = Number(priceEntry.basePrice ?? 0) || 0;
+                                    const tax = Number(priceEntry.tax ?? 0) || 0;
                                     const totalPrice = basePrice + tax;
 
                                     return (
-                                        <TableRow key={priceEntry.flightPriceId || index} className="grid-cols-[2fr_2fr_2fr_2fr]">
+                                        <TableRow key={priceEntry.priceId || index} className="grid-cols-[2fr_2fr_2fr_2fr_1fr]">
                                             <TableCell>
                                                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getClassBadgeColor(priceEntry.ticketClass)}`}>
                                                     {getTicketClassName(priceEntry.ticketClass)}
@@ -314,6 +364,16 @@ const PricingManagement = ({ flights, toast }) => {
                                             <TableCell className="text-orange-600 font-medium">{formatCurrency(basePrice)}</TableCell>
                                             <TableCell className="text-gray-600">{formatCurrency(tax)}</TableCell>
                                             <TableCell className="font-bold text-green-700 text-lg">{formatCurrency(totalPrice)}</TableCell>
+                                            <TableCell className="text-center">
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    onClick={() => handleEditPrice(priceEntry)}
+                                                    className="h-8 px-3"
+                                                >
+                                                    <Edit className="w-3 h-3 mr-1" /> Sửa
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     );
                                 })}
@@ -336,6 +396,50 @@ const PricingManagement = ({ flights, toast }) => {
                             </div>
                         </div>
                     )}
+
+                    {/* Dialog chỉnh sửa giá vé */}
+                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Chỉnh sửa giá vé</DialogTitle>
+                                <DialogDescription>
+                                    {editingPrice && `Hạng vé: ${getTicketClassName(editingPrice.ticketClass)}`}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div>
+                                    <Label htmlFor="basePrice">Giá cơ sở (VND)</Label>
+                                    <Input
+                                        id="basePrice"
+                                        type="number"
+                                        value={editForm.basePrice}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, basePrice: e.target.value }))}
+                                        placeholder="Nhập giá cơ sở"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="tax">Thuế (VND)</Label>
+                                    <Input
+                                        id="tax"
+                                        type="number"
+                                        value={editForm.tax}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, tax: e.target.value }))}
+                                        placeholder="Nhập thuế"
+                                    />
+                                </div>
+                                <div className="p-3 bg-blue-50 rounded-lg">
+                                    <div className="text-sm text-gray-600">Tổng giá vé:</div>
+                                    <div className="text-xl font-bold text-blue-700">
+                                        {formatCurrency(Number(editForm.basePrice || 0) + Number(editForm.tax || 0))}
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Hủy</Button>
+                                <Button onClick={handleSavePrice}>Lưu thay đổi</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </>
             )}
         </div>
@@ -601,14 +705,16 @@ function TicketManagementDashboard() {
     }, [toast]);
 
     const getTickets = async (flight) => {
-        if(flight.ticketList.length === 0){ setTickets([]); setIsDialogOpen(true); return; }
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setTickets(MOCK_TICKETS.map(a => ({
-            "status": a.status, "seatCode": a.seatCode, "ownerData": a.owner, 
-            "flightClass": a.flightClass, "ticketId": a.ticketId, "price": a.price, 
-            "flightId": flight.id, "updatedAt": '2025-10-27', "bookingId": 'BKG123', "createdAt": '2025-10-26'
-        })));
-        setIsDialogOpen(true);
+        try {
+            const ticketsData = await getTicketsByFlightId(flight.flightId);
+            setTickets(Array.isArray(ticketsData) ? ticketsData : []);
+            setIsDialogOpen(true);
+        } catch (error) {
+            console.error("Lỗi tải vé:", error);
+            setTickets([]);
+            setIsDialogOpen(true);
+            toast({ title: "Lỗi", description: "Không thể tải danh sách vé cho chuyến bay này.", variant: "destructive" });
+        }
     };
 
     const handleCancelTicket = async (ticketId) => {
@@ -648,23 +754,22 @@ function TicketManagementDashboard() {
         fetchAllFlights();
     }, [fetchAllFlights]);
 
-    // Hàm tiện ích tính vé đã bán - đếm ghế đã book từ flightSeatList
+    // Hàm tiện ích tính vé đã bán - lấy từ API response
     const calculateSoldTickets = (flight) => {
-        const seatList = flight.flightSeatList || [];
-        // Đếm ghế có status = BOOKED hoặc Booked hoặc booked
-        const bookedCount = seatList.filter(s => {
-            const status = String(s?.status || '').toUpperCase();
-            return status === 'BOOKED' || status === 'RESERVED' || status === 'SOLD';
-        }).length;
-        const total = flight.totalSeats || seatList.length || 0;
+        const total = flight.totalSeats || 0;
+        const booked = flight.bookedSeats || 0;
         
-        // Debug log
-        if (seatList.length > 0) {
-            console.log(`Flight ${flight.flightNumber}: ${bookedCount}/${total} seats booked`, 
-                seatList.slice(0, 3).map(s => ({ id: s.flightSeatId, status: s.status })));
+        // Fallback: nếu API không trả về, đếm từ flightSeatList
+        if (total === 0 && flight.flightSeatList) {
+            const seatList = flight.flightSeatList || [];
+            const bookedCount = seatList.filter(s => {
+                const status = String(s?.status || '').toUpperCase();
+                return status === 'BOOKED' || status === 'RESERVED' || status === 'SOLD';
+            }).length;
+            return { booked: bookedCount, total: seatList.length };
         }
         
-        return { sold: bookedCount, total };
+        return { booked, total };
     };
 
     const getTicketStatusBadge = (status) => {

@@ -35,17 +35,23 @@ public class UserService {
     PasswordOtpRepository passwordTokenRepository;
 
     public UserResponse getById(int id) {
-        return userMapper.toUserResponse(userRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS)));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+
+        if (!user.isActive()) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTS);
+        }
+
+        return userMapper.toUserResponse(user);
     }
 
     public UserResponse getByEmail(String email) {
-        return userMapper.toUserResponse(userRepository.findByEmail(email)
+        return userMapper.toUserResponse(userRepository.findByEmailAndIsActiveTrue(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS)));
     }
 
     public List<UserResponse> getAll() {
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAllByIsActiveTrue();
         return users.stream().map(userMapper::toUserResponse).toList();
     }
 
@@ -53,7 +59,8 @@ public class UserService {
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        User user = userRepository.findByUsernameAndIsActiveTrue(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         return userMapper.toUserResponse(user);
     }
 
@@ -77,6 +84,9 @@ public class UserService {
     public UserResponse update(UserUpdateRequest request, int id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        if (!user.isActive()) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTS);
+        }
         if (request.getPassword() != null)
             request.setPassword(passwordEncoder.encode(request.getPassword()));
         userMapper.UpdateUser(request, user);
@@ -90,13 +100,26 @@ public class UserService {
     }
 
     public void delete(int id) {
-        if (!userRepository.existsById(id))
-            throw new AppException(ErrorCode.USER_NOT_EXISTS);
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+
+        if (!user.isActive()) {
+            return;
+        }
+
+        user.setActive(false);
+        userRepository.save(user);
     }
 
     public void deleteAll() {
-        userRepository.deleteAll();
+        List<User> users = userRepository.findAllByIsActiveTrue();
+        if (users.isEmpty()) {
+            return;
+        }
+        for (User user : users) {
+            user.setActive(false);
+        }
+        userRepository.saveAll((Iterable<User>) users);
     }
 
 

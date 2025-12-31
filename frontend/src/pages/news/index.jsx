@@ -7,12 +7,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-// --- IMPORT DATA TỪ JSON ---
 import newsData from '@/data/latestNews.json';
 
 export default function NewsPage() {
-  // Tách bài viết mới nhất làm Featured (Nổi bật)
-  // Kiểm tra an toàn: đảm bảo newsData là mảng và có phần tử
   const featuredNews = Array.isArray(newsData) && newsData.length > 0 ? newsData[0] : null;
   const otherNews = Array.isArray(newsData) && newsData.length > 1 ? newsData.slice(1) : [];
 
