@@ -1,0 +1,119 @@
+/* styles/index.css */
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "Oswald", sans-serif;
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+}
+
+
+.nav-shadow {
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+
+.carouselItem{
+  padding-right: 2rem;
+}
+
+.hoverImg {
+  width: 100%;
+  transition: 0.5s all ease-in-out;
+}
+
+.hoverImg:hover {
+  transform: scale(1.5);
+}
+
+.transition-bg {
+  transition: 0.5s all ease-in-out;
+}
+
+@layer base {
+  :root {
+    --background: 197 100% 97%;        /* màu nền sáng, xanh nhạt */
+    --foreground: 210 15% 20%;        /* màu chữ chính */
+    --card: 197 100% 90%;             /* màu card nhẹ, xanh nhạt hơn nền */
+    --card-foreground: 210 15% 20%;   /* chữ trên card */
+    --popover: 197 100% 90%;
+    --popover-foreground: 210 15% 20%;
+    --primary: 210 100% 40%; /* xanh trời chủ đạo */
+    --primary-foreground: 0 0% 100%;  /* chữ trắng trên nút primary */
+    --secondary: 197 80% 60%;         /* xanh nhạt secondary */
+    --secondary-foreground: 0 0% 10%; /* chữ tối trên secondary */
+    --muted: 197 50% 85%;             /* màu nền phụ */
+    --muted-foreground: 210 15% 30%;  /* chữ trên muted */
+    --accent: 197 60% 40%;            /* điểm nhấn */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 80% 55%;         /* màu đỏ cho xóa/hủy */
+    --destructive-foreground: 0 0% 100%;
+    --border: 197 70% 80%;            /* màu viền nhẹ */
+    --input: 197 50% 95%;             /* màu input */
+    --ring: 197 100% 50%;             /* màu focus ring */
+    --chart-1: 197 100% 50%;          /* màu biểu đồ 1 */
+    --chart-2: 173 80% 50%;           /* màu biểu đồ 2 */
+    --chart-3: 210 70% 40%;
+    --chart-4: 200 80% 55%;
+    --chart-5: 195 60% 45%;
+    --radius: 0.5rem;
+     --footer-bg: 197 80% 15%;       /* xanh đậm chủ đạo */
+    --footer-text: 0 0% 95%;        /* trắng sáng */
+    --footer-border: 197 70% 25%;   /* viền nhẹ nếu cần */
+    --footer-input-bg: 197 80% 25%; /* input background */
+    --footer-button-bg: 197 100% 50%; /* nút đăng ký */
+    --footer-button-hover: 197 100% 55%;
+    --footer-hover: 30 100% 55%;    /* màu cam hover icon/link */
+  }
+
+  .dark {
+    --background: 210 30% 10%;        /* nền tối nhưng vẫn xanh nhẹ */
+    --foreground: 0 0% 95%;           /* chữ sáng trên nền tối */
+    --card: 210 25% 15%;              /* card tối */
+    --card-foreground: 0 0% 95%;
+    --popover: 210 25% 15%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 197 90% 55%;           /* xanh trời nổi bật */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 197 40% 35%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 210 20% 20%;
+    --muted-foreground: 210 15% 70%;
+    --accent: 197 50% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 20% 25%;
+    --input: 210 20% 15%;
+    --ring: 197 100% 55%;
+    --chart-1: 197 90% 55%;
+    --chart-2: 173 80% 50%;
+    --chart-3: 210 70% 40%;
+    --chart-4: 200 80% 55%;
+    --chart-5: 195 60% 45%;
+    --footer-bg: 210 25% 10%;       /* footer nền tối hơn */
+    --footer-text: 0 0% 95%;
+    --footer-border: 210 20% 20%;
+    --footer-input-bg: 210 20% 15%;
+    --footer-button-bg: 197 100% 55%;
+    --footer-button-hover: 197 100% 60%;
+    --footer-hover: 30 100% 55%;
+  }
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+
