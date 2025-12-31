@@ -261,7 +261,7 @@ const TicketPriceSelector = ({ prices, onBook, isBooking }) => {
       <button 
         onClick={() => onBook({ ...selected, passengerCount, isRoundTrip })}
         disabled={isBooking}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-orange-200 transition-all flex items-center justify-center gap-2 transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full bg-orange-600 hover:bg-orange-700  font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-orange-200 transition-all flex items-center justify-center gap-2 transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isBooking ? <Loader2 className="w-5 h-5 animate-spin"/> : (
           isRoundTrip ? <>Chọn vé chiều về <ArrowRight className="w-5 h-5" /></> : <>Đặt vé ngay <ArrowRight className="w-5 h-5" /></>
@@ -333,11 +333,11 @@ const FlightDetailPage = () => {
     setIsBooking(true);
     
     // Destructure dữ liệu được gửi từ component con
-    const { flight, ticketClass, passengerCount, isRoundTrip } = bookingData;
+    const {  ticketClass, passengerCount, isRoundTrip } = bookingData;
 
     // Chuẩn bị params
     const query = {
-      departureFlightId: flight.flightId,
+      departureFlightId: flightId,
       departureOptionId: ticketClass.classId,
       ticketClassName: ticketClass.className,
       passengerCount: passengerCount,
@@ -351,7 +351,7 @@ const FlightDetailPage = () => {
     }
 
     const queryString = new URLSearchParams(query).toString();
-    router.push(`/booking/confirmation?${queryString}`);
+    router.push(`/check-in?${queryString}`);
   };
 
   // --- RENDER ---

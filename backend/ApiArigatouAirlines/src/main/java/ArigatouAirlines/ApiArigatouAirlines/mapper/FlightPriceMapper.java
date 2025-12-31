@@ -9,13 +9,13 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface FlightPriceMapper {
-    @Mapping(target = "flight", ignore = true)
+//    @Mapping(target = "flight", ignore = true)
     @Mapping(target = "ticketClass", ignore = true)
     FlightPrice toFlightPrice(FlightPriceRequest flightPriceRequest);
 
     FlightPriceResponse toFlightPriceResponse(FlightPrice flightPrice);
 
-    @Mapping(target = "flight", ignore = true)
+//    @Mapping(target = "flight", ignore = true)
     @Mapping(target = "ticketClass", ignore = true)
     FlightPrice toUpdateFlightPrice(FlightPriceRequest flightPriceRequest, @MappingTarget FlightPrice flightPrice);
 }

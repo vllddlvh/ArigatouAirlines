@@ -1,531 +1,182 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/router";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/router"; 
+import { format } from "date-fns";
+
+// --- UI COMPONENTS ---
 import { StepIndicator } from "@/components/checkin/step-indicator";
 import { FlightDetailsStep } from "@/components/checkin/flight-details";
-import { PassengerListStep } from "@/components/checkin/passenger-list";
+import { PassengerInputStep } from "@/components/checkin/passenger-input-step"; 
 import { SeatSelectionStep } from "@/components/checkin/seat-selection";
-import { PaymentStep } from "@/components/checkin/payment-step";
-import { ConfirmationStep } from "@/components/checkin/confirmation-step";
-import LoadingSkeleton from "@/components/checkin/loading-skeleton";
-import { useToast } from "@/hooks/use-toast";
+import LoadingSkeleton from "@/components/checkin/loading-skeleton"; 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// --- HOOK ---
+import { useFlightConfirmation } from "@/hooks/useFlightConfirmation";
 
+// 1. CẬP NHẬT: Chỉ giữ lại 3 bước
 const steps = [
-  { title: "Chi tiết chuyến bay", description: "Xem lại thông tin chuyến bay" },
-  { title: "Hành khách", description: "Chọn hành khách" },
-  { title: "Chọn ghế", description: "Chọn ghế của bạn" },
-  { title: "Thanh toán", description: "Thanh toán vé" },
-  { title: "Xác nhận", description: "Xác nhận thông tin" },
+  { title: "Chuyến bay", description: "Chi tiết" },
+  { title: "Hành khách", description: "Điền thông tin" },
+  { title: "Chọn ghế", description: "Vị trí ngồi" },
 ];
 
 export default function CheckInPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [bookingID, setBookingID] = useState(null);
-  const [email, setEmail] = useState(null);
-
-  const [bookingData, setBookingData] = useState(null);
-  const [departureFlight, setDepartureFlight] = useState(null);
-  const [returnFlight, setReturnFlight] = useState(null);
-  const [passengerList, setPassengerList] = useState({
-    departure: [],
-    return: [],
-  });
-
-  const [departureSeats, setDepartureSeats] = useState([]);
-  const [returnSeats, setReturnSeats] = useState([]);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [currentTrip, setCurrentTrip] = useState("departure"); // "departure" hoặc "return"
-
   const router = useRouter();
-  const { toast } = useToast(); // Hook toast
+  const [currentStep, setCurrentStep] = useState(0);
 
-  // ------------------------------------
-  // 1. Các hàm generate, tính toán, ...
-  // ------------------------------------
-  const generateSeatData = useCallback(() => {
-    const columns = ["A", "B", "C", "D", "E", "G"];
-    const rows = Array.from({ length: 44 }, (_, i) => i + 1);
+  // --- LẤY LOGIC TỪ HOOK ---
+  const {
+    tripType,
+    departureFlightData,
+    returnFlightData,
+    totalAmount,
+    
+    // Data Ghế & Khách
+    flightSeats,
+    passengers, 
+    selectedAssignments, 
+    loading,
+    error,
+    isCreatingBooking, // Trạng thái loading khi gọi API tạo booking
 
-    return rows.flatMap((row) =>
-      columns.map((col) => ({
-        id: `${row}${col}`,
-        type:
-          row === 18 || row === 32
-            ? "blocked"
-            : Math.random() < 0.3
-            ? "unavailable"
-            : "available",
-      }))
-    );
-  }, []);
+    handleSavePassengerInfo, 
+    toggleSeatSelection,     
+    handleConfirmPayment, // Hàm này trong hook đã có logic redirect sang /payment
+  } = useFlightConfirmation();
 
-  const calculateDuration = useCallback((departure, arrival) => {
-    const durationInMinutes = (arrival - departure) / 60;
-    const hours = Math.floor(durationInMinutes / 60);
-    const minutes = durationInMinutes % 60;
-    return `${hours}h ${minutes}m`;
-  }, []);
+  // --- XỬ LÝ QUERY PARAMS ---
+  const passengerCounts = useMemo(() => {
+    const query = router.query || {};
+    return query.passengerCount;
+  }, [router.query]);
 
-  const generateGate = useCallback(() => {
-    return "6";
-  }, []);
+  const totalPassengers = passengerCounts;
 
-  // ------------------------------------
-  // 2. Các hàm fetch API (Mock - Giả lập dữ liệu)
-  // ------------------------------------
-  // Comment out real fetchFlightDetails
-  /*
-  const fetchFlightDetails = useCallback(
-    async (flightId, type) => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("Token không tồn tại.");
+  // --- DATA ADAPTER ---
+  const formatTime = (seconds) => seconds ? format(new Date(seconds * 1000), "HH:mm") : "--:--";
+  const formatDate = (seconds) => seconds ? format(new Date(seconds * 1000), "dd/MM/yyyy") : "--/--/----";
+  const formatDuration = (mins) => mins ? `${Math.floor(mins / 60)}h ${mins % 60}m` : "";
 
-        const response = await fetch(`${API_BASE_URL}/flight/${flightId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          throw new Error(`Error fetching flight: ${response.statusText}`);
-        }
+  const departureFlightProps = departureFlightData ? {
+    from: departureFlightData.departureCity,
+    to: departureFlightData.arrivalCity,
+    departureTime: formatTime(departureFlightData.departureTime?.seconds),
+    arrivalTime: formatTime(departureFlightData.arrivalTime?.seconds),
+    duration: formatDuration(departureFlightData.durationMinutes),
+    flightNumber: departureFlightData.flightNumber,
+    date: formatDate(departureFlightData.departureTime?.seconds),
+    basePrice: departureFlightData.basePrice
+  } : null;
 
-        const result = await response.json();
-        const flightData = result.data;
+  const returnFlightProps = returnFlightData ? {
+    from: returnFlightData.departureCity,
+    to: returnFlightData.arrivalCity,
+    departureTime: formatTime(returnFlightData.departureTime?.seconds),
+    arrivalTime: formatTime(returnFlightData.arrivalTime?.seconds),
+    duration: formatDuration(returnFlightData.durationMinutes),
+    flightNumber: returnFlightData.flightNumber,
+    date: formatDate(returnFlightData.departureTime?.seconds),
+  } : null;
 
-        const formattedFlight = {
-          from: flightData.departureCity,
-          to: flightData.arrivalCity,
-          departureTime: new Date(
-            flightData.departureTime.seconds * 1000
-          ).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          arrivalTime: new Date(
-            flightData.arrivalTime.seconds * 1000
-          ).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          duration: calculateDuration(
-            flightData.departureTime.seconds,
-            flightData.arrivalTime.seconds
-          ),
-          flightNumber: flightData.flightNumber,
-          date: new Date(
-            flightData.departureTime.seconds * 1000
-          ).toLocaleDateString("vi-VN"),
-        };
+  const mappedSeats = Array.isArray(flightSeats) ? flightSeats.map(seat => {
+    const isSelected = Object.values(selectedAssignments).includes(seat.seatNumber);
+    let type = 'available';
+    if (seat.booked) type = 'blocked';
+    if (isSelected) type = 'selected';
+    return { ...seat, type };
+  }) : [];
 
-        if (type === "departure") {
-          setDepartureFlight(formattedFlight);
-        } else {
-          setReturnFlight(formattedFlight);
-        }
-      } catch (err) {
-        console.error(err);
-        setError(`Error fetching ${type} flight: ${err.message}`);
-      }
-    },
-    [calculateDuration, setDepartureFlight, setReturnFlight, setError]
-  );
-  */
+  // --- ACTION HANDLERS ---
 
-  // Comment out real fetchTickets
-  /*
-  const fetchTickets = useCallback(
-    async (ticketIds) => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("Token không tồn tại.");
-
-        const ticketPromises = ticketIds.map(async (ticketId) => {
-          const response = await fetch(
-            `${API_BASE_URL}/api/ticket?id=${ticketId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          if (!response.ok) {
-            throw new Error(
-              `Error fetching ticket ${ticketId}: ${response.statusText}`
-            );
-          }
-
-          const result = await response.json();
-          const ownerData = result.data.owner;
-          console.log("Owner Data:", ownerData);
-          return {
-            id: ticketId,
-            title: ownerData.gender === "Female" ? "Bà" : "Ông",
-            name: `${ownerData.first_name} ${ownerData.last_name}`,
-            type: result.data.flightClass || "Economy",
-            flightId: result.data.flightId,
-            // Lúc sau bạn có thể thêm thuộc tính "seat" nếu cần
-          };
-        });
-
-        return await Promise.all(ticketPromises);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-        return [];
-      }
-    },
-    [setError]
-  );
-  */
-
-  const fetchBooking = useCallback(async () => {
-    if (!bookingID) return;
-
-    try {
-      setLoading(true);
-
-      // Mock data for booking
-      const mockBookingData = {
-        tripType: "roundTrip",
-        departureFlightId: "mock_dep_flight",
-        returnFlightId: "mock_ret_flight",
-        departureIdTickets: ["mock_ticket_1", "mock_ticket_2"],
-        returnIdTickets: ["mock_ticket_3", "mock_ticket_4"],
-        bookingId: bookingID || "mock_booking_123",
-      };
-      setBookingData(mockBookingData);
-
-      // Mock departure flight
-      const mockDepartureFlight = {
-        from: "Hà Nội",
-        to: "Hồ Chí Minh",
-        departureTime: "08:00",
-        arrivalTime: "10:30",
-        duration: "2h 30m",
-        flightNumber: "VN123",
-        date: "15/10/2023",
-      };
-      setDepartureFlight(mockDepartureFlight);
-
-      // Mock return flight
-      const mockReturnFlight = {
-        from: "Hồ Chí Minh",
-        to: "Hà Nội",
-        departureTime: "14:00",
-        arrivalTime: "16:30",
-        duration: "2h 30m",
-        flightNumber: "VN456",
-        date: "20/10/2023",
-      };
-      setReturnFlight(mockReturnFlight);
-
-      // Mock passengers
-      const mockDeparturePassengers = [
-        {
-          id: "mock_ticket_1",
-          title: "Ông",
-          name: "Nguyễn Văn A",
-          type: "Economy",
-          flightId: "mock_dep_flight",
-        },
-        {
-          id: "mock_ticket_2",
-          title: "Bà",
-          name: "Trần Thị B",
-          type: "Business",
-          flightId: "mock_dep_flight",
-        },
-      ];
-      const mockReturnPassengers = [
-        {
-          id: "mock_ticket_3",
-          title: "Ông",
-          name: "Nguyễn Văn A",
-          type: "Economy",
-          flightId: "mock_ret_flight",
-        },
-        {
-          id: "mock_ticket_4",
-          title: "Bà",
-          name: "Trần Thị B",
-          type: "Business",
-          flightId: "mock_ret_flight",
-        },
-      ];
-
-      setPassengerList({
-        departure: mockDeparturePassengers,
-        return: mockReturnPassengers,
-      });
-
-      // Generate seat data ban đầu
-      setDepartureSeats(generateSeatData());
-      setReturnSeats(generateSeatData());
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    bookingID,
-    generateSeatData,
-    setPassengerList,
-    setDepartureSeats,
-    setReturnSeats,
-    setBookingData,
-    setDepartureFlight,
-    setReturnFlight,
-    setError,
-    setLoading,
-  ]);
-
-  // ------------------------------------
-  // 3. Các useEffect
-  // ------------------------------------
-  // Lấy bookingID, email từ query
-  useEffect(() => {
-    if (router.isReady) {
-      if (router.query.bookingID) {
-        setBookingID(router.query.bookingID);
-      } else {
-        // Use mock bookingID for development/demo purposes
-        setBookingID("mock_booking_123");
-      }
-      if (router.query.email) {
-        setEmail(router.query.email);
-      }
-    }
-  }, [router.isReady, router.query]);
-
-  // Gọi fetchBooking khi bookingID thay đổi
-  useEffect(() => {
-    fetchBooking();
-  }, [fetchBooking]);
-
-  // ------------------------------------
-  // 4. Các hàm xử lý sự kiện
-  // ------------------------------------
-  const handleSeatSelect = (seatId, customerId, tripType) => {
-    // Cập nhật seat cho passengerList
-    setPassengerList((prev) => ({
-      ...prev,
-      [tripType]: prev[tripType].map((p) =>
-        p.id === customerId ? { ...p, seat: seatId } : p
-      ),
-    }));
-
-    // Cập nhật trạng thái ghế
-    const updateSeats = (seats) =>
-      seats.map((seat) =>
-        seat.id === seatId
-          ? { ...seat, type: "selected" }
-          : seat.type === "selected" &&
-            passengerList[tripType].some((p) => p.seat === seat.id)
-          ? { ...seat, type: "available" }
-          : seat
-      );
-
-    if (tripType === "departure") {
-      setDepartureSeats((prev) => updateSeats(prev));
-    } else {
-      setReturnSeats((prev) => updateSeats(prev));
-    }
-  };
-
-  // Hàm gọi API update seat (Mock - Giả lập)
-  const updateSeatsApi = useCallback(async () => {
-    // Mock implementation: always succeed
-    const payload = [
-      ...passengerList.departure.map((passenger) => ({
-        ticketId: passenger.id,
-        seatCode: passenger.seat,
-      })),
-      ...passengerList.return.map((passenger) => ({
-        ticketId: passenger.id,
-        seatCode: passenger.seat,
-      })),
-    ].filter((entry) => entry.seatCode);
-
-    if (payload.length === 0) {
-      toast({
-        title: "Không có ghế",
-        description: "Không có ghế nào được chọn để lưu.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    toast({
-      title: "Thành công",
-      description: "Ghế đã được cập nhật thành công!",
-      variant: "default",
-    });
-    return true;
-
-    /*
-    // Comment out real API call
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token không tồn tại.");
-
-      const response = await fetch(`${API_BASE_URL}/api/ticket/update-seats`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
-
-      await response.json();
-      toast({
-        title: "Thành công",
-        description: "Ghế đã được cập nhật thành công!",
-        variant: "default",
-      });
-      return true;
-    } catch (error) {
-      console.error("Error updating seats:", error);
-      toast({
-        title: "Cập nhật thất bại",
-        description: "Cập nhật ghế thất bại, vui lòng thử lại.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    */
-  }, [passengerList, toast]);
-
-  // Hàm xử lý điều hướng step
-  const handleContinue = async () => {
-    // Nếu đang ở step Chọn ghế (index = 2) thì gọi updateSeatsApi
-    // if (currentStep === 2) {
-    //   const isUpdated = await updateSeatsApi();
-    //   if (!isUpdated) return;
-    // }
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-    }
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) setCurrentStep(prev => prev + 1);
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
-    }
+    if (currentStep > 0) setCurrentStep(prev => prev - 1);
+    else router.back();
   };
 
-  // ------------------------------------
-  // 5. Render
-  // ------------------------------------
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
+  const onPassengerSubmit = (data) => {
+    handleSavePassengerInfo(data.passengers); 
+    handleNext();
+  };
 
-  if (error) {
-    return (
-      <div className="container mx-auto p-6 text-red-600">Lỗi: {error}</div>
-    );
-  }
+  // 2. CẬP NHẬT: Xử lý khi chọn ghế xong -> Gọi API tạo booking & Redirect
+  const onSeatSubmit = async () => {
+    const selectedCount = Object.keys(selectedAssignments).length;
+
+    if (selectedCount !== Number(totalPassengers)) {
+        alert(`Vui lòng chọn đủ ${totalPassengers} ghế.`);
+        return;
+    }
+
+    // Gọi hàm trong hook: Tạo booking -> Redirect sang /payment
+    await handleConfirmPayment(); 
+  };
+
+  // --- RENDER ---
+
+  if (loading) return <LoadingSkeleton />;
+  if (error) return <div className="p-10 text-center text-red-500">Lỗi: {error}</div>;
 
   return (
-    <div className="container mx-auto p-6">
-      <StepIndicator currentStep={currentStep} steps={steps} />
+    <div className="min-h-screen bg-gray-50 pb-20">
+      
+      {/* Step Indicator */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="container mx-auto py-4">
+           <StepIndicator currentStep={currentStep} steps={steps} />
+        </div>
+      </div>
 
-      {currentStep === 0 && (
-        <FlightDetailsStep
-          flightDetails={departureFlight}
-          returnFlightDetails={
-            bookingData?.tripType === "roundTrip" ? returnFlight : null
-          }
-          passengerCount={passengerList.departure.length}
-          onContinue={handleContinue}
-          onCancel={() => window.history.back()}
-        />
-      )}
+      <div className="container mx-auto p-4 md:p-6 mt-4">
+        
+        {/* STEP 0: CHI TIẾT CHUYẾN BAY */}
+        {currentStep === 0 && (
+          <FlightDetailsStep
+            flightDetails={departureFlightProps}
+            returnFlightDetails={tripType === "roundTrip" ? returnFlightProps : null}
+            passengerCount={totalPassengers}
+            totalPrice={totalAmount}
+            onContinue={handleNext}
+            onCancel={handleBack}
+          />
+        )}
 
-      {currentStep === 1 && (
-        <PassengerListStep
-          passengers={passengerList}
-          onContinue={handleContinue}
-          onBack={handleBack}
-        />
-      )}
+        {/* STEP 1: NHẬP THÔNG TIN HÀNH KHÁCH */}
+        {currentStep === 1 && (
+          <PassengerInputStep
+            passengerCounts={passengerCounts} 
+            onContinue={onPassengerSubmit}
+            onBack={handleBack}
+          />
+        )}
 
-      {currentStep === 2 && (
-        <SeatSelectionStep
-          passengers={
-            currentTrip === "departure"
-              ? passengerList.departure
-              : passengerList.return
-          }
-          seats={currentTrip === "departure" ? departureSeats : returnSeats}
-          onSeatSelect={(seatId, customerId) =>
-            handleSeatSelect(seatId, customerId, currentTrip)
-          }
-          onContinue={handleContinue}
-          onBack={handleBack}
-          onSwitchTrip={() =>
-            setCurrentTrip((prev) =>
-              prev === "departure" ? "return" : "departure"
-            )
-          }
-          currentTrip={currentTrip}
-        />
-      )}
+        {/* STEP 2: CHỌN GHẾ */}
+        {currentStep === 2 && (
+          <SeatSelectionStep
+            passengers={passengers} 
+            seats={mappedSeats}
+            onSeatSelect={toggleSeatSelection} 
+            
+            // Thay đổi hành động nút Continue: Gọi API và Redirect
+            onContinue={onSeatSubmit}
+            onBack={handleBack}
+            currentTrip={"departure"}
+          />
+        )}
 
-      {currentStep === 3 && (
-        <PaymentStep
-          onPaymentSuccess={async () => {
-            const isUpdated = await updateSeatsApi();
-            if (isUpdated) setCurrentStep(4);
-          }}
-          onBack={handleBack}
-          bookingId={bookingID}
-          amount={10000} 
-          currency="USD"
-        />
-      )}
 
-      {currentStep === 4 && (
-        <ConfirmationStep
-          bookingReference={bookingData?.bookingId || "Không rõ"}
-          departurePassengers={passengerList.departure || []}
-          returnPassengers={passengerList.return || []}
-          departureFlight={{
-            flightNumber: departureFlight?.flightNumber || "N/A",
-            date: departureFlight?.date || "N/A",
-            departureTime: departureFlight?.departureTime || "N/A",
-            from: departureFlight?.from || "N/A",
-            to: departureFlight?.to || "N/A",
-            gate: generateGate(),
-          }}
-          returnFlight={
-            bookingData?.tripType === "roundTrip"
-              ? {
-                  flightNumber: returnFlight?.flightNumber || "N/A",
-                  date: returnFlight?.date || "N/A",
-                  departureTime: returnFlight?.departureTime || "N/A",
-                  from: returnFlight?.from || "N/A",
-                  to: returnFlight?.to || "N/A",
-                  gate: generateGate(),
-                }
-              : null
-          }
-          onBack={handleBack}
-          onHome={() => router.push("/")}
-        />
-      )}
+        {isCreatingBooking && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex flex-col items-center justify-center text-white backdrop-blur-sm">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                <p className="text-lg font-medium">Đang khởi tạo đặt chỗ...</p>
+            </div>
+        )}
+
+      </div>
     </div>
   );
 }

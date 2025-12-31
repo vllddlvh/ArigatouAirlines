@@ -5,404 +5,240 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, CreditCard, Wallet, Banknote, ArrowLeft, CheckCircle2, QrCode, ClipboardCopy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, CreditCard, Wallet, Banknote, ArrowLeft, CheckCircle2, QrCode, ClipboardCopy, ChevronDown, ChevronUp, Mail, Phone, User } from 'lucide-react';
 
-// --- PAYMENT METHOD DATA ---
-const paymentOptions = [
-  { id: 'card', label: 'Thẻ Tín dụng / Ghi nợ', icon: CreditCard, description: 'Thanh toán quốc tế bảo mật.' },
-  { id: 'e-wallet', label: 'Ví điện tử (Momo/ZaloPay)', icon: Wallet, description: 'Quét mã QR, thanh toán nhanh chóng.' },
-  { id: 'bank', label: 'Chuyển khoản Ngân hàng', icon: Banknote, description: 'Phổ biến: Vietcombank, MB, Techcombank.' },
+// --- CONFIG ---
+const PAYMENT_OPTIONS = [
+  { id: 'card', label: 'Thẻ Tín dụng / Ghi nợ', icon: CreditCard, description: 'Visa, Mastercard, JCB.' },
+  { id: 'e-wallet', label: 'Ví điện tử', icon: Wallet, description: 'Momo, ZaloPay, ShopeePay.' },
+  { id: 'bank', label: 'Chuyển khoản Ngân hàng', icon: Banknote, description: 'VietQR, Napas 24/7.' },
 ];
 
-// --- MOCK API FUNCTIONS ---
+const formatCurrency = (value) => 
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
-// Mock function to copy text to clipboard (using deprecated execCommand for iFrame compatibility)
+// --- HELPER ---
 const copyToClipboard = (text) => {
   try {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
+    navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error("Could not copy text: ", error);
     return false;
   }
 };
 
 // --- SUB-COMPONENTS ---
 
-function CardPaymentForm({ loading, handleSubmit, amount, currency }) {
+function CardPaymentForm({ isLoading, onSubmit, amount }) {
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-gray-600 border-l-4 border-orange-400 pl-3 py-1 bg-orange-50 rounded-r-md">
-        Thanh toán được bảo mật bởi Stripe Mockup.
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+      <div className="bg-orange-50 border-l-4 border-orange-500 p-3 rounded-r text-sm text-orange-800">
+        <p>Thanh toán bảo mật. Vé điện tử sẽ được gửi ngay sau khi giao dịch thành công.</p>
+      </div>
+      <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Số thẻ tín dụng
-          </label>
-          <Input
-            type="text"
-            placeholder="1234 5678 9012 3456"
-            required
-            className="p-3 border-gray-300"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Số thẻ tín dụng</label>
+          <Input placeholder="0000 0000 0000 0000" className="font-mono" required />
         </div>
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ngày hết hạn
-            </label>
-            <Input
-              type="text"
-              placeholder="MM/YY"
-              required
-              className="p-3 border-gray-300"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hết hạn</label>
+            <Input placeholder="MM/YY" className="font-mono" required />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              CVV
-            </label>
-            <Input
-              type="text"
-              placeholder="123"
-              required
-              className="p-3 border-gray-300"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+            <Input placeholder="123" type="password" className="font-mono" maxLength={3} required />
           </div>
         </div>
-        <Button
-          type="submit"
-          disabled={loading}
-          variant="orange"
-          className="mt-4 w-full text-lg shadow-lg"
-        >
-          {loading ? (
-            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang xử lý...</>
-          ) : (
-            `Thanh toán ${amount} ${currency?.toUpperCase()}`
-          )}
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tên chủ thẻ</label>
+            <Input placeholder="NGUYEN VAN A" className="uppercase" required />
+        </div>
+        
+        <Button type="submit" disabled={isLoading} variant="orange" className="w-full text-lg h-12 shadow-lg bg-orange-600 hover:bg-orange-700 text-white">
+          {isLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang xử lý...</> : `Thanh toán ${formatCurrency(amount)}`}
         </Button>
       </form>
     </div>
   );
 }
 
-function EWalletPaymentDisplay({ loading, handleSubmit, amount, currency }) {
+function EWalletPayment({ isLoading, onSubmit, amount }) {
+  return (
+    <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-4">
+      <div className="p-6 bg-white border-4 border-purple-500 rounded-xl inline-block shadow-lg">
+        <QrCode className="w-40 h-40 text-gray-800 mx-auto" />
+        <p className="mt-2 text-xs text-gray-500 font-mono">SCAN TO PAY</p>
+      </div>
+      
+      <div>
+        <p className="text-gray-600 mb-2">Tổng thanh toán:</p>
+        <p className="text-2xl font-bold text-purple-700">{formatCurrency(amount)}</p>
+      </div>
+
+      <Button onClick={onSubmit} disabled={isLoading} className="w-full h-12 text-lg bg-purple-600 hover:bg-purple-700 text-white shadow-md">
+          {isLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang xác nhận...</> : "Đã Quét Mã & Thanh Toán"}
+      </Button>
+    </div>
+  );
+}
+
+function BankTransferPayment({ isLoading, onSubmit, amount, bookingRef }) {
   const [copied, setCopied] = useState(false);
-  const mockQrCodeText = `PAY|QAIRLINE|${amount}|${currency}|BOOKING12345`;
-  
+  const transferContent = `QAIR ${bookingRef || 'BOOKING'}`;
+
   const handleCopy = () => {
-    if (copyToClipboard(mockQrCodeText)) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    copyToClipboard(transferContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
-    <div className="text-center space-y-6">
-      <p className="text-sm text-gray-600 border-l-4 border-purple-500 pl-3 py-1 bg-purple-50 rounded-r-md">
-        Quét mã QR dưới đây bằng ứng dụng **Momo** hoặc **ZaloPay** để thanh toán.
-      </p>
-      
-      {/* Mock QR Code  */}
-      <div className="flex justify-center my-6">
-        <div className="p-4 border-8 border-purple-500 bg-white shadow-xl rounded-xl">
-          <QrCode className="w-32 h-32 md:w-48 md:h-48 text-gray-800" />
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
+        <div className="flex justify-between border-b border-blue-200 pb-2">
+            <span className="text-gray-600">Ngân hàng:</span>
+            <span className="font-bold text-blue-800">Vietcombank (VCB)</span>
         </div>
-      </div>
-      
-      <p className="text-lg font-bold text-gray-700">
-        Tổng tiền: <span className="text-purple-600">{amount} {currency?.toUpperCase()}</span>
-      </p>
-
-      <Button onClick={handleSubmit} disabled={loading} variant="orange" className="w-full text-lg shadow-lg bg-purple-600 hover:bg-purple-700">
-          {loading ? (
-            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang chờ xác nhận...</>
-          ) : (
-            "Mở Ví điện tử và Quét Mã"
-          )}
-      </Button>
-      
-      <Button variant="outline" onClick={handleCopy} size="sm" className="mt-2 w-full">
-        <ClipboardCopy className="w-4 h-4 mr-2" /> 
-        {copied ? "Đã sao chép mã thanh toán!" : "Sao chép mã thanh toán"}
-      </Button>
-    </div>
-  );
-}
-
-function BankPaymentDisplay({ loading, handleSubmit, amount, currency }) {
-  const [copiedAccount, setCopiedAccount] = useState(false);
-  const [copiedAmount, setCopiedAmount] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
-  
-  const bankInfo = {
-    accountName: "CONG TY CP HANG KHONG QAIRLINE",
-    accountNumber: "9876543210",
-    bankName: "VIETCOMBANK (VCB)",
-    content: `QAIRLINE THANH TOAN BOOKING [ID_CUABAN]`
-  };
-  
-  const handleCopy = (text, setter) => {
-    if (copyToClipboard(text)) {
-      setter(true);
-      setTimeout(() => setter(false), 2000);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <p className="text-sm text-gray-600 border-l-4 border-blue-500 pl-3 py-1 bg-blue-50 rounded-r-md">
-        Vui lòng chuyển khoản chính xác **Số tiền** và **Nội dung** dưới đây.
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Số Tài khoản */}
-        <InfoItem 
-            label="Ngân hàng" 
-            value={bankInfo.bankName} 
-            color="text-green-700"
-            copyText={bankInfo.bankName}
-            copied={copiedAccount}
-            onCopy={() => handleCopy(bankInfo.bankName, setCopiedAccount)}
-        />
-        <InfoItem 
-            label="Tên tài khoản" 
-            value={bankInfo.accountName} 
-            color="text-gray-900"
-        />
-        <InfoItem 
-            label="Số tài khoản" 
-            value={bankInfo.accountNumber} 
-            color="text-blue-600"
-            copyText={bankInfo.accountNumber}
-            copied={copiedAccount}
-            onCopy={() => handleCopy(bankInfo.accountNumber, setCopiedAccount)}
-        />
-        <InfoItem 
-            label="Số tiền cần chuyển" 
-            value={`${amount} ${currency?.toUpperCase()}`} 
-            color="text-red-600 font-bold"
-            copyText={amount.toString()}
-            copied={copiedAmount}
-            onCopy={() => handleCopy(amount.toString(), setCopiedAmount)}
-        />
-      </div>
-
-      <div className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-yellow-50">
-        <h4 className="font-semibold text-gray-800 mb-2">Nội dung chuyển khoản (BẮT BUỘC):</h4>
-        <p className="font-mono text-sm text-red-700 bg-white p-2 rounded break-all">
-          {bankInfo.content}
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Lưu ý: Thay thế `[ID_CUABAN]` bằng mã booking thực tế của bạn.
-        </p>
-      </div>
-
-      <Button 
-          onClick={() => setShowInstructions(!showInstructions)} 
-          variant="outline" 
-          className="w-full mt-4 text-gray-700"
-      >
-        Hướng dẫn chi tiết {showInstructions ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-      </Button>
-
-      {showInstructions && (
-          <div className="p-4 bg-gray-100 rounded-lg mt-2 text-left text-sm space-y-2">
-              <p>1. **Thực hiện chuyển khoản** qua Mobile Banking hoặc ATM.</p>
-              <p>2. **Điền chính xác** số tiền và nội dung chuyển khoản như trên.</p>
-              <p>3. Nhấn **&quot;Tôi đã thanh toán&quot;** để hệ thống bắt đầu kiểm tra.</p>
-          </div>
-      )}
-
-      <Button onClick={handleSubmit} disabled={loading} variant="orange" className="w-full text-lg shadow-lg">
-          {loading ? (
-            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang chờ xác nhận...</>
-          ) : (
-            "Tôi đã thanh toán qua Ngân hàng"
-          )}
-      </Button>
-    </div>
-  );
-}
-
-function InfoItem({ label, value, color, onCopy, copied, copyText }) {
-    return (
-        <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <p className="text-xs font-medium text-gray-500">{label}</p>
-            <div className="flex items-center justify-between mt-1">
-                <p className={cn("text-base font-semibold", color)}>
-                    {value}
-                </p>
-                {onCopy && (
-                    <button 
-                        type="button" 
-                        onClick={onCopy} 
-                        className="text-sm text-blue-500 hover:text-blue-700 transition-colors"
-                        title="Sao chép"
-                    >
-                        {copied ? 'Đã sao chép' : <ClipboardCopy className="w-4 h-4" />}
-                    </button>
-                )}
+        <div className="flex justify-between border-b border-blue-200 pb-2">
+            <span className="text-gray-600">Số tài khoản:</span>
+            <span className="font-bold text-blue-800 font-mono text-lg">9999 8888 66</span>
+        </div>
+        <div className="flex justify-between border-b border-blue-200 pb-2">
+            <span className="text-gray-600">Chủ tài khoản:</span>
+            <span className="font-bold text-blue-800 uppercase">Cong Ty QAirline</span>
+        </div>
+        <div className="flex justify-between items-center pt-1">
+            <span className="text-gray-600">Nội dung CK:</span>
+            <div className="flex items-center gap-2">
+                <span className="font-bold text-red-600 bg-white px-2 py-1 rounded border border-red-200 font-mono">
+                    {transferContent}
+                </span>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCopy}>
+                    {copied ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <ClipboardCopy className="h-4 w-4 text-gray-500" />}
+                </Button>
             </div>
         </div>
-    );
+      </div>
+
+      <Button onClick={onSubmit} disabled={isLoading} className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+          {isLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang kiểm tra...</> : "Tôi Đã Chuyển Khoản"}
+      </Button>
+    </div>
+  );
 }
 
 // --- MAIN COMPONENT ---
 
 export function PaymentStep({
-  onPaymentSuccess,
-  onBack,
-  bookingId = "QABOOK12345", // Mock data if props are missing
-  amount = 2500000,
+  amount = 0,
   currency = "VND",
+  bookingId = "PENDING...", // Nhận từ CheckInPage (hoặc PENDING nếu chưa tạo)
+  contactInfo,              // Nhận từ CheckInPage
+  onPaymentSuccess,         // Hàm trigger tạo booking/confirm
+  isLoading,                // State loading từ Hook (isCreatingBooking)
+  onBack
 }) {
-  const [selectedMethod, setSelectedMethod] = useState('card');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [ready, setReady] = useState(false);
-  
-  // Simulate API initialization delay
-  useEffect(() => {
-    setTimeout(() => setReady(true), 500);
-  }, []);
+  const [method, setMethod] = useState('card');
+  const [localProcessing, setLocalProcessing] = useState(false); // Loading giả lập payment gateway
 
-  const handleSubmit = async (e) => {
+  // Tổng hợp trạng thái loading: Local (Check thẻ) HOẶC Parent (Gọi API Booking)
+  const isBusy = localProcessing || isLoading;
+
+  const handleProcessPayment = async (e) => {
     if (e) e.preventDefault();
-    setLoading(true);
-    setMessage("");
+    
+    // 1. Giả lập xử lý thanh toán (verify thẻ, check số dư...)
+    setLocalProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Delay 1.5s cho UX
+    setLocalProcessing(false);
 
-    // Mock payment confirmation
-    setTimeout(() => {
-      setMessage("Thanh toán thành công! Vé máy bay điện tử đã được gửi đến email của bạn.");
-      setLoading(false);
-      // Only proceed if the success message is set
-      setTimeout(() => onPaymentSuccess(), 500); 
-    }, 2500); // Simulate 2.5 second processing time
-  };
-
-  const renderPaymentForm = () => {
-    switch (selectedMethod) {
-      case 'card':
-        return <CardPaymentForm loading={loading} handleSubmit={handleSubmit} amount={amount} currency={currency} />;
-      case 'e-wallet':
-        return <EWalletPaymentDisplay loading={loading} handleSubmit={handleSubmit} amount={amount} currency={currency} />;
-      case 'bank':
-        return <BankPaymentDisplay loading={loading} handleSubmit={handleSubmit} amount={amount} currency={currency} />;
-      default:
-        return <p className="text-red-500">Vui lòng chọn phương thức thanh toán.</p>;
+    // 2. Gọi callback của Parent để thực hiện logic nghiệp vụ (Tạo Booking -> API)
+    if (onPaymentSuccess) {
+        onPaymentSuccess();
     }
   };
 
-  if (!ready) {
-      return (
-          <div className="flex justify-center items-center min-h-[400px]">
-              <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-              <p className="ml-3 text-gray-600">Đang tải giao diện thanh toán...</p>
-          </div>
-      );
-  }
-
-  // --- Success View ---
-  if (message.includes("Thanh toán thành công")) {
-    return (
-      <div className="text-center p-12 bg-green-50 rounded-lg shadow-xl border-t-4 border-green-500">
-        <CheckCircle2 className="h-20 w-20 text-green-600 mx-auto mb-4" />
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Giao Dịch Hoàn Tất!</h1>
-        <p className="text-lg text-gray-700 mb-6">{message}</p>
-        <p className="text-sm text-gray-500">Mã Booking: <span className="font-mono font-semibold text-gray-700">{bookingId}</span></p>
-        <Button variant="orange" className="mt-6 text-lg" onClick={onPaymentSuccess}>
-          Xem Chi Tiết Booking
-        </Button>
-      </div>
-    );
-  }
-
-  // --- Payment View ---
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8 p-4">
-      <h1 className="text-3xl font-bold text-gray-900 text-center">Hoàn tất Thanh toán</h1>
+    <div className="w-full max-w-5xl mx-auto space-y-6">
       
-      {/* Payment Summary */}
-      <Card className="shadow-lg border-2 border-orange-400 bg-orange-50">
-        <CardContent className="p-4 flex justify-between items-center">
-          <div className="flex flex-col">
-            <p className="text-sm font-medium text-gray-600">Mã Booking</p>
-            <p className="font-mono text-lg font-semibold text-orange-700">{bookingId}</p>
-          </div>
-          <div className="flex flex-col items-end">
-            <p className="text-sm font-medium text-gray-600">Số tiền cần thanh toán</p>
-            <p className="text-3xl font-extrabold text-red-600">
-              {amount.toLocaleString('vi-VN')} <span className="text-xl">{currency?.toUpperCase()}</span>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Header Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-2 border-l-4 border-orange-500 shadow-sm">
+            <CardContent className="p-4 flex flex-col justify-center h-full">
+                <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-bold text-gray-800">Tổng thanh toán</h2>
+                    <span className="text-2xl font-bold text-orange-600">{formatCurrency(amount)}</span>
+                </div>
+                <div className="text-sm text-gray-500 flex gap-4">
+                    <span className="flex items-center gap-1"><User className="h-3 w-3"/> {contactInfo?.email || 'Khách hàng'}</span>
+                    <span className="flex items-center gap-1"><Phone className="h-3 w-3"/> {contactInfo?.phone || '---'}</span>
+                </div>
+            </CardContent>
+        </Card>
         
-        {/* Lựa chọn phương thức thanh toán */}
-        <div className="lg:col-span-1 space-y-4">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">Chọn Phương Thức</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {paymentOptions.map((option) => (
+        <Card className="bg-gray-50 border-gray-200 shadow-sm">
+            <CardContent className="p-4 flex flex-col justify-center h-full">
+                <span className="text-xs text-gray-500 uppercase font-semibold">Mã đặt chỗ (Tạm tính)</span>
+                <span className="text-xl font-mono font-bold text-gray-700">{bookingId}</span>
+            </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left: Payment Methods */}
+        <div className="lg:col-span-4 space-y-3">
+            <h3 className="font-semibold text-gray-700 mb-2">Phương thức thanh toán</h3>
+            {PAYMENT_OPTIONS.map((opt) => (
                 <div
-                  key={option.id}
-                  className={cn(
-                    "p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 flex items-center gap-4 hover:shadow-md",
-                    selectedMethod === option.id
-                      ? "border-orange-500 bg-orange-100/70 shadow-lg"
-                      : "border-gray-200 bg-white hover:bg-gray-50"
-                  )}
-                  onClick={() => {
-                    setSelectedMethod(option.id);
-                    setMessage(""); // Clear message on method change
-                  }}
+                    key={opt.id}
+                    onClick={() => !isBusy && setMethod(opt.id)}
+                    className={cn(
+                        "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                        method === opt.id 
+                            ? "border-orange-500 bg-orange-50 shadow-md" 
+                            : "border-gray-100 bg-white hover:border-gray-300 hover:bg-gray-50",
+                        isBusy && "opacity-50 pointer-events-none"
+                    )}
                 >
-                  <option.icon className={cn("h-6 w-6 flex-shrink-0", selectedMethod === option.id ? "text-orange-500" : "text-gray-500")} />
-                  <div>
-                    <p className="font-semibold text-gray-800">{option.label}</p>
-                    <p className="text-xs text-gray-500">{option.description}</p>
-                  </div>
+                    <div className={cn("p-2 rounded-full", method === opt.id ? "bg-orange-200 text-orange-700" : "bg-gray-100 text-gray-500")}>
+                        <opt.icon className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <div className={cn("font-bold", method === opt.id ? "text-orange-900" : "text-gray-700")}>{opt.label}</div>
+                        <div className="text-xs text-gray-500">{opt.description}</div>
+                    </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+            ))}
+            
+            <Button variant="ghost" onClick={onBack} disabled={isBusy} className="w-full mt-4 text-gray-500 hover:text-gray-900">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại chọn ghế
+            </Button>
         </div>
-        
-        {/* Chi tiết form/thông tin thanh toán */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-lg border-t-4 border-gray-300">
-            <CardHeader className="border-b pb-3">
-              <CardTitle className="text-2xl text-gray-800">
-                {paymentOptions.find(o => o.id === selectedMethod)?.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {renderPaymentForm()}
-              {/* Message Display (Error or Success) */}
-              {message && (
-                <div className={cn("mt-4 p-3 rounded-lg font-medium", message.includes("thành công") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
-                  {message}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Button onClick={onBack} variant="outline" className="mt-8 w-full text-lg shadow-md hover:bg-gray-100">
-            <ArrowLeft className="h-5 w-5 mr-2" /> Quay lại
-          </Button>
+
+        {/* Right: Payment Details Form */}
+        <div className="lg:col-span-8">
+            <Card className="h-full border-t-4 border-t-blue-500 shadow-md">
+                <CardHeader className="border-b bg-gray-50/50 pb-4">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                        {method === 'card' && <CreditCard className="text-blue-600"/>}
+                        {method === 'e-wallet' && <Wallet className="text-purple-600"/>}
+                        {method === 'bank' && <Banknote className="text-green-600"/>}
+                        {PAYMENT_OPTIONS.find(o => o.id === method)?.label}
+                    </CardTitle>
+                    <CardDescription>
+                        {method === 'card' ? "Nhập thông tin thẻ để hoàn tất." : "Thực hiện giao dịch theo hướng dẫn."}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                    {method === 'card' && <CardPaymentForm isLoading={isBusy} onSubmit={handleProcessPayment} amount={amount} />}
+                    {method === 'e-wallet' && <EWalletPayment isLoading={isBusy} onSubmit={handleProcessPayment} amount={amount} />}
+                    {method === 'bank' && <BankTransferPayment isLoading={isBusy} onSubmit={handleProcessPayment} amount={amount} bookingRef={bookingId} />}
+                </CardContent>
+            </Card>
         </div>
+
       </div>
     </div>
   );

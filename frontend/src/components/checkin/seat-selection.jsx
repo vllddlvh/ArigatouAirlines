@@ -13,7 +13,7 @@ export function SeatSelectionStep({
   onSwitchTrip,
   currentTrip,
 }) {
-  const { toast } = useToast(); // Sử dụng useToast
+  const { toast } = useToast(); 
 
   const handleContinue = () => {
     const allSelected = passengers.every((customer) => customer.seat);

@@ -47,7 +47,7 @@ export default function Hero() {
                       bg-gradient-to-r from-blue-400 to-cyan-300 text-transparent bg-clip-text
                       tracking-wide leading-tight text-center"
           >
-            Khám phá thế giới cùng <span className="text-cyan-400">QAirlines</span>
+            Khám phá thế giới cùng  <span className="text-cyan-400 ml-2">QAirlines</span>
           </h1>
           <p className="mt-4 text-lg text-gray-200">
             Trải nghiệm đẳng cấp – Vươn tầm không gian – Đến mọi nơi bạn muốn.
