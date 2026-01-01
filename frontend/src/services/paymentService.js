@@ -48,3 +48,40 @@ export const cancelPayment = async (bookingId) => {
   );
   return extractBody(response);
 };
+
+
+/**
+ * Tạo URL thanh toán VNPAY
+ * Gọi đến API: GET /payment/create_payment
+ * @param {number} amount - Số tiền cần thanh toán (Optional: tùy vào backend có nhận hay không)
+ * @returns {Promise<Object>} - Trả về object chứa URL thanh toán (PaymentResponse)
+ */
+export const createVnPayUrl = async (amount = 10000) => {
+  // Lưu ý: Controller Java hiện tại của bạn đang hardcode số tiền là 10.000
+  // Nếu sau này bạn sửa Backend để nhận tham số amount, hãy thêm vào params
+  const response = await axios.get(
+    `${API_BASE_URL}/payment/create_payment`,
+    {
+      headers: getAuthHeader(),
+      // params: { amount: amount } // Bỏ comment dòng này nếu Backend đã sửa để nhận tham số
+    }
+  );
+  return extractBody(response);
+};
+
+/**
+ * Gửi thông tin trả về từ VNPAY về Backend để xác thực
+ * Gọi đến API: GET /payment/payment_info
+ * @param {Object} params - Object chứa các tham số từ URL (vnp_Amount, vnp_ResponseCode,...)
+ * @returns {Promise<Object>} - Kết quả giao dịch (TransactionStatus)
+ */
+export const verifyVnPayReturn = async (params) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/payment/payment_info`,
+    {
+      headers: getAuthHeader(),
+      params: params, // Axios sẽ tự động chuyển object này thành query string (?vnp_Amount=...&vnp_...)
+    }
+  );
+  return extractBody(response);
+};
