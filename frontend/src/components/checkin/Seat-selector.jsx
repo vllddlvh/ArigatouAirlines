@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from "react";
-import { MdChair, MdAirlineSeatReclineExtra } from "react-icons/md"; // Thêm icon ghế thương gia
-import { User, Info, CheckCircle2, XCircle, ArrowRight, PlaneTakeoff, Users, AlertCircle, Armchair } from 'lucide-react';
+import { 
+  MdChair, 
+  MdAirlineSeatReclineExtra, 
+  MdAirlineSeatFlat 
+} from "react-icons/md"; // Icon cho 3 hạng ghế
+import { 
+  User, Info, CheckCircle2, Users, AlertCircle, PlaneTakeoff 
+} from 'lucide-react';
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -16,55 +22,81 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Helper: Group ghế theo visualRow từ API
+// --- HELPER FUNCTIONS ---
+
+// 1. Group ghế theo hàng
 const groupSeatsByRow = (seats) => {
   const rows = {};
   if (!Array.isArray(seats)) return rows;
-  
   seats.forEach(seat => {
-    const rowNum = seat.visualRow; // Dùng visualRow từ API
-    if (!rows[rowNum]) {
-      rows[rowNum] = [];
-    }
+    const rowNum = seat.visualRow;
+    if (!rows[rowNum]) rows[rowNum] = [];
     rows[rowNum].push(seat);
   });
   return rows;
 };
 
+// 2. Cấu hình giao diện cho 3 hạng ghế
+const getSeatConfig = (seatClass) => {
+  const upperClass = seatClass ? seatClass.toUpperCase() : "";
 
+  if (upperClass.includes("FIRST") || upperClass.includes("PREMIER")) {
+    return {
+      color: "bg-yellow-100 border-yellow-400 text-yellow-600 hover:bg-yellow-200",
+      selectedColor: "bg-yellow-500 border-yellow-600 text-white",
+      icon: MdAirlineSeatFlat, // Giường nằm
+      label: "Hạng Nhất",
+      size: "w-12 h-12" // To nhất
+    };
+  } 
+  
+  if (upperClass.includes("BUSINESS")) {
+    return {
+      color: "bg-purple-50 border-purple-300 text-purple-600 hover:bg-purple-100",
+      selectedColor: "bg-purple-600 border-purple-700 text-white",
+      icon: MdAirlineSeatReclineExtra, // Ghế rộng
+      label: "Thương Gia",
+      size: "w-11 h-11" // Vừa
+    };
+  }
+
+  // Mặc định Economy
+  return {
+    color: "bg-white border-blue-200 text-blue-400 hover:bg-blue-50",
+    selectedColor: "bg-blue-600 border-blue-700 text-white",
+    icon: MdChair, // Ghế thường
+    label: "Phổ Thông",
+    size: "w-10 h-10" // Nhỏ
+  };
+};
 
 export default function SeatSelector({ seats: initialSeats, passengers, onSeatSelect }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [tempSelectedSeat, setTempSelectedSeat] = useState(null); // Lưu cả object seat
+  const [tempSelectedSeat, setTempSelectedSeat] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-
-  // 1. Tạo Map để tra cứu nhanh: Key = "visualRow-visualCol"
+  // Map tra cứu nhanh
   const seatMap = useMemo(() => {
     const map = new Map();
     initialSeats.forEach(seat => {
-      // Key unique theo tọa độ
       map.set(`${seat.visualRow}-${seat.visualCol}`, seat);
     });
     return map;
   }, [initialSeats]);
 
-  // 2. Lấy danh sách hàng và sắp xếp
+  // Lấy danh sách hàng
   const rowsData = useMemo(() => groupSeatsByRow(initialSeats), [initialSeats]);
   const rowNumbers = Object.keys(rowsData).sort((a, b) => parseInt(a) - parseInt(b));
-
-  // 3. Cấu hình cột (Giả định máy bay 6 cột từ API)
-  const TOTAL_COLS = 6; 
-  const colIndices = Array.from({ length: TOTAL_COLS }, (_, i) => i + 1); // [1, 2, 3, 4, 5, 6]
 
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);
   };
 
   const handleSeatClick = (seat) => {
-    // Logic check: Phải chọn khách trước & ghế phải available
-    // Lưu ý: Parent component cần map field 'booked' thành type='blocked' hoặc 'available'
-    if (seat?.type === "available" && selectedCustomer) {
+    // Logic check: Phải chọn khách trước & ghế phải available & chưa bị book
+    const isBooked = seat.status === "Booked" || seat.type !== "available";
+    
+    if (!isBooked && selectedCustomer) {
       setTempSelectedSeat(seat);
       setIsDialogOpen(true);
     }
@@ -83,14 +115,12 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
     <div className="min-h-screen bg-gray-50/50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
 
-        {/* --- LEFT PANEL: DANH SÁCH KHÁCH & CHÚ THÍCH --- */}
+        {/* --- LEFT PANEL: LIST PASSENGERS --- */}
         <div className="w-full lg:w-1/3 space-y-6">
-          
-          {/* Danh sách hành khách */}
-          <Card className="shadow-md border-t-4 border-orange-500 bg-white">
-            <CardHeader className="p-4 border-b bg-orange-50/30">
+          <Card className="shadow-md border-t-4 border-blue-500 bg-white">
+            <CardHeader className="p-4 border-b bg-blue-50/30">
               <CardTitle className="flex items-center gap-2 text-lg text-gray-800">
-                <Users className="h-5 w-5 text-orange-600" /> Danh Sách Hành Khách
+                <Users className="h-5 w-5 text-blue-600" /> Danh Sách Hành Khách
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -102,8 +132,8 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
                     className={cn(
                       "flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer",
                       selectedCustomer?.id === customer.id
-                        ? "bg-orange-50 border-orange-400 shadow-md ring-1 ring-orange-200"
-                        : "bg-white border-gray-200 hover:border-orange-300 hover:bg-gray-50",
+                        ? "bg-blue-50 border-blue-400 shadow-md ring-1 ring-blue-200"
+                        : "bg-white border-gray-200 hover:border-blue-300 hover:bg-gray-50",
                       customer.seat && "bg-green-50/50 border-green-200"
                     )}
                   >
@@ -132,7 +162,7 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
             </CardContent>
           </Card>
 
-          {/* Chú thích (Legend) */}
+          {/* LEGEND (CHÚ THÍCH) */}
           <Card className="shadow-sm border border-gray-200">
             <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2 text-base text-gray-700">
@@ -141,80 +171,77 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <LegendItem color="bg-orange-500 border-orange-600" label="Đang chọn" />
-                <LegendItem color="bg-blue-600 border-blue-700" label="Ghế của bạn" />
-                <LegendItem color="bg-gray-300 border-gray-400" label="Đã có người" />
-                <LegendItem color="bg-white border-purple-300 text-purple-600" label="Thương gia" isOutline />
-                <LegendItem color="bg-white border-blue-300 text-blue-500" label="Phổ thông" isOutline />
+                <LegendItem color="bg-blue-500 border-blue-600 text-white" label="Đang chọn" />
+                <LegendItem color="bg-gray-300 border-gray-400 text-gray-500" label="Đã bán / Kín" />
+                {/* 3 Hạng ghế */}
+                <LegendItem color="bg-yellow-100 border-yellow-400 text-yellow-600" label="Hạng Nhất" isOutline />
+                <LegendItem color="bg-purple-50 border-purple-300 text-purple-600" label="Thương Gia" isOutline />
+                <LegendItem color="bg-white border-blue-200 text-blue-400" label="Phổ Thông" isOutline />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* --- RIGHT PANEL: SƠ ĐỒ GHẾ --- */}
+        {/* --- RIGHT PANEL: AIRPLANE MAP --- */}
         <div className="flex-1 flex flex-col items-center">
             
-          {/* Header trạng thái */}
-          <div className="mb-6 w-full text-center">
+          {/* Status Bar */}
+          <div className="mb-6 w-full text-center h-16">
              {selectedCustomer ? (
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600  rounded-full shadow-lg animate-in fade-in slide-in-from-top-4">
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full shadow-lg animate-in fade-in slide-in-from-top-4">
                 <User className="h-5 w-5" /> 
                 <span>Đang chọn ghế cho: <strong>{selectedCustomer.fullName}</strong></span>
               </div>
             ) : (
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-500 rounded-full shadow-sm">
                 <AlertCircle className="h-5 w-5" /> 
-                <span>Vui lòng chọn hành khách bên trái để bắt đầu</span>
+                <span>Vui lòng chọn hành khách để bắt đầu</span>
               </div>
             )}
           </div>
 
-          {/* MÔ HÌNH MÁY BAY */}
-          <div className="relative bg-white rounded-[3rem] shadow-2xl border-4 border-gray-100 p-8 pb-20 w-full max-w-3xl overflow-hidden">
+          {/* MAP CONTAINER */}
+          <div className="relative bg-white rounded-[3rem] shadow-2xl border-4 border-gray-100 p-8 pb-20 w-full max-w-3xl overflow-visible">
             
-            {/* Buồng lái decor */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-gradient-to-b from-gray-200 to-white rounded-b-full opacity-50"></div>
-            <div className="flex justify-center mb-10 text-gray-300">
+            {/* Buồng lái */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-gradient-to-b from-gray-200 to-white rounded-b-full opacity-50 z-0"></div>
+            <div className="flex justify-center mb-10 text-gray-300 relative z-10">
                 <PlaneTakeoff size={48} />
             </div>
 
-            {/* GRID GHẾ */}
-            <div className="flex flex-col gap-3 items-center">
+            {/* SEAT GRID */}
+            <div className="flex flex-col gap-3 items-center relative z-10">
                 
-                {/* Header Cột (A B C - D E F) */}
+                {/* Labels Cột */}
                 <div className="flex gap-4 mb-2">
-                    {/* Cánh trái (A B C) */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-[140px] justify-center">
                         {['A', 'B', 'C'].map(char => (
                             <div key={char} className="w-10 text-center font-bold text-gray-400">{char}</div>
                         ))}
                     </div>
-                    {/* Lối đi (Spacer) */}
                     <div className="w-8"></div>
-                    {/* Cánh phải (D E F) */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-[140px] justify-center">
                         {['D', 'E', 'F'].map(char => (
                             <div key={char} className="w-10 text-center font-bold text-gray-400">{char}</div>
                         ))}
                     </div>
                 </div>
 
-                {/* Render Từng Hàng */}
+                {/* Render Rows */}
                 {rowNumbers.map((rowNum) => (
                    <div key={rowNum} className="flex items-center gap-4 group">
                         
-                        {/* Số hàng bên trái */}
-                        <div className="w-6 text-right text-xs font-bold text-gray-300 group-hover:text-gray-500 transition-colors">
+                        {/* Số hàng trái */}
+                        <div className="w-6 text-right text-xs font-bold text-gray-300">
                             {rowNum}
                         </div>
 
-                        {/* Các ghế trong hàng */}
-                        <div className="flex gap-2">
-                             {/* Loop Col 1-3 (Trái) */}
+                        {/* Ghế bên trái (Col 1-3) */}
+                        <div className="flex gap-2 w-[140px] justify-end">
                              {[1, 2, 3].map(colNum => (
                                 <SeatItem 
                                     key={`${rowNum}-${colNum}`}
-                                    seat={seatMap.get(`${rowNum}-${colNum}`)} // Tìm ghế theo Row-Col
+                                    seat={seatMap.get(`${rowNum}-${colNum}`)}
                                     passengers={passengers}
                                     selectedCustomer={selectedCustomer}
                                     tempSelectedSeat={tempSelectedSeat}
@@ -223,13 +250,13 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
                              ))}
                         </div>
 
-                        {/* LỐI ĐI (AISLE) */}
+                        {/* Lối đi */}
                         <div className="w-8 flex justify-center items-center text-[10px] text-gray-200 font-mono">
                             {rowNum}
                         </div>
 
-                        <div className="flex gap-2">
-                             {/* Loop Col 4-6 (Phải) */}
+                        {/* Ghế bên phải (Col 4-6) */}
+                        <div className="flex gap-2 w-[140px] justify-start">
                              {[4, 5, 6].map(colNum => (
                                 <SeatItem 
                                     key={`${rowNum}-${colNum}`}
@@ -242,8 +269,8 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
                              ))}
                         </div>
 
-                        {/* Số hàng bên phải */}
-                        <div className="w-6 text-left text-xs font-bold text-gray-300 group-hover:text-gray-500 transition-colors">
+                        {/* Số hàng phải */}
+                        <div className="w-6 text-left text-xs font-bold text-gray-300">
                             {rowNum}
                         </div>
                    </div>
@@ -252,14 +279,13 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
 
           </div>
         </div>
-
       </div>
 
       {/* Confirmation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl text-orange-600">
+            <DialogTitle className="flex items-center gap-2 text-xl text-blue-600">
               <CheckCircle2 className="h-6 w-6" /> Xác nhận ghế
             </DialogTitle>
             <DialogDescription className="pt-2 text-base text-gray-700">
@@ -267,16 +293,19 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
             </DialogDescription>
           </DialogHeader>
           
-          {/* Thông tin ghế chi tiết */}
           {tempSelectedSeat && (
-              <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1 border">
-                  <div className="flex justify-between">
+              <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-2 border">
+                  <div className="flex justify-between border-b pb-2">
                       <span className="text-gray-500">Hạng vé:</span>
-                      <span className="font-medium">{tempSelectedSeat.seatClass.replace('_', ' ')}</span>
+                      <span className="font-bold text-gray-900">{getSeatConfig(tempSelectedSeat.seatClass).label}</span>
                   </div>
                   <div className="flex justify-between">
                       <span className="text-gray-500">Vị trí:</span>
-                      <span className="font-medium">{tempSelectedSeat.seatType}</span>
+                      <span className="font-medium text-gray-900">{tempSelectedSeat.seatType}</span>
+                  </div>
+                   <div className="flex justify-between">
+                      <span className="text-gray-500">Trạng thái:</span>
+                      <span className="font-medium text-green-600">Có sẵn</span>
                   </div>
               </div>
           )}
@@ -295,71 +324,137 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
   );
 }
 
-// --- SUB COMPONENTS ---
 
-function SeatItem({ seat, passengers, selectedCustomer, tempSelectedSeat, onSeatClick }) {
-    if (!seat) return <div className="w-10 h-10"></div>;
-
-    // Check trạng thái ghế
-    const isSelectedByCurrent = tempSelectedSeat?.seatNumber === seat.seatNumber;
-    const isBookedByMyGroup = passengers.some(p => p.seat === seat.seatNumber); // Ghế nhóm mình đã chọn
-    const isSeatOfCurrentCustomer = passengers.find(p => p.id === selectedCustomer?.id)?.seat === seat.seatNumber; // Ghế hiện tại của khách đang active
-
-    // Styles cơ bản
-    const isBusiness = seat.seatClass.includes("BUSINESS");
-    const isAvailable = seat.type === "available";
-    const isBlocked = seat.type === "blocked" || (isBookedByMyGroup && !isSeatOfCurrentCustomer); // Block nếu người khác trong nhóm đã chọn
-
-    // Xác định Class màu sắc
-    let btnClass = "bg-white border-gray-300 text-gray-400 hover:border-gray-400"; // Mặc định Economy Available
-    
-    if (isBusiness) {
-        btnClass = "bg-white border-purple-300 text-purple-400 hover:border-purple-500 hover:bg-purple-50"; // Mặc định Business
-    }
-
-    if (!isAvailable || isBlocked) {
-        btnClass = "bg-gray-200 border-transparent text-gray-400 cursor-not-allowed opacity-70"; // Đã bán / Block
-    } else if (isSelectedByCurrent) {
-        btnClass = "bg-orange-500 border-orange-600 text-white shadow-lg scale-110 z-10"; // Đang chọn tạm
-    } else if (isSeatOfCurrentCustomer) {
-        btnClass = "bg-blue-600 border-blue-700 text-white shadow-md"; // Ghế đã chốt của khách này
-    } else if (selectedCustomer) {
-        // Hover state khi đang chọn khách
-        btnClass += " cursor-pointer hover:shadow-md hover:scale-105";
-    } else {
-        btnClass += " cursor-not-allowed opacity-50"; // Chưa chọn khách
-    }
-
-    // Icon ghế: Thương gia dùng icon to/khác hơn chút
-    const Icon = isBusiness ? MdAirlineSeatReclineExtra : MdChair;
-
-    return (
-        <button
-            onClick={() => onSeatClick(seat)}
-            disabled={!isAvailable || isBlocked || !selectedCustomer}
-            className={cn(
-                "w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all duration-200 relative group",
-                btnClass
-            )}
-            title={`${seat.seatNumber} - ${seat.seatClass}`}
-        >
-            <Icon size={isBusiness ? 20 : 24} />
-            
-            {/* Tooltip hover số ghế */}
-            {!isBlocked && (
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-                    {seat.seatNumber}
-                </span>
-            )}
-        </button>
-    )
-}
 
 function LegendItem({ color, label, isOutline }) {
   return (
     <div className="flex items-center gap-2">
-      <div className={cn("w-4 h-4 rounded-sm", color, isOutline && "border-2")}></div>
-      <span className="text-gray-600">{label}</span>
+      <div className={cn("flex items-center justify-center w-6 h-6 rounded-md shadow-sm", color, isOutline && "border-2")}>
+        {isOutline && <MdChair className="w-4 h-4" />}
+      </div>
+      <span className="text-gray-600 font-medium">{label}</span>
     </div>
   );
+}
+
+function SeatItem({ seat, passengers, selectedCustomer, tempSelectedSeat, onSeatClick }) {
+    // 1. Dùng State để kiểm soát Hover (Chắc chắn chạy 100%)
+    const [isHovered, setIsHovered] = useState(false);
+
+    if (!seat) return <div className="w-10 h-10"></div>;
+
+    // --- Logic Config (Giữ nguyên) ---
+    const getSeatConfig = (seatClass) => {
+        const upperClass = seatClass ? seatClass.toUpperCase() : "";
+        if (upperClass.includes("FIRST") || upperClass.includes("PREMIER")) {
+            return { color: "bg-yellow-100 border-yellow-400 text-yellow-600", icon: MdAirlineSeatFlat, label: "Hạng Nhất" };
+        }
+        if (upperClass.includes("BUSINESS")) {
+            return { color: "bg-purple-50 border-purple-300 text-purple-600", icon: MdAirlineSeatReclineExtra, label: "Thương Gia" };
+        }
+        return { color: "bg-white border-blue-200 text-blue-400", icon: MdChair, label: "Phổ Thông" };
+    };
+
+    const config = getSeatConfig(seat.seatClass);
+    const Icon = config.icon;
+    const isTempSelected = tempSelectedSeat?.seatNumber === seat.seatNumber;
+    const isBookedByMyGroup = passengers.some(p => p.seat === seat.seatNumber);
+    const isSeatOfCurrentCustomer = passengers.find(p => p.id === selectedCustomer?.id)?.seat === seat.seatNumber;
+    const isApiBooked = seat.status === "Booked" || seat.type !== "available";
+    const isBlocked = isApiBooked || (isBookedByMyGroup && !isSeatOfCurrentCustomer);
+
+    // --- Logic Class cho Button (Giữ nguyên Tailwind cho đẹp) ---
+    let btnClass = `flex items-center justify-center rounded-lg border-2 w-10 h-10 transition-all `;
+    let iconClass = "";
+
+    if (isBlocked) {
+        btnClass += "bg-gray-200 border-gray-200 cursor-not-allowed opacity-60";
+        iconClass = "text-gray-400";
+    } else if (isTempSelected) {
+        btnClass += "bg-orange-500 border-orange-600 shadow-lg scale-110"; 
+        iconClass = "text-white";
+    } else if (isSeatOfCurrentCustomer) {
+        btnClass += "bg-blue-600 border-blue-700 text-white shadow-md";
+        iconClass = "text-white";
+    } else {
+        btnClass += config.color;
+        if (selectedCustomer) btnClass += " cursor-pointer hover:shadow-md hover:scale-105";
+        else btnClass += " cursor-not-allowed opacity-80";
+    }
+
+    return (
+        <div 
+            className="relative flex justify-center items-center"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{ zIndex: isHovered ? 9999 : 'auto' }} 
+        >
+            <button
+                onClick={() => onSeatClick(seat)}
+                disabled={isBlocked || !selectedCustomer}
+                className={btnClass}
+            >
+                <Icon size={20} className={iconClass} />
+                {!isBlocked && (
+                    <span className="absolute bottom-0.5 right-1 text-[8px] font-bold opacity-60 pointer-events-none">
+                        {seat.seatNumber.replace(/[0-9]/g, '')}
+                    </span>
+                )}
+            </button>
+
+            {isHovered && (
+                <div 
+                    style={{
+                        position: 'absolute',
+                        bottom: '120%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        backgroundColor: '#1f2937',
+                        color: '#ffffff',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                        width: 'max-content',
+                        minWidth: '140px',
+                        zIndex: 10000,
+                        pointerEvents: 'none',
+                        textAlign: 'left'
+                    }}
+                >
+
+                    <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        borderWidth: '6px',
+                        borderStyle: 'solid',
+                        borderColor: '#1f2937 transparent transparent transparent'
+                    }}></div>
+
+                    {/* Nội dung Tooltip */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#fbbf24' }}>{seat.seatNumber}</span>
+                            <span style={{ fontSize: '10px', background: '#374151', padding: '2px 6px', borderRadius: '4px', border: '1px solid #4b5563' }}>
+                                {config.label}
+                            </span>
+                        </div>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '12px' }}>
+                            <span style={{ color: '#9ca3af' }}>Loại:</span>
+                            <span style={{ fontWeight: '500' }}>
+                                {seat.seatType === 'WINDOW' ? 'Cửa sổ' : seat.seatType === 'AISLE' ? 'Lối đi' : 'Giữa'}
+                            </span>
+
+                            <span style={{ color: '#9ca3af' }}>Trạng thái:</span>
+                            <span style={{ fontWeight: 'bold', color: isApiBooked ? '#f87171' : '#4ade80' }}>
+                                {isApiBooked ? 'Đã đặt' : 'Trống'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }

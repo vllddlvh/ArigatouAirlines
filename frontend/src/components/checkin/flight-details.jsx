@@ -156,14 +156,14 @@ export function FlightDetailsStep({
           <Button
             variant="outline"
             onClick={onCancel}
-            className="px-8 py-3 text-lg font-semibold border-gray-300 hover:bg-gray-100 transition-all duration-300 shadow-md"
+            className="px-8 py-3 text-lg font-semibold border-gray-300 hover:bg-gray-100 hover:text-red-800 transition-all duration-300 shadow-md"
           >
             Hủy bỏ
           </Button>
           <Button
             variant="orange"
             onClick={onContinue}
-            className="px-8 py-3 text-lg font-semibold bg-orange-600 text-white hover:bg-orange-700 transition-all duration-300 shadow-lg shadow-orange-300"
+            className="px-8 py-3 text-lg font-semibold bg-blue-600 text-white hover:bg-orange-700 transition-all duration-300 shadow-lg shadow-orange-300"
           >
             Tiếp tục thanh toán <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
