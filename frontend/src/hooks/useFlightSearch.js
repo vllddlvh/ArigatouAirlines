@@ -4,9 +4,9 @@ const useFlightSearch = () => {
   const [fromAirport, setFromAirport] = useState('');
   const [toAirport, setToAirport] = useState('');
   const [departureDate, setDepartureDate] = useState(null);
-  const [returnDate, setReturnDate] = useState(null);
-  const [passengerCount, setPassengerCount] = useState(1);
-  const [tripType, setTripType] = useState('roundTrip');
+  const [returnDate, setReturnDate] = useState(null); // Kept for compatibility
+  const [passengerCount, setPassengerCount] = useState(1); // Kept for compatibility
+  const [tripType, setTripType] = useState('oneWay'); // Changed default to oneWay
   const [errors, setErrors] = useState({});
   const [isValid, setIsValid] = useState(false);
 
@@ -15,25 +15,13 @@ const useFlightSearch = () => {
     setToAirport(fromAirport);
   };
 
-  // Bọc validateInputs trong useCallback
+  // Simplified validation for one-way search only
   const validateInputs = useCallback(() => {
     const newErrors = {};
 
     if (!fromAirport) newErrors.fromAirport = 'Vui lòng chọn sân bay đi';
     if (!toAirport) newErrors.toAirport = 'Vui lòng chọn sân bay đến';
     if (!departureDate) newErrors.departureDate = 'Vui lòng chọn ngày đi';
-    if (tripType === 'roundTrip' && !returnDate)
-      newErrors.returnDate = 'Vui lòng chọn ngày về';
-
-    if (!Number.isInteger(passengerCount) || passengerCount < 1) {
-      newErrors.passengerCount = 'Số lượng hành khách không hợp lệ';
-    }
-
-    if (departureDate && returnDate) {
-      if (new Date(returnDate) <= new Date(departureDate)) {
-        newErrors.returnDate = 'Ngày về phải sau ngày đi';
-      }
-    }
 
     setErrors(newErrors);
     setIsValid(Object.keys(newErrors).length === 0);
@@ -41,11 +29,6 @@ const useFlightSearch = () => {
     fromAirport,
     toAirport,
     departureDate,
-    returnDate,
-    passengerCount,
-    tripType,
-    setErrors,
-    setIsValid,
   ]);
 
   // Gọi hàm validateInputs bên trong useEffect

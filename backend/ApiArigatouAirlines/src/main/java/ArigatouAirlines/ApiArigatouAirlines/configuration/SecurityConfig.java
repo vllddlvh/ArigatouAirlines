@@ -43,7 +43,7 @@ public class SecurityConfig {
             "/airport",
             "/aircraft",
             "/flightSchedules",
-            "/flights",
+            "/flights/**",
             "/airline"
     };
 
