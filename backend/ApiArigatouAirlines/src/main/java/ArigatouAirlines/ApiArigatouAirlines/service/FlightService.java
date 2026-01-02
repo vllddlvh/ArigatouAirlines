@@ -25,11 +25,13 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -228,6 +230,98 @@ public class FlightService {
             return "Delete Finished!";
         }
         return "FLightID doesn't found!";
+    }
+
+    /**
+     * Search flights with filters
+     * @param departureAirportCode Departure airport code (optional)
+     * @param arrivalAirportCode Arrival airport code (optional)
+     * @param departureDate Departure date (optional)
+     * @return List of filtered flights
+     */
+    public List<FlightResponseWithoutList> searchFlights(
+            String departureAirportCode, 
+            String arrivalAirportCode, 
+            LocalDate departureDate) {
+        
+        List<Flight> allFlights = flightRepository.findAll();
+        
+        // Apply filters
+        List<Flight> filteredFlights = allFlights.stream()
+            .filter(flight -> {
+                // Filter by departure airport
+                if (departureAirportCode != null && !departureAirportCode.isEmpty()) {
+                    String flightDepartureCode = flight.getSchedule() != null 
+                        && flight.getSchedule().getDepartureAirport() != null
+                        ? flight.getSchedule().getDepartureAirport().getAirportCode()
+                        : null;
+                    if (flightDepartureCode == null || 
+                        !flightDepartureCode.equalsIgnoreCase(departureAirportCode)) {
+                        return false;
+                    }
+                }
+                
+                // Filter by arrival airport
+                if (arrivalAirportCode != null && !arrivalAirportCode.isEmpty()) {
+                    String flightArrivalCode = flight.getSchedule() != null 
+                        && flight.getSchedule().getArrivalAirport() != null
+                        ? flight.getSchedule().getArrivalAirport().getAirportCode()
+                        : null;
+                    if (flightArrivalCode == null || 
+                        !flightArrivalCode.equalsIgnoreCase(arrivalAirportCode)) {
+                        return false;
+                    }
+                }
+                
+                // Filter by departure date
+                if (departureDate != null && flight.getDepartureDateTime() != null) {
+                    LocalDate flightDate = flight.getDepartureDateTime().toLocalDate();
+                    if (!flightDate.equals(departureDate)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            })
+            .collect(Collectors.toList());
+        
+        // Map to response DTOs
+        return filteredFlights.stream().map(flight -> {
+            FlightResponseWithoutList response = flightMapper.toFlightResponseWithoutList(flight);
+            
+            // Populate flattened fields
+            if (flight.getSchedule() != null) {
+                response.setFlightNumber(flight.getSchedule().getFlightNumber());
+                if (flight.getSchedule().getDepartureAirport() != null) {
+                    response.setDepartureAirportCode(flight.getSchedule().getDepartureAirport().getAirportCode());
+                }
+                if (flight.getSchedule().getArrivalAirport() != null) {
+                    response.setArrivalAirportCode(flight.getSchedule().getArrivalAirport().getAirportCode());
+                }
+                if (flight.getSchedule().getAirline() != null) {
+                    response.setAirline(flight.getSchedule().getAirline().getAirlineName());
+                }
+            }
+
+            long totalSeats = flightSeatRepository.countByFlight_FlightId(flight.getFlightId());
+            if (totalSeats <= 0
+                    && flight.getAircraft() != null
+                    && flight.getAircraft().getAircraftType() != null
+                    && flight.getAircraft().getAircraftType().getTotalSeats() > 0) {
+                totalSeats = flight.getAircraft().getAircraftType().getTotalSeats();
+            }
+            long bookedSeats = flightSeatRepository.countByFlight_FlightIdAndStatus(
+                flight.getFlightId(), StatusFlightSeat.Booked);
+            response.setTotalSeats((int) totalSeats);
+            response.setBookedSeats((int) bookedSeats);
+
+            FlightPrice flightPrice = getDefaultFlightPrice(flight.getFlightId());
+            if (flightPrice != null) {
+                response.setBasePrice(flightPrice.getBasePrice());
+                response.setTax(flightPrice.getTax());
+            }
+            return response;
+        }).toList();
     }
 
     /**
