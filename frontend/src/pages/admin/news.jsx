@@ -164,7 +164,7 @@ export default function AdminNewsPage() {
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Quản lý Tin tức</h1>
             <p className="text-gray-500 mt-1">Xem, thêm mới và chỉnh sửa các bài viết trên hệ thống.</p>
           </div>
-          <Button onClick={handleAddNew} className="bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all hover:shadow-lg">
+          <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700  shadow-md transition-all hover:shadow-lg">
             <Plus className="w-4 h-4 mr-2" /> Thêm bài viết mới
           </Button>
         </div>
@@ -291,7 +291,7 @@ export default function AdminNewsPage() {
         {/* --- ADD / EDIT MODAL --- */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto p-0 gap-0 bg-white rounded-xl shadow-2xl">
-            <DialogHeader className="p-6 border-b sticky top-0 bg-white z-10">
+            <DialogHeader className="p-6 border-b sticky top-0 bg-white z-10 text-gray-900 ">
               <DialogTitle className="text-xl font-bold text-gray-900">
                 {isEditing ? 'Chỉnh sửa bài viết' : 'Thêm bài viết mới'}
               </DialogTitle>
@@ -396,7 +396,7 @@ export default function AdminNewsPage() {
             </div>
 
             <DialogFooter className="p-6 border-t bg-gray-50 sticky bottom-0 z-10">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)} className="bg-white hover:bg-gray-100">Hủy bỏ</Button>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)} className="bg-white hover:bg-red-600">Hủy bỏ</Button>
               <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700  shadow-md">
                   <Save className="w-4 h-4 mr-2" />
                   {isEditing ? 'Lưu thay đổi' : 'Đăng bài viết'}

@@ -1,63 +1,74 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Plane, CalendarDays, User, Users, UserPen, FileText, TicketCheck, Shield, ShoppingBag, Landmark, Briefcase, DollarSign } from 'lucide-react'
+import { LayoutDashboard, Plane, MessageSquare, User, Users, UserPen, FileText, TicketCheck, Shield, ShoppingBag, Landmark, Newspaper, DollarSign } from 'lucide-react'
 
 const navItems = [
-  { 
-    name: 'Tổng quan', 
-    href: '/admin/dashboard', 
-    icon: LayoutDashboard 
-  },
-  { 
-    name: 'Quản lý chuyến bay', 
-    href: '/admin/flights', 
-    icon: Plane // Biểu tượng máy bay trực quan hơn
-  },
-  { 
-    name: 'Quản lý khách hàng', 
-    href: '/admin/customers', 
-    icon: Users 
-  },
-  {
-    name:"Quản lý Bookings",
-    href:'/admin/bookings',
-    icon: FileText // Giữ nguyên FileText, hoặc sử dụng Briefcase/Receipt
-  },
-  { 
-    name: 'Quản lý đặt vé', 
-    href: '/admin/tickets', 
-    icon: TicketCheck // Icon đặt vé/kiểm tra vé
-  },
-  { 
-    name: 'Quản lý cơ sở', 
-    href: '/admin/master-data', 
-    icon: Landmark // Biểu tượng cột mốc/cơ sở
-  },
-  { 
-    name: 'Quản lý voucher', 
-    href: '/admin/vouchers', 
-    icon: DollarSign // Biểu tượng tiền/chiết khấu
-  },
-  { 
-    name: 'Quản lý chính sách', 
-    href: '/admin/policy', 
-    icon: Shield // Biểu tượng lá chắn/chính sách
-  },
-  { 
-    name: 'Quản lý dịch vụ', 
-    href: '/admin/service', 
-    icon: ShoppingBag // Biểu tượng mua sắm/dịch vụ bổ sung
-  },
-  { 
-    name: 'Quản lý admin', 
-    href: '/admin/members', 
-    icon: UserPen // Biểu tượng người dùng có bút (quản trị)
-  },
-  { 
-    name: 'Hồ sơ cá nhân', 
-    href: '/admin/profile', 
-    icon: User
-  },
+  { 
+    name: 'Tổng quan', 
+    href: '/admin/dashboard', 
+    icon: LayoutDashboard 
+  },
+  { 
+    name: 'Quản lý chuyến bay', 
+    href: '/admin/flights', 
+    icon: Plane 
+  },
+  { 
+    name: 'Quản lý khách hàng', 
+    href: '/admin/customers', 
+    icon: Users 
+  },
+  {
+    name: 'Chat hỗ trợ',
+    href: '/admin/chat',
+    icon: MessageSquare 
+  },
+  {
+    name: 'Quản lý Bookings',
+    href: '/admin/bookings',
+    icon: FileText 
+  },
+  { 
+    name: 'Quản lý đặt vé', 
+    href: '/admin/tickets', 
+    icon: TicketCheck 
+  },
+  { 
+    name: 'Quản lý cơ sở', 
+    href: '/admin/master-data', 
+    icon: Landmark 
+  },
+  { 
+    name: 'Quản lý voucher', 
+    href: '/admin/vouchers', 
+    icon: DollarSign 
+  },
+  { 
+    name: 'Quản lý chính sách', 
+    href: '/admin/policy', 
+    icon: Shield 
+  },
+ 
+  { 
+    name: 'Quản lý tin tức', 
+    href: '/admin/news', 
+    icon: Newspaper 
+  },
+  { 
+    name: 'Quản lý dịch vụ', 
+    href: '/admin/service', 
+    icon: ShoppingBag 
+  },
+  { 
+    name: 'Quản lý admin', 
+    href: '/admin/members', 
+    icon: UserPen 
+  },
+  { 
+    name: 'Hồ sơ cá nhân', 
+    href: '/admin/profile', 
+    icon: User
+  },
 ]
 
 export default function Navbar() {
