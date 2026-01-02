@@ -5,7 +5,7 @@ import {
   MdChair, 
   MdAirlineSeatReclineExtra, 
   MdAirlineSeatFlat 
-} from "react-icons/md"; // Icon cho 3 hạng ghế
+} from "react-icons/md"; 
 import { 
   User, Info, CheckCircle2, Users, AlertCircle, PlaneTakeoff 
 } from 'lucide-react';
