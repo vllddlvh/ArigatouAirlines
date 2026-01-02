@@ -279,14 +279,27 @@ export default function FlightBooking() {
 
   const handleSelectFlight = (flight) => {
     setSelectedFlight(flight);
-    
+    let departureOptionId = 1;
+    if(flight.ticketClassName == "BUSINESS") {
+      departureOptionId = 3;
+    } else if(flight.ticketClassName == "PREMIUM_ECONOMY") {
+      departureOptionId = 2;
+    }
+
     // Auto navigate to check-in page
     if (flight?.autoNavigate) {
+      let departureOptionId = 1;
+    if(flight.ticketClassName == "BUSINESS") {
+      departureOptionId = 3;
+    } else if(flight.ticketClassName == "PREMIUM_ECONOMY") {
+      departureOptionId = 2;
+    }
+
       router.push({
         pathname: "/check-in",
         query: {
           departureFlightId: flight.id,
-          departureOptionId: flight.selectedOptionId,
+          departureOptionId: departureOptionId,
           ticketClassName: flight.ticketClassName,
         },
       });

@@ -11,10 +11,6 @@ import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import * as masterDataService from "@/services/masterDataService"; 
 
-// ============================================================================
-// 1. HELPER COMPONENTS (UI NHỎ)
-// ============================================================================
-
 const StatusBadge = ({ status }) => {
   const styles = {
     Scheduled: "bg-blue-100 text-blue-700 border-blue-200",
@@ -50,9 +46,7 @@ const DetailRow = ({ label, value, highlight = false }) => (
   </div>
 );
 
-// ============================================================================
-// 2. COMPONENT LỰA CHỌN VÉ (DROPDOWN + SỐ NGƯỜI + KHỨ HỒI)
-// ============================================================================
+
 
 const TicketPriceSelector = ({ prices, onBook, isBooking }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -276,9 +270,7 @@ const TicketPriceSelector = ({ prices, onBook, isBooking }) => {
   );
 };
 
-// ============================================================================
-// 3. MAIN PAGE COMPONENT
-// ============================================================================
+
 
 const FlightDetailPage = () => { 
   const params = useParams(); 
@@ -286,8 +278,7 @@ const FlightDetailPage = () => {
   const searchParams = useSearchParams();
   
   const flightId = params?.id;
-  // Nếu URL có sẵn param số khách thì lấy, k thì mặc định 1. Nhưng Component TicketSelector sẽ quản lý state này tốt hơn.
-  // Ở đây ta chỉ dùng để fetch data thôi.
+
 
   const [flight, setFlight] = useState(null);
   const [prices, setPrices] = useState([]);
@@ -345,9 +336,8 @@ const FlightDetailPage = () => {
 
     // Logic Khứ hồi (Demo)
     if (isRoundTrip) {
-      alert(`Bạn đã chọn khứ hồi cho ${passengerCount} khách.\nHệ thống sẽ chuyển bạn sang trang tìm vé chiều về.\n(Hiện tại Demo sẽ tiếp tục quy trình 1 chiều)`);
-      // Trong thực tế: router.push(`/flights/return-search?departureId=${...}&date=${...}`);
-      // Ở đây mình push tiếp sang check-in để demo flow
+      alert(`Bạn đã chọn khứ hồi cho ${passengerCount} khách.\nHệ thống sẽ chuyển bạn sang trang tìm vé chiều về.\n`);
+      router.push(`/flights`);
     }
 
     const queryString = new URLSearchParams(query).toString();
