@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation"; // Next 13+ hooks
+import { useSearchParams, useRouter } from "next/navigation"; 
 import { verifyVnPayReturn } from "@/services/paymentService";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 export default function PaymentReturnPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState('loading'); // loading | success | failed
+  const [status, setStatus] = useState('loading'); 
 
   useEffect(() => {
     const vnp_ResponseCode = searchParams.get('vnp_ResponseCode');
