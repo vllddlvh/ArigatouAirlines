@@ -19,9 +19,9 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
     SET f.status =
         CASE
             WHEN f.departureDateTime < :now AND f.arrivalDateTime > :now
-                THEN 'ON_TIME'
+                THEN 'On_Time'
             WHEN f.arrivalDateTime < :now
-                THEN 'ARRIVED'
+                THEN 'Arrived'
             ELSE f.status
         END
 """)
