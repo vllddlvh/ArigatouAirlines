@@ -127,7 +127,6 @@ public class PaymentService {
         vnp_Params.put("vnp_Command", ConfigPayment.vnp_Command);
         vnp_Params.put("vnp_TmnCode", ConfigPayment.vnp_TmnCode);
         vnp_Params.put("vnp_Amount", payment.getAmount()
-                .multiply(BigDecimal.valueOf(1000))
                 .toBigInteger()
                 .toString());
         vnp_Params.put("vnp_CurrCode", "VND");
