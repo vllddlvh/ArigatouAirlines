@@ -33,8 +33,15 @@ public class AircraftTypeService {
     @Transactional
      public AircraftTypeResponse creationAircraftType(AircraftTypeRequest aircraftTypeRequest) {
         AircraftType aircraftType = aircraftTypeMapper.toAircraftType(aircraftTypeRequest);
-        aircraftTypeRepository.save(aircraftType);
+        
+        // Khởi tạo empty list TRƯỚC khi save để tránh lỗi orphanRemoval
         List<SeatMap> listSeatMap = new ArrayList<>();
+        aircraftType.setListSeatMap(listSeatMap);
+        
+        // Save AircraftType trước để có ID
+        aircraftTypeRepository.save(aircraftType);
+        
+        // Tạo seats
         int rows = aircraftType.getTotalSeats()/ aircraftType.getNumCols();
         for(int row = 1; row <= rows; row++) {
             for(int col = 1; col <= aircraftType.getNumCols(); col++) {
@@ -71,8 +78,8 @@ public class AircraftTypeService {
             }
             return Integer.compare(s1.getVisualCol(), s2.getVisualCol());
         });
-        aircraftType.setListSeatMap(listSeatMap);
 
+        // Save tất cả seats (cascade sẽ tự động update AircraftType)
         seatMapRepository.saveAll(listSeatMap);
 
         return aircraftTypeMapper.toAircraftTypeResponse(aircraftType);

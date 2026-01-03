@@ -18,6 +18,7 @@ import ArigatouAirlines.ApiArigatouAirlines.repository.FlightPriceRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightScheduleRepository;
 import ArigatouAirlines.ApiArigatouAirlines.repository.FlightSeatRepository;
+import ArigatouAirlines.ApiArigatouAirlines.repository.TicketRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class FlightService {
     AircraftRepository aircraftRepository;
     FlightPriceRepository flightPriceRepository;
     FlightSeatRepository flightSeatRepository;
+    TicketRepository ticketRepository;
     FlightSeatMapper flightSeatMapper;
     SeatMapRepository seatMapRepository;
 
@@ -57,6 +59,17 @@ public class FlightService {
                             return base.add(tax);
                         }))
                         .orElse(null));
+    }
+
+    private long computeBookedSeats(int flightId) {
+        long bookedBySeatStatus = flightSeatRepository.countByFlight_FlightIdAndStatus(
+                flightId,
+                StatusFlightSeat.Booked
+        );
+
+        long soldByTicket = ticketRepository.countSoldTicketsByFlightId(flightId);
+
+        return Math.max(bookedBySeatStatus, soldByTicket);
     }
 
     @Transactional
@@ -101,6 +114,7 @@ public class FlightService {
             FlightSeat flightSeat = FlightSeat.builder()
                     .flight(flight)
                     .seatMap(seatMapList.get(i))
+                    .status(StatusFlightSeat.Available)  // Set status mặc định là Available
                     .build();
             flightSeatList.add(flightSeat);
         }
@@ -135,7 +149,7 @@ public class FlightService {
                     && flight.getAircraft().getAircraftType().getTotalSeats() > 0) {
                 totalSeats = flight.getAircraft().getAircraftType().getTotalSeats();
             }
-            long bookedSeats = flightSeatRepository.countByFlight_FlightIdAndStatus(flight.getFlightId(), StatusFlightSeat.Booked);
+            long bookedSeats = computeBookedSeats(flight.getFlightId());
             response.setTotalSeats((int) totalSeats);
             response.setBookedSeats((int) bookedSeats);
 
@@ -214,6 +228,7 @@ public class FlightService {
                     FlightSeat flightSeat = FlightSeat.builder()
                             .flight(flight)
                             .seatMap(seatMapList.get(i))
+                            .status(StatusFlightSeat.Available)  // Set status mặc định là Available
                             .build();
                     flightSeatList.add(flightSeat);
                 }
@@ -310,8 +325,7 @@ public class FlightService {
                     && flight.getAircraft().getAircraftType().getTotalSeats() > 0) {
                 totalSeats = flight.getAircraft().getAircraftType().getTotalSeats();
             }
-            long bookedSeats = flightSeatRepository.countByFlight_FlightIdAndStatus(
-                flight.getFlightId(), StatusFlightSeat.Booked);
+            long bookedSeats = computeBookedSeats(flight.getFlightId());
             response.setTotalSeats((int) totalSeats);
             response.setBookedSeats((int) bookedSeats);
 
