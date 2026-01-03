@@ -221,26 +221,6 @@ export default function MyBookingsPage() {
                        </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        {/* Hiển thị thông tin bay tóm tắt nếu có */}
-                        {booking.flight ? (
-                            <div className="flex items-center gap-3">
-                                <div className="text-lg font-semibold text-gray-800">
-                                    {booking.flight.departureAirport?.iataCode || 'HAN'}
-                                </div>
-                                <Plane className="w-4 h-4 text-gray-400 rotate-90" />
-                                <div className="text-lg font-semibold text-gray-800">
-                                    {booking.flight.arrivalAirport?.iataCode || 'SGN'}
-                                </div>
-                                <span className="text-sm text-gray-500 ml-2 bg-gray-100 px-2 py-0.5 rounded">
-                                    {booking.flight.flightNumber}
-                                </span>
-                            </div>
-                        ) : (
-                            <span className="text-gray-500 italic text-sm">Thông tin chuyến bay đang cập nhật</span>
-                        )}
-                    </div>
-
                     <div className="flex items-center gap-3 mt-2">
                        {getBookingStatusBadge(booking.statusBooking)}
                        {getPaymentStatusBadge(booking.statusPayment)}
@@ -305,36 +285,6 @@ export default function MyBookingsPage() {
 
           {selectedBooking && (
              <div className="space-y-6 mt-2">
-                
-                {/* 1. Flight Info Section (Lấy từ Booking -> Flight) */}
-                {selectedBooking.flight && (
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <h4 className="text-sm font-semibold text-blue-800 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <Calendar className="w-4 h-4" /> Thông tin chuyến bay
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <p className="text-xs text-gray-500">Chuyến bay</p>
-                                <p className="font-bold text-gray-900">{selectedBooking.flight.flightNumber}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500">Khởi hành</p>
-                                <p className="font-bold text-gray-900">
-                                    {selectedBooking.flight.departureAirport?.city} ({selectedBooking.flight.departureAirport?.iataCode})
-                                </p>
-                                <p className="text-xs text-gray-600">{formatDate(selectedBooking.flight.departureTime)}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500">Điểm đến</p>
-                                <p className="font-bold text-gray-900">
-                                    {selectedBooking.flight.arrivalAirport?.city} ({selectedBooking.flight.arrivalAirport?.iataCode})
-                                </p>
-                                <p className="text-xs text-gray-600">{formatDate(selectedBooking.flight.arrivalTime)}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* 2. Passenger & Ticket List */}
                 <div>
                     <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -349,33 +299,87 @@ export default function MyBookingsPage() {
                     ) : tickets.length > 0 ? (
                         <div className="space-y-3">
                             {tickets.map((ticket, idx) => (
-                                <div key={ticket.ticketId || idx} className="border rounded-lg p-3 flex justify-between items-center bg-white shadow-sm">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-semibold text-gray-900">
-                                                {ticket.passenger?.fullName || 'Hành khách'}
-                                            </span>
-                                            <Badge variant="secondary" className="text-xs font-normal">
-                                                {/* Xác định loại khách nếu có, tạm thời để Người lớn */}
-                                                Người lớn
-                                            </Badge>
-                                        </div>
-                                        <div className="text-xs text-gray-500 flex items-center gap-3">
-                                            <span className="flex items-center gap-1">
-                                                <Armchair className="w-3 h-3" /> 
-                                                Ghế: <b className="text-gray-800">{ticket.flightSeatId || 'N/A'}</b> 
-                                                {/* Lưu ý: Nếu có thông tin ghế chi tiết hơn thì hiển thị */}
-                                            </span>
-                                            <span>|</span>
-                                            <span>Số vé: {ticket.ticketNumber}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        {getTicketStatusBadge(ticket.status)}
-                                    </div>
-                                </div>
-                            ))}
+    <div key={ticket.ticketId || idx} className="border rounded-lg p-3 flex justify-between items-center bg-white shadow-sm">
+        <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-900">
+                    {/* Dữ liệu đã được làm phẳng ở Mapper */}
+                    {ticket.passengerName || 'Hành khách'}
+                </span>
+                <Badge variant="secondary" className="text-xs font-normal">
+                    Người lớn
+                </Badge>
+            </div>
+            <div className="text-xs text-gray-500 flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                    <Armchair className="w-3 h-3" /> 
+                    {/* Dữ liệu lấy trực tiếp từ field seatNumber */}
+                    Ghế: <b className="text-gray-800">{ticket.seatNumber || 'N/A'}</b> 
+                </span>
+                <span>|</span>
+                {/* Dữ liệu lấy trực tiếp từ field ticketId hoặc bookingCode */}
+                <span>Mã vé: {ticket.ticketId}</span>
+            </div>
+        </div>
+        
+        {/* Phần Status: Nếu trong DTO TicketResponse không có status, bạn cần xem lại. 
+            Nếu muốn hiển thị trạng thái chuyến bay thì dùng ticket.flight?.status */}
+        <div>
+            {/* {getTicketStatusBadge(ticket.status)} */} 
+            {/* Tạm ẩn để tránh lỗi vì DTO TicketResponse chưa có field status */}
+        </div>
+
+        <div className="flex items-center gap-6">
+                {ticket.flight ? (
+                    <div className="flex items-center gap-3">
+                        <div className="text-lg font-semibold text-gray-800">
+                            {/* DTO trả về String code trực tiếp */}
+                            {ticket.flight.departureAirportCode || 'HAN'}
+                        </div>
+                        <Plane className="w-4 h-4 text-gray-400 rotate-90" />
+                        <div className="text-lg font-semibold text-gray-800">
+                            {ticket.flight.arrivalAirportCode || 'SGN'}
+                        </div>
+                        <span className="text-sm text-gray-500 ml-2 bg-gray-100 px-2 py-0.5 rounded">
+                            {ticket.flight.flightNumber}
+                        </span>
+                    </div>
+                ) : (
+                    <span className="text-gray-500 italic text-sm">Thông tin chuyến bay đang cập nhật</span>
+                )}
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <h4 className="text-sm font-semibold text-blue-800 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <Calendar className="w-4 h-4" /> Thông tin chuyến bay
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <p className="text-xs text-gray-500">Chuyến bay</p>
+                    <p className="font-bold text-gray-900">{ticket.flight?.flightNumber}</p>
+                </div>
+                <div>
+                    <p className="text-xs text-gray-500">Khởi hành</p>
+                    <p className="font-bold text-gray-900">
+                        {/* Vì DTO chỉ có Code, hiển thị Code thay cho City */}
+                        {ticket.flight?.departureAirportCode}
+                    </p>
+                    {/* Sửa departureTime -> departureDateTime theo DTO */}
+                    <p className="text-xs text-gray-600">{formatDate(ticket.flight?.departureDateTime)}</p>
+                </div>
+                <div>
+                    <p className="text-xs text-gray-500">Điểm đến</p>
+                    <p className="font-bold text-gray-900">
+                        {/* Vì DTO chỉ có Code, hiển thị Code thay cho City */}
+                        {ticket.flight?.arrivalAirportCode}
+                    </p>
+                    {/* Sửa arrivalTime -> arrivalDateTime theo DTO */}
+                    <p className="text-xs text-gray-600">{formatDate(ticket.flight?.arrivalDateTime)}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+))}
                         </div>
                     ) : (
                         <div className="text-center py-4 text-gray-500 text-sm italic bg-gray-50 rounded">

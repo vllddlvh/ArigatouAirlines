@@ -16,7 +16,7 @@ public interface TicketMapper {
     Ticket toTicket(TicketRequest ticketRequest);
 
 
-    @Mapping(source = "flight.flightId", target = "flightId")
+    @Mapping(source = "flight", target = "flight")
     @Mapping(source = "flightSeat.flightSeatId", target = "flightSeatId")
     TicketResponse toTicketResponse(Ticket ticket);
 }

@@ -11,6 +11,7 @@ export default function MethodVnPay({ amount, voucherCode, bookingId }) {
   const handleVnPayCheckout = async () => {
     setLoading(true);
     try {
+
       const res = voucherCode
           ? await createVnPayUrl(bookingId, voucherCode)
           : await createVnPayUrl(bookingId);

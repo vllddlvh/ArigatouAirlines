@@ -38,35 +38,36 @@ const groupSeatsByRow = (seats) => {
 
 // 2. Cấu hình giao diện cho 3 hạng ghế
 const getSeatConfig = (seatClass) => {
-  const upperClass = seatClass ? seatClass.toUpperCase() : "";
+  const upperClass = seatClass ? seatClass.toUpperCase() : "ECONOMY";
 
-  if (upperClass.includes("FIRST") || upperClass.includes("PREMIER")) {
+  // 1. BUSINESS_PREMIER - Hạng Thương Gia Cao Cấp (Xịn nhất)
+  if (upperClass === "BUSINESS_PREMIER") {
     return {
-      color: "bg-yellow-100 border-yellow-400 text-yellow-600 hover:bg-yellow-200",
+      color: "bg-yellow-50 border-yellow-400 text-yellow-700 hover:bg-yellow-100",
       selectedColor: "bg-yellow-500 border-yellow-600 text-white",
-      icon: MdAirlineSeatFlat, // Giường nằm
-      label: "Hạng Nhất",
-      size: "w-12 h-12" // To nhất
+      icon: MdAirlineSeatFlat,
+      label: "Thương Gia Premier",
+      size: "w-12 h-12"
     };
   } 
   
-  if (upperClass.includes("BUSINESS")) {
+  if (upperClass === "PREMIUM_ECONOMY") {
     return {
       color: "bg-purple-50 border-purple-300 text-purple-600 hover:bg-purple-100",
       selectedColor: "bg-purple-600 border-purple-700 text-white",
-      icon: MdAirlineSeatReclineExtra, // Ghế rộng
-      label: "Thương Gia",
-      size: "w-11 h-11" // Vừa
+      icon: MdAirlineSeatReclineExtra, 
+      label: "Phổ Thông Đặc Biệt",
+      size: "w-11 h-11" 
     };
   }
 
-  // Mặc định Economy
+  // 3. ECONOMY - Phổ Thông (Mặc định)
   return {
-    color: "bg-white border-blue-200 text-blue-400 hover:bg-blue-50",
+    color: "bg-white border-blue-200 text-blue-500 hover:bg-blue-50",
     selectedColor: "bg-blue-600 border-blue-700 text-white",
-    icon: MdChair, // Ghế thường
+    icon: MdChair,
     label: "Phổ Thông",
-    size: "w-10 h-10" // Nhỏ
+    size: "w-10 h-10"  
   };
 };
 
@@ -75,7 +76,7 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
   const [tempSelectedSeat, setTempSelectedSeat] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Map tra cứu nhanh
+
   const seatMap = useMemo(() => {
     const map = new Map();
     initialSeats.forEach(seat => {
@@ -84,7 +85,7 @@ export default function SeatSelector({ seats: initialSeats, passengers, onSeatSe
     return map;
   }, [initialSeats]);
 
-  // Lấy danh sách hàng
+
   const rowsData = useMemo(() => groupSeatsByRow(initialSeats), [initialSeats]);
   const rowNumbers = Object.keys(rowsData).sort((a, b) => parseInt(a) - parseInt(b));
 
@@ -338,21 +339,36 @@ function LegendItem({ color, label, isOutline }) {
 }
 
 function SeatItem({ seat, passengers, selectedCustomer, tempSelectedSeat, onSeatClick }) {
-    // 1. Dùng State để kiểm soát Hover (Chắc chắn chạy 100%)
     const [isHovered, setIsHovered] = useState(false);
 
     if (!seat) return <div className="w-10 h-10"></div>;
 
-    // --- Logic Config (Giữ nguyên) ---
+
     const getSeatConfig = (seatClass) => {
         const upperClass = seatClass ? seatClass.toUpperCase() : "";
-        if (upperClass.includes("FIRST") || upperClass.includes("PREMIER")) {
-            return { color: "bg-yellow-100 border-yellow-400 text-yellow-600", icon: MdAirlineSeatFlat, label: "Hạng Nhất" };
+
+        if (upperClass === "BUSINESS_PREMIER") {
+            return { 
+                color: "bg-yellow-100 border-yellow-400 text-yellow-600", 
+                icon: MdAirlineSeatFlat, 
+                label: "Thương Gia Premier" 
+            };
         }
-        if (upperClass.includes("BUSINESS")) {
-            return { color: "bg-purple-50 border-purple-300 text-purple-600", icon: MdAirlineSeatReclineExtra, label: "Thương Gia" };
+
+ 
+        if (upperClass === "PREMIUM_ECONOMY") {
+            return { 
+                color: "bg-purple-50 border-purple-300 text-purple-600", 
+                icon: MdAirlineSeatReclineExtra, 
+                label: "Phổ Thông ĐB" 
+            };
         }
-        return { color: "bg-white border-blue-200 text-blue-400", icon: MdChair, label: "Phổ Thông" };
+
+        return { 
+            color: "bg-white border-blue-200 text-blue-400", 
+            icon: MdChair, 
+            label: "Phổ Thông" 
+        };
     };
 
     const config = getSeatConfig(seat.seatClass);
