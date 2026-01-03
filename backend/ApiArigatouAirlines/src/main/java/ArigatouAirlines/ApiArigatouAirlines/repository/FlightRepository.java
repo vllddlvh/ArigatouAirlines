@@ -15,7 +15,7 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
     @Modifying
     @Transactional
     @Query("""
-    UPDATE flight f
+    UPDATE Flight f
     SET f.status =
         CASE
             WHEN f.departureDateTime < :now AND f.arrivalDateTime > :now

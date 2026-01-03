@@ -228,7 +228,7 @@ public class PaymentService {
         if(amountBooking.compareTo(voucher.getMinOrderAmount()) < 0) {
             throw new AppException(ErrorCode.AMOUNT_BOOKING_MORE_THAN_MIN_ORDER_AMOUNT);
         }
-        if(discountType.equals(DiscountType.PERCENTAGE)) {
+        if(discountType.equals(DiscountType.Percentage)) {
             amount = amountBooking.multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
             if(amount.compareTo(maxDiscountAmount) > 0) {
                 amount = maxDiscountAmount;

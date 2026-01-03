@@ -48,7 +48,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE ticket t SET t.status = ArigatouAirlines.ApiArigatouAirlines.enums.StatusTicket.Cancelled " +
+    @Query("UPDATE Ticket t SET t.status = ArigatouAirlines.ApiArigatouAirlines.enums.StatusTicket.Cancelled " +
             "WHERE t.booking.paymentDeadline <= :now " +
             "AND t.booking.statusBooking = ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking.Pending " +
             "AND t.booking.statusPayment != ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking.Paid")

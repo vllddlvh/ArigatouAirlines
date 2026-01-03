@@ -8,7 +8,8 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity(name = "flight")
+@Entity
+@Table(name = "flight")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -38,6 +39,7 @@ public class Flight {
     @Column(name = "arrival_datetime")
     LocalDateTime arrivalDateTime;
 
+    @Column(name="status")
     @Enumerated(EnumType.STRING)
     @Builder.Default
     StatusFlight status = StatusFlight.Scheduled;
