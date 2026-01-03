@@ -201,10 +201,37 @@ export const getAllFlights = async () => {
   }
 };
 
+export const searchFlights = async ({ departureAirport, arrivalAirport, departureDate }) => {
+  try {
+    const params = {};
+    if (departureAirport) params.departureAirport = departureAirport;
+    if (arrivalAirport) params.arrivalAirport = arrivalAirport;
+    if (departureDate) {
+      // Expect YYYY-MM-DD from UI; if not, try to normalize without timezone shifting
+      if (/^\d{4}-\d{2}-\d{2}$/.test(String(departureDate))) {
+        params.departureDate = departureDate;
+      } else {
+        const date = new Date(departureDate);
+        if (!Number.isNaN(date.getTime())) {
+          params.departureDate = date.toISOString().split('T')[0];
+        }
+      }
+    }
+    
+    const response = await axios.get(`${API_BASE_URL}/flights/search`, {
+      headers: getAuthHeader(),
+      params,
+    });
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm chuyến bay:", error);
+    throw error.response?.data?.message || "Đã xảy ra lỗi khi tìm kiếm chuyến bay.";
+  }
+};
+
 export const getFlightById = async (id) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/flights/${id}`, {
-
       headers: getAuthHeader(),
     });
     return extractBody(response);

@@ -75,7 +75,6 @@ export function useFlightConfirmation() {
         const seats = Array.isArray(flight?.flightSeatList) 
             ? flight?.flightSeatList
             : [];
-          console.log(seats)
         setFlightSeats(seats);
 
         // Tính số cột
@@ -183,6 +182,7 @@ export function useFlightConfirmation() {
           departureCity,
           arrivalCity,
           basePrice: perPassengerAmount,
+          aircraft: flight?.aircraft,  // Thêm aircraft để lấy totalSeats và numCols
         });
 
         const classNameUpper = String(normalizedTicketClassName || "").toUpperCase();
@@ -357,7 +357,6 @@ export function useFlightConfirmation() {
         .filter(s => selectedSeatNumbers.includes(s.seatNumber))
         .map(s => s.flightSeatId || s.seatNumber);
 
-    console.log(selectedFlightSeatIds)
 
     setIsCreatingBooking(true);
     try {

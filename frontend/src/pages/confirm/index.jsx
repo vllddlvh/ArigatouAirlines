@@ -94,6 +94,7 @@ export default function ConfirmationPage() {
         confirmSeatSelection={confirmSeatSelection}
         numCols={aircraftNumCols}
         allowedSeatClass={allowedSeatClass}
+        totalSeats={departureFlightData?.aircraft?.aircraftType?.totalSeats}
       />
       <TotalAndActions
         totalAmount={totalAmount}
@@ -368,16 +369,13 @@ function SeatSelectionSection({
   confirmSeatSelection,
   numCols = 6,
   allowedSeatClass = "ECONOMY",
+  totalSeats = 0,
 }) {
   const seats = Array.isArray(flightSeats) ? flightSeats : [];
   const selectedIds = Array.isArray(selectedSeatIds) ? selectedSeatIds : [];
   const selectedSeatNumbers = selectedIds
     .map((id) => seats.find((s) => s?.flightSeatId === id)?.seatNumber)
     .filter(Boolean);
-
-  // Use visualRow/visualCol from backend (already 1-based and consistent)
-  const rowKeys = Array.from(new Set(seats.map((s) => s.visualRow))).filter(Boolean).sort((a, b) => a - b);
-  const colKeys = Array.from(new Set(seats.map((s) => s.visualCol))).filter(Boolean).sort((a, b) => a - b);
 
   // Build seat map by [visualRow][visualCol]
   const seatByRowCol = seats.reduce((acc, s) => {
@@ -386,6 +384,20 @@ function SeatSelectionSection({
     acc[s.visualRow][s.visualCol] = s;
     return acc;
   }, {});
+
+  // Calculate total rows from aircraft structure
+  const totalRows = totalSeats > 0 && numCols > 0 
+    ? Math.ceil(totalSeats / numCols)
+    : Math.max(...seats.map(s => s.visualRow || 0), 0);
+  
+  // Generate row and column arrays based on aircraft structure
+  const rowKeys = totalRows > 0 
+    ? Array.from({ length: totalRows }, (_, i) => i + 1)
+    : Array.from(new Set(seats.map((s) => s.visualRow))).filter(Boolean).sort((a, b) => a - b);
+  
+  const colKeys = numCols > 0
+    ? Array.from({ length: numCols }, (_, i) => i + 1)
+    : Array.from(new Set(seats.map((s) => s.visualCol))).filter(Boolean).sort((a, b) => a - b);
 
   // Calculate split for aisle: for 6 cols split at 3 (A,B,C | D,E,F), for 4 cols split at 2 (A,B | C,D)
   const actualNumCols = colKeys.length || numCols;
@@ -404,7 +416,20 @@ function SeatSelectionSection({
 
   const renderSeatCell = (r, c) => {
     const seat = seatByRowCol?.[r]?.[c];
-    if (!seat) return <div key={`${r}-${c}`} />;
+    
+    // If no seat data, render empty placeholder
+    if (!seat) {
+      const seatNumber = `${r}${String.fromCharCode(64 + c)}`;
+      return (
+        <div 
+          key={`${r}-${c}`} 
+          className="h-10 rounded-lg border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-xs text-gray-400"
+          title="Ghế chưa có dữ liệu"
+        >
+          {seatNumber}
+        </div>
+      );
+    }
 
     const seatId = seat.flightSeatId;
     const isSelected = selectedIds.includes(seatId);

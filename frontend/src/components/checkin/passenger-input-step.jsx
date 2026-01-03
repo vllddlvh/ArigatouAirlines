@@ -258,7 +258,7 @@ export function PassengerInputStep({ passengerCounts, onContinue, onBack }) {
                 </Button>
                 <Button 
                     onClick={handleSubmit}
-                    className="py-6 bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg shadow-lg shadow-orange-200"
+                    className="py-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg shadow-blue-200"
                 >
                     Tiếp tục chọn chỗ ngồi <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>

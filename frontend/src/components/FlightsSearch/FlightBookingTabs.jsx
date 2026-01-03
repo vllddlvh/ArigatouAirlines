@@ -27,9 +27,6 @@ const FlightBookingTabs = () => {
         fromAirport: data.fromAirport,
         toAirport: data.toAirport,
         departureDate: data.departureDate,
-        returnDate: data.returnDate || null,
-        tripType: data.tripType,
-        passengerCount: data.passengerCount,
       },
     });
   };

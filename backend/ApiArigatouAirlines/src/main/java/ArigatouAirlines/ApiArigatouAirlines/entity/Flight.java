@@ -39,6 +39,7 @@ public class Flight {
     @Column(name = "arrival_datetime")
     LocalDateTime arrivalDateTime;
 
+    @Column(name="status")
     @Enumerated(EnumType.STRING)
     @Builder.Default
     StatusFlight status = StatusFlight.Scheduled;

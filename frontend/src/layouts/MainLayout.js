@@ -2,6 +2,8 @@ import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import AuthDialog from "../components/AuthDialog";
 import ChatbotWidget from "../components/ChatbotWidget";
+import { CustomerChatWidget } from "@/components/ChatCustomer"
+
 import { useAuth } from "../contexts/AuthContext";
 
 const MainLayout = ({ children }) => {
@@ -28,6 +30,7 @@ const MainLayout = ({ children }) => {
         }}
       />
       <ChatbotWidget />
+      <CustomerChatWidget/>
       {isAuthenticated && (
         <>
           <Navbar />

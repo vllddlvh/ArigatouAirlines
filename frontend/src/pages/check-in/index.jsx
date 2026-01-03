@@ -4,17 +4,15 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/router"; 
 import { format } from "date-fns";
 
-// --- UI COMPONENTS ---
 import { StepIndicator } from "@/components/checkin/step-indicator";
 import { FlightDetailsStep } from "@/components/checkin/flight-details";
 import { PassengerInputStep } from "@/components/checkin/passenger-input-step"; 
 import { SeatSelectionStep } from "@/components/checkin/seat-selection";
 import LoadingSkeleton from "@/components/checkin/loading-skeleton"; 
 
-// --- HOOK ---
+
 import { useFlightConfirmation } from "@/hooks/useFlightConfirmation";
 
-// 1. CẬP NHẬT: Chỉ giữ lại 3 bước
 const steps = [
   { title: "Chuyến bay", description: "Chi tiết" },
   { title: "Hành khách", description: "Điền thông tin" },
@@ -145,7 +143,6 @@ export default function CheckInPage() {
           />
         )}
 
-        {/* STEP 1: NHẬP THÔNG TIN HÀNH KHÁCH */}
         {currentStep === 1 && (
           <PassengerInputStep
             passengerCounts={passengerCounts} 
@@ -154,14 +151,14 @@ export default function CheckInPage() {
           />
         )}
 
-        {/* STEP 2: CHỌN GHẾ */}
+ 
         {currentStep === 2 && (
           <SeatSelectionStep
             passengers={passengers} 
             seats={mappedSeats}
             onSeatSelect={toggleSeatSelection} 
             
-            // Thay đổi hành động nút Continue: Gọi API và Redirect
+        
             onContinue={onSeatSubmit}
             onBack={handleBack}
             currentTrip={"departure"}

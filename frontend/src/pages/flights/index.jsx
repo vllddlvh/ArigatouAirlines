@@ -38,16 +38,12 @@ export default function FlightBooking() {
     fromAirport,
     toAirport,
     departureDate,
-    returnDate,
-    tripType,
-    passengerCount,
   } = router.query;
 
   const isUrlDataMissing = !fromAirport || !toAirport || !departureDate;
 
   const [allFlights, setAllFlights] = useState([]);
   const [flights, setFlights] = useState([]);
-  const [returnFlights, setReturnFlights] = useState([]);
   const [filteredFlights, setFilteredFlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -192,7 +188,19 @@ export default function FlightBooking() {
       setLoading(true);
       setError(null);
       try {
-        const data = await masterDataService.getAllFlights();
+        let data;
+        
+        // Nếu có search params, gọi API search; nếu không thì lấy tất cả
+        if (!isUrlDataMissing && (fromAirport || toAirport || departureDate)) {
+          data = await masterDataService.searchFlights({
+            departureAirport: fromAirport,
+            arrivalAirport: toAirport,
+            departureDate: departureDate,
+          });
+        } else {
+          data = await masterDataService.getAllFlights();
+        }
+        
         const mapped = (Array.isArray(data) ? data : []).map((f) => {
           const ui = mapApiFlightToUi(f);
           return {
@@ -203,18 +211,8 @@ export default function FlightBooking() {
         });
 
         setAllFlights(mapped);
-
-        // Nếu có query search thì lọc theo route/date; nếu không thì show tất cả
-        const departureFiltered = isUrlDataMissing
-          ? mapped
-          : filterFlightsByRouteAndDate(mapped, {
-              from: fromAirport,
-              to: toAirport,
-              date: departureDate,
-            });
-
-        setFlights(departureFiltered);
-        setFilteredFlights(departureFiltered);
+        setFlights(mapped);
+        setFilteredFlights(mapped);
       } catch (err) {
         const message = err?.message || String(err || "Không thể tải danh sách chuyến bay");
         setError(message);
@@ -256,11 +254,6 @@ export default function FlightBooking() {
     setFilteredFlights(filtered);
   }, [flights, filters]);
 
-  const fetchReturnFlights = (from, to, date) => {
-    const result = filterFlightsByRouteAndDate(allFlights, { from, to, date });
-    setReturnFlights(result);
-  };
-
   const getCityByCode = (code) => {
     const key = String(code || "").toUpperCase();
     return airportCityMap?.[key] || getCityByCodeStatic(code);
@@ -269,53 +262,52 @@ export default function FlightBooking() {
   const departureCity = fromAirport ? getCityByCode(fromAirport) : "Tất cả";
   const arrivalCity = toAirport ? getCityByCode(toAirport) : "Tất cả";
   const formattedDepartureDate = departureDate ? formatDateToVietnamese(departureDate) : "N/A";
-  const formattedReturnDate = returnDate ? formatDateToVietnamese(returnDate) : "N/A";
 
-  const [isSelectingReturn, setIsSelectingReturn] = useState(false);
-  const [selectedDepartureFlight, setSelectedDepartureFlight] = useState(null);
-  const [selectedReturnFlight, setSelectedReturnFlight] = useState(null);
+  const [selectedFlight, setSelectedFlight] = useState(null);
 
-  const handleSelectDepartureFlight = (flight) => {
-    setSelectedDepartureFlight(flight);
-    setSelectedReturnFlight(null); // Reset chuyến về khi chọn lại chuyến đi
+  const handleViewAllFlights = () => {
+    setSelectedFlight(null);
+    setFilters({
+      budget: [0, 1000000000],
+      departureTime: "all",
+    });
+    router.push({
+      pathname: "/flights",
+      query: {},
+    });
+  };
 
+  const handleSelectFlight = (flight) => {
+    setSelectedFlight(flight);
+    let departureOptionId = 1;
+    if(flight.ticketClassName == "BUSINESS") {
+      departureOptionId = 3;
+    } else if(flight.ticketClassName == "PREMIUM_ECONOMY") {
+      departureOptionId = 2;
+    }
+
+    // Auto navigate to check-in page
     if (flight?.autoNavigate) {
+      let departureOptionId = 1;
+    if(flight.ticketClassName == "BUSINESS") {
+      departureOptionId = 3;
+    } else if(flight.ticketClassName == "PREMIUM_ECONOMY") {
+      departureOptionId = 2;
+    }
+
       router.push({
         pathname: "/check-in",
         query: {
           departureFlightId: flight.id,
-          departureOptionId: flight.selectedOptionId,
+          departureOptionId: departureOptionId,
           ticketClassName: flight.ticketClassName,
-          passengerCount,
+          passengerCount:1,
         },
       });
-      return;
     }
-
-    // Backend hiện tại chỉ hỗ trợ đặt vé cho 1 flightId.
-    // Do đó, luôn để user bấm nút "Mua vé" ở cuối trang để chuyển qua /confirm.
-    setIsSelectingReturn(false);
-    setReturnFlights([]);
-  };
-
-  const handleSelectReturnFlight = (flight) => {
-    setSelectedReturnFlight(flight);
-    router.push({
-      pathname: "/check-in",
-      query: {
-        departureFlightId: selectedDepartureFlight.id,
-        departureOptionId: selectedDepartureFlight.selectedOptionId,
-        returnFlightId: flight.id,
-        returnOptionId: flight.selectedOptionId,
-        passengerCount,
-      },
-    });
   };
 
   if (error) return <div>Có lỗi xảy ra: {error}</div>;
-
-  // Khi không chọn chiều về, sử dụng filteredFlights để áp dụng filter.
-  const displayedFlights = isSelectingReturn ? returnFlights : filteredFlights;
 
   return (
     <div>
@@ -325,8 +317,8 @@ export default function FlightBooking() {
         departureCity={departureCity}
         arrivalCity={arrivalCity}
         departureDate={formattedDepartureDate}
-        returnDate={formattedReturnDate}
-        passengers={passengerCount || 1}
+        returnDate=""
+        passengers={1}
       />
 
       <div className="flex flex-col gap-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm min-h-screen max-w-6xl m-auto">
@@ -334,8 +326,16 @@ export default function FlightBooking() {
         <FlightSideFilter filters={filters} setFilters={setFilters} />
 
         <div className="flex-1 space-y-4">
-          {!loading && (
-            <FlightSelectionNotice isSelectingReturn={isSelectingReturn} />
+          {(fromAirport || toAirport || departureDate) && (
+            <div className="flex items-center justify-end">
+              <Button
+                className="bg-gray-100 hover:bg-gray-200 text-gray-900"
+                onClick={handleViewAllFlights}
+                disabled={loading}
+              >
+                Xem toàn bộ chuyến bay
+              </Button>
+            </div>
           )}
           {loading ? (
             <>
@@ -345,11 +345,9 @@ export default function FlightBooking() {
             </>
           ) : (
             <FlightCard
-              flights={displayedFlights}
-              passengerCount={passengerCount}
-              onSelectFlight={
-                isSelectingReturn ? handleSelectReturnFlight : handleSelectDepartureFlight
-              }
+              flights={filteredFlights}
+              passengerCount={1}
+              onSelectFlight={handleSelectFlight}
             />
           )}
 
@@ -358,34 +356,30 @@ export default function FlightBooking() {
               <>
                 <SkeletonFlightCard />
                 <SkeletonFlightCard />
-                <SkeletonFlightCard />
               </>
-            ) : isSelectingReturn ? (
-              <span>Có {returnFlights.length} chuyến bay quay về</span>
             ) : (
               <span>Có {filteredFlights.length} chuyến bay</span>
             )}
           </div>
 
           {/* Nút hành động: Mua vé khi đã chọn chuyến bay, Quay lại trang chủ khi chưa chọn */}
-          {selectedDepartureFlight ? (
+          {selectedFlight ? (
             <Button
               className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 text-lg"
               onClick={() => {
                 router.push({
                   pathname: "/check-in",
                   query: {
-                    departureFlightId: selectedDepartureFlight.id,
-                    departureOptionId: selectedDepartureFlight.selectedOptionId,
-                    ticketClassName: selectedDepartureFlight.ticketClassName,
-                    passengerCount,
+                    departureFlightId: selectedFlight.id,
+                    departureOptionId: selectedFlight.selectedOptionId,
+                    ticketClassName: selectedFlight.ticketClassName,
+                    passengerCount:1,
                   },
                 });
               }}
-              disabled={loading}
             >
-              <CreditCard className="w-5 h-5 mr-2" />
-              Mua vé
+              <CreditCard className="inline-block mr-2 mb-1" />
+              Mua Vé
             </Button>
           ) : (
             <Link href="/">
