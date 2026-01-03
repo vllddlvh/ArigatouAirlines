@@ -83,7 +83,7 @@ public class PaymentService {
             voucherRepository.save(voucher);
         } else if (voucherCode != null) {
             voucher = voucherRepository.findByVoucherCode(voucherCode)
-                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_ID_IS_NOT_EXISTED));
+                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_CODE_IS_NOT_EXISTED));
 
             if(voucher.getUsageLimit() == 0) {
                 throw new AppException(ErrorCode.VOUCHER_WAS_USED_USAGE_LIMIT);
