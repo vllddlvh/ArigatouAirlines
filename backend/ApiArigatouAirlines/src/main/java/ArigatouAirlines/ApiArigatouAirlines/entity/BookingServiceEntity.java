@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
-@Entity(name = "booking_s")
+@Entity(name = "booking_service")
 @Getter
 @Setter
 @AllArgsConstructor

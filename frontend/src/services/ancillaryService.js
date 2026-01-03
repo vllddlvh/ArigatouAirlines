@@ -117,3 +117,22 @@ export const getBookingServiceById = async (id) => {
         throw error;
     }
 };
+
+
+/**
+ * Tạo mới Booking Service (Thêm dịch vụ cho 1 vé cụ thể)
+ * @param {Object} data - { ticketId, serviceId, priceAtPurchase }
+ */
+export const createBookingService = async (data) => {
+    try {
+        const response = await axios.post(
+            `${API_BASE_URL}/booking-service`,
+            data,
+            { headers: getAuthHeader() }
+        );
+        return extractBody(response);
+    } catch (error) {
+        console.error('Error creating booking service:', error);
+        throw error;
+    }
+};

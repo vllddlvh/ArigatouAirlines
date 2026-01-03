@@ -157,7 +157,6 @@ export default function PaymentPage() {
   // --- 5. SUCCESS HANDLERS ---
   const handleManualPaymentSuccess = () => {
 
-    
     setPaymentSuccess(true);
     localStorage.removeItem('pendingPayment');
   };
@@ -268,6 +267,7 @@ export default function PaymentPage() {
                   amount={finalTotalAmount} 
                   bookingCode={bookingData.bookingCode} 
                   bookingId={bookingData.bookingId}
+                  serviceIds={selectedServices.map(service => service.serviceId)}
                   onSuccess={handleManualPaymentSuccess}
                 />
               )}

@@ -75,7 +75,6 @@ export function useFlightConfirmation() {
         const seats = Array.isArray(flight?.flightSeatList) 
             ? flight?.flightSeatList
             : [];
-          console.log(seats)
         setFlightSeats(seats);
 
         // Tính số cột
@@ -357,7 +356,6 @@ export function useFlightConfirmation() {
         .filter(s => selectedSeatNumbers.includes(s.seatNumber))
         .map(s => s.flightSeatId || s.seatNumber);
 
-    console.log(selectedFlightSeatIds)
 
     setIsCreatingBooking(true);
     try {

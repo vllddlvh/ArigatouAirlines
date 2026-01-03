@@ -57,8 +57,6 @@ export const cancelPayment = async (bookingId) => {
  * @returns {Promise<Object>} - Trả về object chứa URL thanh toán (PaymentResponse)
  */
 export const createVnPayUrl = async (amount = 10000) => {
-  // Lưu ý: Controller Java hiện tại của bạn đang hardcode số tiền là 10.000
-  // Nếu sau này bạn sửa Backend để nhận tham số amount, hãy thêm vào params
   const response = await axios.get(
     `${API_BASE_URL}/payment/create_payment`,
     {
