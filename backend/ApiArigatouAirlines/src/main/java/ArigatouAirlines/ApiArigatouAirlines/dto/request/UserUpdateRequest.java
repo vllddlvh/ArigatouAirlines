@@ -1,7 +1,6 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.request;
 
 import ArigatouAirlines.ApiArigatouAirlines.enums.Gender;
-import ArigatouAirlines.ApiArigatouAirlines.validator.UniqueEmail;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -17,7 +16,6 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
     @Email(message = "INVALID_EMAIL")
-    @UniqueEmail(message = "EMAIL_EXISTED")
     String email;
 
     @Size(min = 8, message = "INVALID_PASSWORD")

@@ -87,11 +87,15 @@ public class UserService {
 
         // Validate Email
         if (request.getEmail() != null) {
-            if (request.getEmail().isEmpty()) {
+            String email = request.getEmail().trim();
+            request.setEmail(email);
+            if (email.isEmpty()) {
                 throw new AppException(ErrorCode.INVALID_EMAIL);
             }
-            if (userRepository.existsByEmail(request.getEmail()) &&
-                    !user.getEmail().equals(request.getEmail())) {
+            String currentEmail = user.getEmail() == null ? null : user.getEmail().trim();
+            boolean sameEmail = currentEmail != null && currentEmail.equalsIgnoreCase(email);
+
+            if (userRepository.existsByEmail(email) && !sameEmail) {
                 throw new AppException(ErrorCode.EMAIL_EXISTED);
             }
         }
