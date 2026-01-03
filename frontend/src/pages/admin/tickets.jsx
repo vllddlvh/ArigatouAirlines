@@ -668,15 +668,26 @@ function TicketManagementDashboard() {
                 const airlineName = schedule.airline?.airlineName || f.airline || 'N/A';
                 const aircraftTypeName = f.aircraft?.aircraftType?.typeName || 'N/A';
                 
-                // Lấy flightSeatList và đếm ghế booked
-                const seatList = f.flightSeatList || [];
-                const bookedCount = seatList.filter(s => {
-                    const status = String(s?.status || '').toUpperCase();
-                    return status === 'BOOKED' || status === 'RESERVED' || status === 'SOLD';
-                }).length;
+                const seatList = Array.isArray(f.flightSeatList) ? f.flightSeatList : [];
+                const apiTotalSeats = Number(f?.totalSeats ?? 0);
+                const apiBookedSeats = Number(f?.bookedSeats ?? 0);
+
+                let totalSeats = apiTotalSeats;
+                if (!(totalSeats > 0)) {
+                    totalSeats = Number(f?.aircraft?.aircraftType?.totalSeats ?? 0) || seatList.length || 0;
+                }
+
+                let bookedSeats = apiBookedSeats;
+                if (!(bookedSeats > 0) && seatList.length > 0) {
+                    bookedSeats = seatList.filter(s => {
+                        const status = String(s?.status || '').toUpperCase();
+                        return status === 'BOOKED' || status === 'RESERVED' || status === 'SOLD';
+                    }).length;
+                }
 
                 return {
                     id: f.flightId,
+                    flightId: f.flightId,
                     schedule,
                     flightNumber,
                     airlineName,
@@ -688,8 +699,8 @@ function TicketManagementDashboard() {
                     departureCity: depCity,
                     arrivalCity: arrCity,
                     ticketList: [],
-                    totalSeats: f.aircraft?.aircraftType?.totalSeats || seatList.length || 0,
-                    bookedSeats: bookedCount,
+                    totalSeats,
+                    bookedSeats,
                     aircraftId: f.aircraft?.aircraftId,
                     aircraft: f.aircraft,
                     flightSeatList: seatList,

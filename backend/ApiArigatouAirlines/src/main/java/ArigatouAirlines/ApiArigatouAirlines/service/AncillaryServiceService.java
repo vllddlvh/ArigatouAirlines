@@ -38,7 +38,9 @@ public class AncillaryServiceService {
 
     public AncillaryServiceResponse updateAncillaryService(int id, AncillaryServiceRequest ancillaryServiceRequest) {
         AncillaryService ancillaryService = ancillaryServiceRepository.findById(id).orElseThrow();
-        ancillaryService = ancillaryServiceMapper.toAncillaryService(ancillaryServiceRequest);
+        ancillaryService.setServiceName(ancillaryServiceRequest.getServiceName());
+        ancillaryService.setDescription(ancillaryServiceRequest.getDescription());
+        ancillaryService.setPrice(ancillaryServiceRequest.getPrice());
         ancillaryServiceRepository.save(ancillaryService);
 
         return ancillaryServiceMapper.toAncillaryResponse(ancillaryService);

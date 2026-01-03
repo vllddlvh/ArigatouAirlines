@@ -182,6 +182,7 @@ export function useFlightConfirmation() {
           departureCity,
           arrivalCity,
           basePrice: perPassengerAmount,
+          aircraft: flight?.aircraft,  // Thêm aircraft để lấy totalSeats và numCols
         });
 
         const classNameUpper = String(normalizedTicketClassName || "").toUpperCase();
