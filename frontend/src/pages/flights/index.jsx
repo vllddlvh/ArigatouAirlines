@@ -301,6 +301,7 @@ export default function FlightBooking() {
           departureFlightId: flight.id,
           departureOptionId: departureOptionId,
           ticketClassName: flight.ticketClassName,
+          passengerCount:1,
         },
       });
     }
@@ -372,6 +373,7 @@ export default function FlightBooking() {
                     departureFlightId: selectedFlight.id,
                     departureOptionId: selectedFlight.selectedOptionId,
                     ticketClassName: selectedFlight.ticketClassName,
+                    passengerCount:1,
                   },
                 });
               }}
