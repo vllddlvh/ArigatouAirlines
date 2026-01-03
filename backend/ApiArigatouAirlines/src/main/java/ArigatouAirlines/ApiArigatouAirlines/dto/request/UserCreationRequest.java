@@ -34,8 +34,8 @@ public class UserCreationRequest {
     @NotNull(message = "FULLNAME_IS_NULL")
     String fullName;
 
-    @NotNull(message = "PHONE_NULL")
-    String phone;
+    // @NotNull(message = "PHONE_NULL")
+    // String phone;
 
     @NotNull(message = "DOB_IS_NULL")
     LocalDate dateOfBirth;

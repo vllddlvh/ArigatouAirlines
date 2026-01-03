@@ -21,7 +21,7 @@ public class UserResponse {
     String email;
     String username;
     String fullName;
-    String phone;
+    // String phone;
     LocalDate dateOfBirth;
     Gender gender;
     String avatar;

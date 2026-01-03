@@ -84,7 +84,7 @@ public class ApplicationInitConfig {
                         .password(passwordEncoder.encode("admin"))
                         .gender(Gender.Male)
                         .roles(roles)
-                        .phone("000000000")
+                        // .phone("000000000")
                         .email("dllv@gmail.com")
                         .fullName("Dao Le Long Vu")
                         .dateOfBirth(LocalDate.parse("2005-09-06"))

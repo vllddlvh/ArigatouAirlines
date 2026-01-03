@@ -68,9 +68,9 @@ public class UserService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        if(userRepository.existsByPhone(request.getPhone())) {
-            throw new AppException(ErrorCode.PHONE_EXISTED);
-        }
+        // if(userRepository.existsByPhone(request.getPhone())) {
+        //     throw new AppException(ErrorCode.PHONE_EXISTED);
+        // }
         if(request.getEmail().compareTo("") == 0) {
             throw new AppException(ErrorCode.INVALID_EMAIL);
         }
@@ -97,12 +97,12 @@ public class UserService {
         }
 
         // Validate Phone
-        if (request.getPhone() != null) {
-            if (userRepository.existsByPhone(request.getPhone()) &&
-                    !user.getPhone().equals(request.getPhone())) {
-                throw new AppException(ErrorCode.PHONE_EXISTED);
-            }
-        }
+        // if (request.getPhone() != null) {
+        //     if (userRepository.existsByPhone(request.getPhone()) &&
+        //             !user.getPhone().equals(request.getPhone())) {
+        //         throw new AppException(ErrorCode.PHONE_EXISTED);
+        //     }
+        // }
 
         // Validate Date of Birth
         if (request.getDateOfBirth() != null) {

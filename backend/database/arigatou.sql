@@ -685,7 +685,7 @@ CREATE TABLE `user` (
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `full_name` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
+  -- `phone` varchar(20) DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
   `gender` enum('Male','Female','Other') DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',

@@ -32,7 +32,7 @@ public class User {
     @Column(name = "full_name")
     String fullName;
 
-    String phone;
+    // String phone;
 
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;

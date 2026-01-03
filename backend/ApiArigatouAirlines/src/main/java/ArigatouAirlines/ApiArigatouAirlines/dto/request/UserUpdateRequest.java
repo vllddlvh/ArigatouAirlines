@@ -25,7 +25,7 @@ public class UserUpdateRequest {
 
     String fullName;
 
-    String phone;
+    // String phone;
 
     LocalDate dateOfBirth;
 
