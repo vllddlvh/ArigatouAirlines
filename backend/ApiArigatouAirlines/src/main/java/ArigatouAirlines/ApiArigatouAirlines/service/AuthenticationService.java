@@ -110,7 +110,7 @@ public class AuthenticationService {
         PasswordOTP passwordOTP = PasswordOTP.builder()
                 .OTP(UUID.randomUUID().toString())
                 .user(user)
-                .expiryTime(new Date(Instant.now().plus(5, ChronoUnit.SECONDS).toEpochMilli()))
+                .expiryTime(new Date(Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()))
                 .valid(true)
                 .build();
 
