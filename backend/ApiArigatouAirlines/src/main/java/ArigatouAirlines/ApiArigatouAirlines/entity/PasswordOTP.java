@@ -30,7 +30,26 @@ public class PasswordOTP {
     @Column(name = "is_valid")
     boolean valid;
 
+    @Column(name = "valid")
+    Boolean validDb;
+
     @NotNull
-    @Column(name = "expiry_at")
+    @Column(name = "expiry_time")
     Date expiryTime;
+
+    @Column(name = "expiry_at")
+    Date expiryAt;
+
+    @PrePersist
+    void prePersist() {
+        if (validDb == null) {
+            validDb = valid;
+        }
+        if (expiryAt == null && expiryTime != null) {
+            expiryAt = expiryTime;
+        }
+        if (expiryTime == null && expiryAt != null) {
+            expiryTime = expiryAt;
+        }
+    }
 }

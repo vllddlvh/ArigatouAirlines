@@ -107,10 +107,13 @@ public class AuthenticationService {
         passwordOtpRepository.invalidateOtp(user.getUserId());
         passwordOtpRepository.flush();
 
+        Date expiry = new Date(Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli());
+
         PasswordOTP passwordOTP = PasswordOTP.builder()
                 .OTP(UUID.randomUUID().toString())
                 .user(user)
-                .expiryTime(new Date(Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()))
+                .expiryTime(expiry)
+                .expiryAt(expiry)
                 .valid(true)
                 .build();
 
