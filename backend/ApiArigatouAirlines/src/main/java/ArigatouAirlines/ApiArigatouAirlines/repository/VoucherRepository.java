@@ -16,4 +16,6 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select v from voucher v where lower(v.voucherCode) = lower(?1)")
     Optional<Voucher> findByVoucherCodeForUpdate(String voucherCode);
+
+    Optional<Voucher> findByVoucherCode(String voucherCode);
 }

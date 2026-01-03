@@ -4,28 +4,29 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DiscountType {
-    Percentage("Percentage"),
-    FixedAmount("Fixed Amount"),
-    Amount("Amount");
 
-    private final String value;
+    PERCENTAGE("Percentage"),
+    FIXED_AMOUNT("Fixed Amount");
 
-    DiscountType(String value) {
-        this.value = value;
+    private final String dbValue;
+
+    DiscountType(String dbValue) {
+        this.dbValue = dbValue;
     }
 
     @JsonValue
-    public String getValue() {
-        return value;
+    public String getDbValue() {
+        return dbValue;
     }
 
     @JsonCreator
-    public static DiscountType fromValue(String raw) {
-        if (raw == null) return null;
-        String v = raw.trim();
-        if (v.equalsIgnoreCase("Percentage")) return Percentage;
-        if (v.equalsIgnoreCase("Fixed Amount") || v.equalsIgnoreCase("FixedAmount") || v.equalsIgnoreCase("Fixed")) return FixedAmount;
-        if (v.equalsIgnoreCase("Amount")) return Amount;
-        throw new IllegalArgumentException("Unknown discount type: " + raw);
+    public static DiscountType fromValue(String value) {
+        for (DiscountType type : values()) {
+            if (type.dbValue.equalsIgnoreCase(value)
+                    || type.name().equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown discount type: " + value);
     }
 }

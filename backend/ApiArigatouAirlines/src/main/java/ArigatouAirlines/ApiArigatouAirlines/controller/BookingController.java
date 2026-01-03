@@ -49,20 +49,4 @@ public class BookingController {
                 .body(bookingService.getBooking(id))
                 .build();
     }
-
-    @PutMapping("/{id}/confirm-payment")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    ApiResponse<BookingResponse> confirmPayment(@PathVariable int id, @RequestBody(required = false) PaymentRequest paymentRequest) {
-        return ApiResponse.<BookingResponse>builder()
-                .body(bookingService.confirmPayment(id, paymentRequest))
-                .build();
-    }
-
-    @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<BookingResponse> cancelBooking(@PathVariable int id) {
-        return ApiResponse.<BookingResponse>builder()
-                .body(bookingService.cancelBooking(id))
-                .build();
-    }
 }
