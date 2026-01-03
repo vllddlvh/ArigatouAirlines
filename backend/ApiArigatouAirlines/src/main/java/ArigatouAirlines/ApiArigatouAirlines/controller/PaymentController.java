@@ -13,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -38,12 +40,21 @@ public class PaymentController {
     }
 
     @GetMapping("/payment_info")
-    public ApiResponse<TransactionResponse> transaction(@RequestParam(value = "vnp_TxnRef") String paymentId,
-                                                        @RequestParam(value = "vnp_Amount") String amount,
-                                                        @RequestParam(value = "vnp_TransactionNo") String transactionId,
-                                                        @RequestParam(value = "vnp_ResponseCode") String responseCode) {
-        return ApiResponse.<TransactionResponse>builder()
-                .body(paymentService.transaction(paymentId, amount, transactionId, responseCode))
-                .build();
+    public RedirectView transaction(@RequestParam(value = "vnp_TxnRef") String paymentId,
+                                    @RequestParam(value = "vnp_Amount") String amount,
+                                    @RequestParam(value = "vnp_TransactionNo") String transactionId,
+                                    @RequestParam(value = "vnp_ResponseCode") String responseCode) {
+        TransactionResponse transactionResponse = paymentService.transaction(paymentId, amount, transactionId, responseCode);
+
+        String redirectUrl = UriComponentsBuilder
+                .fromHttpUrl("http://localhost:3000/payment-result")
+                .queryParam("status", transactionResponse.getPaymentStatus())
+                .build()
+                .toUriString();
+
+        RedirectView redirectView = new RedirectView();
+        redirectView.setUrl(redirectUrl);
+        redirectView.setExposeModelAttributes(false);
+        return redirectView;
     }
 }
