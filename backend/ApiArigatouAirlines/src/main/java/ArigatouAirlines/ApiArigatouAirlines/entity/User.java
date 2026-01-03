@@ -50,6 +50,6 @@ public class User {
     )
     Set<Role> roles;
 
-    @Column(name = "is_active")
+    @Column(name = "is_active", columnDefinition = "TINYINT(1) DEFAULT 1")
     boolean isActive;
 }
