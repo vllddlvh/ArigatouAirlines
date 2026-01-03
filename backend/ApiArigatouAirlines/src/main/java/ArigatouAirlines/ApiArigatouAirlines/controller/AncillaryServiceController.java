@@ -3,12 +3,10 @@ package ArigatouAirlines.ApiArigatouAirlines.controller;
 import ArigatouAirlines.ApiArigatouAirlines.dto.request.AncillaryServiceRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.AncillaryServiceResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.ApiResponse;
-import ArigatouAirlines.ApiArigatouAirlines.entity.AncillaryService;
 import ArigatouAirlines.ApiArigatouAirlines.service.AncillaryServiceService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.access.method.P;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 

@@ -20,7 +20,7 @@ public class AncillaryService {
     @Column(name = "service_id")
     int serviceId;
 
-    @Column(name = "Service_name")
+    @Column(name = "service_name")
     String serviceName;
 
     String description;
