@@ -47,7 +47,7 @@ public class PaymentController {
         TransactionResponse transactionResponse = paymentService.transaction(paymentId, amount, transactionId, responseCode);
 
         String redirectUrl = UriComponentsBuilder
-                .fromHttpUrl("http://localhost:3000/payment-result")
+                .fromHttpUrl("http://localhost:3000/payment/return")
                 .queryParam("status", transactionResponse.getPaymentStatus())
                 .build()
                 .toUriString();

@@ -127,6 +127,7 @@ public class PaymentService {
         vnp_Params.put("vnp_Command", ConfigPayment.vnp_Command);
         vnp_Params.put("vnp_TmnCode", ConfigPayment.vnp_TmnCode);
         vnp_Params.put("vnp_Amount", payment.getAmount()
+                .multiply(BigDecimal.valueOf(100))
                 .toBigInteger()
                 .toString());
         vnp_Params.put("vnp_CurrCode", "VND");
@@ -187,7 +188,11 @@ public class PaymentService {
     public TransactionResponse transaction(String paymentId, String amount, String transactionId, String responseCode) {
         Payment payment = paymentRepository.findPaymentByTransactionId(paymentId);
         payment.setTransactionId(transactionId);
-        payment.setAmount(new BigDecimal(amount));
+        payment.setAmount(
+                new BigDecimal(amount)
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
+        );
+
 
         Booking booking = bookingRepository.findById(payment.getBooking().getBookingId())
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_ID_IS_NOT_EXISTED));
