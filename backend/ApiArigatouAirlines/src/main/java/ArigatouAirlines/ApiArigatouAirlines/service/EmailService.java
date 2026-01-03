@@ -19,19 +19,19 @@ import java.util.Date;
 @Slf4j
 public class EmailService {
     JavaMailSender mailSender;
-    private final String SYSTEM_EMAIL_ADDRESS = "daolelongvu1000@gmail.com";
+    private final String SYSTEM_EMAIL_ADDRESS = "thanghuong272005@gmail.com";
 
 
     public void sendResetPasswordOtp(User user, PasswordOTP passwordOTP) throws MailException {
         String OTP = passwordOTP.getOTP();
-        String resetLink = "http://localhost:3000/reset-password/" + OTP;
+        String resetLink = OTP;
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(user.getEmail());
         message.setFrom(SYSTEM_EMAIL_ADDRESS);
         message.setSubject("Password Reset Token");
         message.setSentDate(new Date());
         message.setText("Hello " + user.getFullName() + "!\n"
-                + "Click here to reset your password: " + resetLink + "\n"
+                + "OTP to reset your password: " + resetLink + "\n"
                 + "Keep it secret! Don't share to anyone!");
 
         mailSender.send(message);

@@ -27,8 +27,10 @@ public class PasswordOTP {
     User user;
 
     @NotNull
+    @Column(name = "is_valid")
     boolean valid;
 
     @NotNull
+    @Column(name = "expiry_at")
     Date expiryTime;
 }

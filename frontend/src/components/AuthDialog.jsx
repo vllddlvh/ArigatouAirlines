@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { requestPasswordOtp, resetPassword } from "../services/authService";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,13 @@ export default function AuthDialog({ children, initialTab = "login", open, onOpe
   });
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotData, setForgotData] = useState({
+    email: "",
+    otp: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [forgotStep, setForgotStep] = useState("request");
   const [loginMode, setLoginMode] = useState("user");
   const { login, register } = useAuth();
   const { toast } = useToast();
@@ -89,6 +97,79 @@ export default function AuthDialog({ children, initialTab = "login", open, onOpe
       toast({
         title: "Đăng ký thất bại",
         description: typeof error === "string" ? error : "Đã xảy ra lỗi. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRequestOtp = async (e) => {
+    e.preventDefault();
+    const email = String(forgotData.email || "").trim();
+    if (!email) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const msg = await requestPasswordOtp(email);
+      toast({
+        title: "Đã gửi OTP",
+        description: typeof msg === "string" ? msg : "Vui lòng kiểm tra email để lấy OTP.",
+        variant: "success",
+      });
+      setForgotStep("reset");
+    } catch (error) {
+      toast({
+        title: "Gửi OTP thất bại",
+        description: typeof error === "string" ? error : "Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    const otp = String(forgotData.otp || "").trim();
+    const newPassword = String(forgotData.newPassword || "");
+    const confirmPassword = String(forgotData.confirmPassword || "");
+
+    if (!otp) {
+      toast({ title: "Lỗi", description: "Vui lòng nhập OTP.", variant: "destructive" });
+      return;
+    }
+    if (!newPassword || !confirmPassword) {
+      toast({ title: "Lỗi", description: "Vui lòng nhập mật khẩu mới.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Lỗi", description: "Mật khẩu không khớp.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await resetPassword(otp, { newPassword, confirmPassword });
+      toast({
+        title: "Thành công",
+        description: "Bạn đã đặt lại mật khẩu. Vui lòng đăng nhập lại.",
+        variant: "success",
+      });
+      setForgotData({ email: "", otp: "", newPassword: "", confirmPassword: "" });
+      setForgotStep("request");
+      setActiveTab("login");
+    } catch (error) {
+      toast({
+        title: "Đặt lại mật khẩu thất bại",
+        description: typeof error === "string" ? error : "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -219,6 +300,10 @@ export default function AuthDialog({ children, initialTab = "login", open, onOpe
                 </label>
                 <button
                   type="button"
+                  onClick={() => {
+                    setActiveTab("forgot");
+                    setForgotStep("request");
+                  }}
                   className="text-cyan-300 hover:text-cyan-200 transition-colors"
                 >
                   Quên mật khẩu?
@@ -394,6 +479,126 @@ export default function AuthDialog({ children, initialTab = "login", open, onOpe
                 {isLoading ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
               </Button>
             </form>
+          </TabsContent>
+
+          <TabsContent value="forgot" className="space-y-6 mt-6">
+            <div className="text-sm text-white/80">
+              <button
+                type="button"
+                className="text-cyan-300 hover:text-cyan-200 transition-colors"
+                onClick={() => {
+                  setActiveTab("login");
+                  setForgotStep("request");
+                }}
+              >
+                Quay lại đăng nhập
+              </button>
+            </div>
+
+            {forgotStep === "request" ? (
+              <form onSubmit={handleRequestOtp} className="space-y-5">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Label htmlFor="forgot-email" className="text-white font-medium text-sm mb-2 block">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <MdEmail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 text-lg" />
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        placeholder="Nhập email của bạn"
+                        value={forgotData.email}
+                        onChange={(e) => setForgotData((prev) => ({ ...prev, email: e.target.value }))}
+                        required
+                        className="bg-white/15 border-white/30 text-white placeholder:text-white/60 pl-12 pr-4 py-3 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Đang gửi OTP..." : "Gửi OTP"}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-5">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Label htmlFor="forgot-otp" className="text-white font-medium text-sm mb-2 block">
+                      OTP
+                    </Label>
+                    <Input
+                      id="forgot-otp"
+                      type="text"
+                      placeholder="Nhập OTP trong email"
+                      value={forgotData.otp}
+                      onChange={(e) => setForgotData((prev) => ({ ...prev, otp: e.target.value }))}
+                      required
+                      className="bg-white/15 border-white/30 text-white placeholder:text-white/60 px-4 py-3 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all duration-300"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <Label htmlFor="forgot-new-password" className="text-white font-medium text-sm mb-2 block">
+                      Mật khẩu mới
+                    </Label>
+                    <div className="relative">
+                      <MdLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 text-lg" />
+                      <Input
+                        id="forgot-new-password"
+                        type="password"
+                        placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
+                        value={forgotData.newPassword}
+                        onChange={(e) => setForgotData((prev) => ({ ...prev, newPassword: e.target.value }))}
+                        required
+                        minLength={8}
+                        className="bg-white/15 border-white/30 text-white placeholder:text-white/60 pl-12 pr-4 py-3 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <Label htmlFor="forgot-confirm-password" className="text-white font-medium text-sm mb-2 block">
+                      Xác nhận mật khẩu
+                    </Label>
+                    <div className="relative">
+                      <MdLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 text-lg" />
+                      <Input
+                        id="forgot-confirm-password"
+                        type="password"
+                        placeholder="Nhập lại mật khẩu mới"
+                        value={forgotData.confirmPassword}
+                        onChange={(e) => setForgotData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                        required
+                        minLength={8}
+                        className="bg-white/15 border-white/30 text-white placeholder:text-white/60 pl-12 pr-4 py-3 rounded-xl focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="text-cyan-300 hover:text-cyan-200 transition-colors text-sm"
+                    onClick={() => setForgotStep("request")}
+                  >
+                    Gửi lại OTP
+                  </button>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Đang đặt lại mật khẩu..." : "Đặt lại mật khẩu"}
+                </Button>
+              </form>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>

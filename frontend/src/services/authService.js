@@ -95,3 +95,29 @@ export const getUser = () => {
   const userStr = localStorage.getItem("user");
   return userStr ? JSON.parse(userStr) : null;
 };
+
+export const requestPasswordOtp = async (email) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/forget-password`, {
+      email,
+    });
+    return response?.data?.message || response?.data;
+  } catch (error) {
+    console.error("Lỗi gửi OTP quên mật khẩu:", error);
+    throw error.response?.data?.message || "Không thể gửi OTP. Vui lòng thử lại.";
+  }
+};
+
+export const resetPassword = async (otp, payload) => {
+  try {
+    const safeOtp = encodeURIComponent(String(otp || "").trim());
+    const response = await axios.post(
+      `${API_BASE_URL}/auth/reset-password/${safeOtp}`,
+      payload
+    );
+    return extractBody(response);
+  } catch (error) {
+    console.error("Lỗi đặt lại mật khẩu:", error);
+    throw error.response?.data?.message || "Không thể đặt lại mật khẩu. Vui lòng thử lại.";
+  }
+};
