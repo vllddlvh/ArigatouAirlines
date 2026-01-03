@@ -56,15 +56,24 @@ export const cancelPayment = async (bookingId) => {
  * @param {number} amount - Số tiền cần thanh toán (Optional: tùy vào backend có nhận hay không)
  * @returns {Promise<Object>} - Trả về object chứa URL thanh toán (PaymentResponse)
  */
-export const createVnPayUrl = async (amount = 10000) => {
-  const response = await axios.get(
-    `${API_BASE_URL}/payment/create_payment`,
-    {
-      headers: getAuthHeader(),
-      // params: { amount: amount } // Bỏ comment dòng này nếu Backend đã sửa để nhận tham số
-    }
-  );
-  return extractBody(response);
+export const createVnPayUrl  = async (bookingId, voucherCode = null, voucherId = null) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/payment/create_payment`, 
+      {
+        headers: getAuthHeader(),
+        params: {
+          bookingId: bookingId,
+          voucherCode: voucherCode,
+          voucherId: voucherId
+        }
+      }
+    );
+    return extractBody(response);
+  } catch (error) {
+    console.error('Error creating payment:', error);
+    throw error;
+  }
 };
 
 /**

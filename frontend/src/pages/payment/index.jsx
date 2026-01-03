@@ -260,6 +260,8 @@ export default function PaymentPage() {
               {selectedMethod === 'vnpay' && (
                 <MethodVnPay 
                   amount={finalTotalAmount} 
+                  voucherCode={voucherCode}
+                  bookingId={bookingData.bookingId}
                 />
               )}
               {selectedMethod === 'bank_transfer' && (
@@ -267,6 +269,7 @@ export default function PaymentPage() {
                   amount={finalTotalAmount} 
                   bookingCode={bookingData.bookingCode} 
                   bookingId={bookingData.bookingId}
+                  voucherCode={voucherCode}
                   serviceIds={selectedServices.map(service => service.serviceId)}
                   onSuccess={handleManualPaymentSuccess}
                 />

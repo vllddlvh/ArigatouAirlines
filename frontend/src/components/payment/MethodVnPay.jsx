@@ -4,18 +4,18 @@ import { Loader2, ExternalLink } from 'lucide-react';
 import { createVnPayUrl } from "@/services/paymentService"; // Import API bạn đã viết
 import { useToast } from "@/hooks/use-toast";
 
-export default function MethodVnPay({ amount }) {
+export default function MethodVnPay({ amount, voucherCode, bookingId }) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleVnPayCheckout = async () => {
     setLoading(true);
     try {
-      // Gọi API Backend Spring Boot để lấy URL
-      const res = await createVnPayUrl(amount);
+      const res = voucherCode
+          ? await createVnPayUrl(bookingId, voucherCode)
+          : await createVnPayUrl(bookingId);
       
       if (res.status === "OK" && res.url) {
-        // Redirect người dùng sang VNPAY
         window.location.href = res.url;
       } else {
         toast({ title: "Lỗi", description: "Không thể tạo liên kết thanh toán.", variant: "destructive" });
@@ -24,7 +24,6 @@ export default function MethodVnPay({ amount }) {
       console.error(error);
       toast({ title: "Lỗi kết nối", description: "Vui lòng thử lại sau.", variant: "destructive" });
     } finally {
-      // Không cần setLoading(false) nếu redirect thành công, nhưng giữ lại để an toàn
       setTimeout(() => setLoading(false), 3000); 
     }
   };

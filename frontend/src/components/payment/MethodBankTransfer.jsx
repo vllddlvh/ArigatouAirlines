@@ -5,11 +5,7 @@ import {
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-
-// Import các service cần thiết
 import { confirmPayment } from "@/services/paymentService";
-import { createBookingService } from "@/services/ancillaryService"; 
-import { getTicketsByBookingId } from "@/services/ticketService";
 
 // Helper copy text
 const copyToClipboard = (text) => {
@@ -26,7 +22,7 @@ const formatCurrency = (amount) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-export default function MethodBankTransfer({ amount, bookingCode, bookingId, serviceIds = [], onSuccess }) {
+export default function MethodBankTransfer({ amount, bookingCode, bookingId,voucherCode,onSuccess }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -38,6 +34,7 @@ export default function MethodBankTransfer({ amount, bookingCode, bookingId, ser
     content: false
   });
 
+  // Thông tin tài khoản ngân hàng (Hardcode hoặc lấy từ Config)
   const bankInfo = {
     bankName: "VIETCOMBANK (VCB)",
     accountName: "CONG TY CP HANG KHONG ARIGATOU",
@@ -53,53 +50,17 @@ export default function MethodBankTransfer({ amount, bookingCode, bookingId, ser
     }
   };
 
- 
-  const saveServicesToBackend = async () => {
-
-    // Nếu không có dịch vụ nào được chọn thì bỏ qua
-    if (!serviceIds || serviceIds.length === 0) return;
-
-    try {
-        // 1. Lấy danh sách vé của booking này
-        const tickets = await getTicketsByBookingId(bookingId);
-
-        // 2. Tạo request lưu dịch vụ cho từng vé
-        const promises = [];
-        for (const ticket of tickets) {
-            for (const sId of serviceIds) {
-                const payload = {
-                    ticketId: ticket.ticketId,
-                    serviceId: sId,
-                    priceAtPurchase: null 
-                };
-                promises.push(createBookingService(payload));
-            }
-        }
-
-        // 3. Chờ tất cả request hoàn thành
-        await Promise.all(promises);
-        console.log("Đã lưu dịch vụ bổ sung thành công.");
-    } catch (error) {
-        console.error("Lỗi khi lưu dịch vụ:", error);
-        // Không throw lỗi ở đây để flow thanh toán vẫn tiếp tục, 
-        // nhưng có thể hiện toast cảnh báo nếu cần.
-    }
-  };
-
   const handleConfirmTransfer = async () => {
     setLoading(true);
     try {
-      // BƯỚC 1: Lưu các dịch vụ bổ sung (nếu có)
-      await saveServicesToBackend();
-
-      await confirmPayment(bookingId);
+      await confirmPayment(bookingId, voucherCode);
       
       toast({
         title: "Xác nhận thành công!",
         description: "Hệ thống đang xử lý vé của bạn.",
       });
 
-      // BƯỚC 3: Gọi callback để báo cho component cha
+      // Gọi callback để báo cho component cha (PaymentPage) biết đã xong
       if (onSuccess) {
         onSuccess();
       }
@@ -156,14 +117,14 @@ export default function MethodBankTransfer({ amount, bookingCode, bookingId, ser
         />
       </div>
 
-      {/* Nội dung chuyển khoản */}
-      <div className="p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50/50">
+      {/* Nội dung chuyển khoản (Phần quan trọng nhất) */}
+      <div className="p-4 border-2 border-dashed border-orange-300 rounded-lg bg-orange-50/50">
         <div className="flex justify-between items-center mb-2">
           <h4 className="font-semibold text-gray-800 text-sm uppercase">Nội dung chuyển khoản (Bắt buộc)</h4>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+            className="h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-100"
             onClick={() => handleCopy('content', bankInfo.content)}
           >
             {copiedStates.content ? (
@@ -173,12 +134,12 @@ export default function MethodBankTransfer({ amount, bookingCode, bookingId, ser
             )}
           </Button>
         </div>
-        <div className="font-mono text-xl font-bold text-gray-900 bg-white p-3 rounded border border-blue-200 text-center tracking-wide">
+        <div className="font-mono text-xl font-bold text-gray-900 bg-white p-3 rounded border border-orange-200 text-center tracking-wide">
           {bankInfo.content}
         </div>
       </div>
 
-      {/* Nút hướng dẫn chi tiết */}
+      {/* Nút hướng dẫn chi tiết (Toggle) */}
       <div>
         <Button 
           variant="outline" 
@@ -202,13 +163,12 @@ export default function MethodBankTransfer({ amount, bookingCode, bookingId, ser
 
       {/* Nút xác nhận cuối cùng */}
       <Button 
-        type="button"
         onClick={handleConfirmTransfer} 
         disabled={loading} 
-        className="w-full text-lg shadow-lg bg-blue-600 hover:bg-blue-700 text-white h-12"
+        className="w-full text-lg shadow-lg bg-orange-600 hover:bg-orange-700 text-white h-12"
       >
         {loading ? (
-          <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang xử lý...</>
+          <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Đang xác minh...</>
         ) : (
           "Tôi đã chuyển khoản xong"
         )}

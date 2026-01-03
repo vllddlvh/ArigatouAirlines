@@ -107,6 +107,7 @@ public enum ErrorCode {
     PAYMENT_ID_IS_NOT_EXISTED(8015, "PaymentID is not existed!", HttpStatus.BAD_REQUEST),
     BOOKING_WAS_CANCELLED(8016, "Booking was cancelled!", HttpStatus.BAD_REQUEST),
     VOUCHER_ID_IS_NOT_EXISTED(8017, "VoucherID is not existed!", HttpStatus.BAD_REQUEST),
+    VOUCHER_CODE_IS_NOT_EXISTED(8020, "VoucherCode is not existed!", HttpStatus.BAD_REQUEST),
     VOUCHER_WAS_USED_USAGE_LIMIT(8018, "This voucher has already been used up!", HttpStatus.BAD_REQUEST),
     AMOUNT_BOOKING_MORE_THAN_MIN_ORDER_AMOUNT(8019, "Amount booking more than min order amount voucher!", HttpStatus.BAD_REQUEST);
 
