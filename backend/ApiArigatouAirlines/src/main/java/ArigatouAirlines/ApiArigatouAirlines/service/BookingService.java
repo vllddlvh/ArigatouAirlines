@@ -293,4 +293,100 @@ public class BookingService {
 
         return bookingMapper.toBookingResponse(booking);
     }
+    @Transactional
+    public BookingResponse confirmPayment(int id, PaymentRequest paymentRequest) {
+        // Get current user
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+        User currentUser = userRepository.findByUsernameAndIsActiveTrue(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        // Check if user owns this booking (skip for admin)
+        boolean isAdmin = context.getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && booking.getUser().getUserId() != currentUser.getUserId()) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (booking.getStatusBooking() == StatusBooking.Cancelled) {
+            throw new AppException(ErrorCode.BOOKING_ALREADY_CANCELLED);
+        }
+
+        if (booking.getStatusPayment() == StatusPaymentBooking.Paid) {
+            if (booking.getStatusBooking() != StatusBooking.Confirmed) {
+                booking.setStatusBooking(StatusBooking.Confirmed);
+                bookingRepository.save(booking);
+            }
+            return bookingMapper.toBookingResponse(booking);
+        }
+
+        String voucherCode = paymentRequest == null ? null : paymentRequest.getVoucherCode();
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        Voucher voucher = null;
+        if (voucherCode != null && !voucherCode.trim().isBlank()) {
+            boolean alreadyUsed = voucherUsageRepository.existsByBooking_BookingId(booking.getBookingId());
+            if (!alreadyUsed) {
+                BigDecimal baseAmount = booking.getTotalAmount() == null ? BigDecimal.ZERO : booking.getTotalAmount();
+                voucher = voucherService.validateVoucherForApply(voucherCode, baseAmount);
+                discountAmount = voucherService.computeDiscountAmount(voucher, baseAmount);
+
+                BigDecimal newTotal = baseAmount.subtract(discountAmount);
+                if (newTotal.compareTo(BigDecimal.ZERO) < 0) {
+                    newTotal = BigDecimal.ZERO;
+                }
+                booking.setTotalAmount(newTotal);
+
+                if (voucher != null) {
+                    voucher.setUsedCount(voucher.getUsedCount() + 1);
+                    voucherRepository.save(voucher);
+
+                    VoucherUsage usage = VoucherUsage.builder()
+                            .voucher(voucher)
+                            .booking(booking)
+                            .user(currentUser)
+                            .discountAmount(discountAmount)
+                            .build();
+                    voucherUsageRepository.save(usage);
+                }
+            }
+        }
+
+        booking.setStatusBooking(StatusBooking.Confirmed);
+        booking.setStatusPayment(StatusPaymentBooking.Paid);
+        bookingRepository.save(booking);
+
+        return bookingMapper.toBookingResponse(booking);
+    }
+
+    public BookingResponse cancelBooking(int id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        if (booking.getStatusBooking() == StatusBooking.Cancelled) {
+            throw new AppException(ErrorCode.BOOKING_ALREADY_CANCELLED);
+        }
+
+        // Release all seats associated with this booking
+        List<Ticket> tickets = ticketRepository.findAllByBooking_BookingId(booking.getBookingId());
+        for (Ticket ticket : tickets) {
+            if (ticket.getFlightSeat() != null) {
+                FlightSeat seat = ticket.getFlightSeat();
+                seat.setStatus(StatusFlightSeat.Available);
+                flightSeatRepository.save(seat);
+            }
+        }
+
+        booking.setStatusBooking(StatusBooking.Cancelled);
+        if (booking.getStatusPayment() == StatusPaymentBooking.Paid) {
+            booking.setStatusPayment(StatusPaymentBooking.Refunded);
+        } else {
+            booking.setStatusPayment(StatusPaymentBooking.Failed);
+        }
+        bookingRepository.save(booking);
+
+        return bookingMapper.toBookingResponse(booking);
+    }
 }

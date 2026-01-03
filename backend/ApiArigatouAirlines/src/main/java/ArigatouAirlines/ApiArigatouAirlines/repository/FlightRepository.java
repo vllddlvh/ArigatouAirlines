@@ -19,9 +19,9 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
     SET f.status =
         CASE
             WHEN f.departureDateTime < :now AND f.arrivalDateTime > :now
-                THEN 'ON_TIME'
+                THEN ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlight.On_Time
             WHEN f.arrivalDateTime < :now
-                THEN 'ARRIVED'
+                THEN ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlight.Arrived
             ELSE f.status
         END
 """)
