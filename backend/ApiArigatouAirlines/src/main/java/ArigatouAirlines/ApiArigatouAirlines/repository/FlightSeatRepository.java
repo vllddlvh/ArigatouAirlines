@@ -24,24 +24,24 @@ public interface FlightSeatRepository extends JpaRepository<FlightSeat, Integer>
     long countByFlight_FlightIdAndStatus(int flightId, StatusFlightSeat status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select fs from flight_seat fs where fs.flight.flightId = ?1 and fs.status = ?2 order by fs.flightSeatId asc")
+    @Query("select fs from FlightSeat fs where fs.flight.flightId = ?1 and fs.status = ?2 order by fs.flightSeatId asc")
     List<FlightSeat> findAllByFlight_FlightIdAndStatusForUpdate(int flightId, StatusFlightSeat status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select fs from flight_seat fs where fs.flight.flightId = ?1 and fs.status = ?2 and fs.seatMap.seatClass = ?3 order by fs.flightSeatId asc")
+    @Query("select fs from FlightSeat fs where fs.flight.flightId = ?1 and fs.status = ?2 and fs.seatMap.seatClass = ?3 order by fs.flightSeatId asc")
     List<FlightSeat> findAllByFlight_FlightIdAndStatusAndSeatClassForUpdate(int flightId, StatusFlightSeat status, SeatClass seatClass);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select fs from flight_seat fs where fs.flight.flightId = ?1 and fs.status = ?2 and fs.seatMap.seatClass is null order by fs.flightSeatId asc")
+    @Query("select fs from FlightSeat fs where fs.flight.flightId = ?1 and fs.status = ?2 and fs.seatMap.seatClass is null order by fs.flightSeatId asc")
     List<FlightSeat> findAllByFlight_FlightIdAndStatusAndNullSeatClassForUpdate(int flightId, StatusFlightSeat status);
 
     @Modifying
     @Transactional
-    @Query("UPDATE flight_seat fs SET fs.status = ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat.Available " +
+    @Query("UPDATE FlightSeat fs SET fs.status = ArigatouAirlines.ApiArigatouAirlines.enums.StatusFlightSeat.Available " +
             "WHERE fs.flightSeatId IN ( " +
-            "  SELECT t.flightSeat.flightSeatId FROM ticket t " +
+            "  SELECT t.flightSeat.flightSeatId FROM Ticket t " +
             "  WHERE t.booking.bookingId IN ( " +
-            "    SELECT b.bookingId FROM booking b " +
+            "    SELECT b.bookingId FROM Booking b " +
             "    WHERE b.paymentDeadline <= :now AND b.statusBooking = ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking.Pending" +
             "  ) " +
             ")")

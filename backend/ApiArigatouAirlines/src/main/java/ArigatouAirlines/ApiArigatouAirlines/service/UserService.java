@@ -35,7 +35,7 @@ public class UserService {
     EmailService emailService;
     PasswordOtpRepository passwordTokenRepository;
 
-    public UserResponse getById(String id) {
+    public UserResponse getById(int id) {
         return userMapper.toUserResponse(userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS)));
     }
@@ -81,7 +81,7 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public UserResponse update(UserUpdateRequest request, String id) {
+    public UserResponse update(UserUpdateRequest request, int id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
@@ -131,7 +131,7 @@ public class UserService {
     }
 
 
-    public void delete(String id) {
+    public void delete(int id) {
         if (!userRepository.existsById(id))
             throw new AppException(ErrorCode.USER_NOT_EXISTS);
         userRepository.deleteById(id);

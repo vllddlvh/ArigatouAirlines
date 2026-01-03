@@ -14,7 +14,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity(name = "booking")
+@Entity
+@Table(name = "booking")
 @Getter
 @Setter
 @AllArgsConstructor

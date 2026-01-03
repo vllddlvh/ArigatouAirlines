@@ -15,15 +15,15 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findAllByUser_UserId(int userId);
     
-    @Query("SELECT b FROM booking b LEFT JOIN FETCH b.user WHERE b.user.userId = :userId")
+    @Query("SELECT b FROM Booking b LEFT JOIN FETCH b.user WHERE b.user.userId = :userId")
     List<Booking> findAllByUserIdWithUser(@Param("userId") int userId);
     
-    @Query("SELECT b FROM booking b LEFT JOIN FETCH b.user")
+    @Query("SELECT b FROM Booking b LEFT JOIN FETCH b.user")
     List<Booking> findAllWithUser();
 
     @Transactional
     @Modifying
-    @Query("UPDATE booking b SET b.statusBooking = ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking.Cancelled " +
+    @Query("UPDATE Booking b SET b.statusBooking = ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking.Cancelled " +
             "WHERE b.paymentDeadline <= :now " +
             "AND b.statusBooking = ArigatouAirlines.ApiArigatouAirlines.enums.StatusBooking.Pending " +
             "AND b.statusPayment != ArigatouAirlines.ApiArigatouAirlines.enums.StatusPaymentBooking.Paid")

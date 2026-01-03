@@ -7,7 +7,8 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
-@Entity(name = "ticket")
+@Entity
+@Table(name = "ticket")
 @Getter
 @Setter
 @AllArgsConstructor
