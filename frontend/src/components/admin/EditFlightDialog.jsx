@@ -19,6 +19,10 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
     // 1. Truy cập sâu vào object 'schedule' để lấy dữ liệu ban đầu
     const currentSchedule = flight?.schedule || {};
 
+    const initialFlightDate = flight?.flightDate
+        ? String(flight.flightDate)
+        : (flight?.departureDateTime ? String(flight.departureDateTime).split('T')[0] : '');
+
     const [formData, setFormData] = useState({
         flightNumber: currentSchedule.flightNumber || '',
         airlineId: currentSchedule.airline?.airlineId?.toString() || '',
@@ -27,6 +31,7 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
         // Format LocalTime "16:51:00" -> "16:51" cho input time
         departureTime: currentSchedule.departureTime ? currentSchedule.departureTime.substring(0, 5) : '',
         arrivalTime: currentSchedule.arrivalTime ? currentSchedule.arrivalTime.substring(0, 5) : '',
+        flightDate: initialFlightDate,
         active: currentSchedule.active ?? true
     });
 
@@ -70,8 +75,6 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
                 active: formData.active
             };
 
-            console.log(scheduleId)
-
             const response = await fetch(`${API_BASE_URL}/flightSchedules/${scheduleId}`, {
                 method: "PUT",
                 headers: {
@@ -84,10 +87,29 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || "Cập nhật thất bại");
 
-            toast({ title: "Thành công", description: "Đã cập nhật lịch trình bay." });
+            const flightPayload = {
+                scheduleId: scheduleId,
+                aircraftId: flight?.aircraft?.aircraftId,
+                flightDate: formData.flightDate,
+                departureTime: `${formData.departureTime}:00`,
+            };
+
+            const flightResponse = await fetch(`${API_BASE_URL}/flights/${flight.flightId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(flightPayload)
+            });
+
+            const flightResult = await flightResponse.json();
+            if (!flightResponse.ok) throw new Error(flightResult.message || "Cập nhật chuyến bay thất bại");
+
+            toast({ title: "Thành công", description: "Đã cập nhật lịch trình và ngày bay." });
             
             // Callback để update lại danh sách ở component cha
-            onSave(result.body);
+            onSave(flightResult.body);
             onClose();
         } catch (error) {
             alert(`Lỗi: ${error.message}`);
@@ -204,6 +226,17 @@ export function EditFlightDialog({ flight, onClose, onSave }) {
                                     onChange={(e) => setFormData({...formData, arrivalTime: e.target.value})} 
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-gray-600 font-medium flex items-center gap-2">
+                                <Clock className="h-4 w-4" /> Ngày khởi hành
+                            </Label>
+                            <Input
+                                type="date"
+                                value={formData.flightDate}
+                                onChange={(e) => setFormData({ ...formData, flightDate: e.target.value })}
+                            />
                         </div>
 
                         <DialogFooter className="pt-6 border-t gap-2">

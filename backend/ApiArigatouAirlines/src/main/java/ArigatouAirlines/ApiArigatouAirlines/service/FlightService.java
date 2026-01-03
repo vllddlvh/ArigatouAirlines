@@ -95,6 +95,7 @@ public class FlightService {
                 ? flight.getSchedule().getDepartureTime() : flightRequest.getDepartureTime();
 
         LocalDateTime departureDateTime =  LocalDateTime.of(flightRequest.getFlightDate(), departureTime);
+        flight.setFlightDate(flightRequest.getFlightDate());
         flight.setDepartureDateTime(departureDateTime);
         flight.setArrivalDateTime(departureDateTime.plusMinutes(flight.getSchedule().getDurationMinutes()));
 
@@ -211,7 +212,17 @@ public class FlightService {
         LocalTime departureTime = flightRequest.getDepartureTime() == null
                 ? flight.getSchedule().getDepartureTime() : flightRequest.getDepartureTime();
 
-        LocalDateTime departureDateTime =  LocalDateTime.of(flightRequest.getFlightDate(), departureTime);
+        LocalDate flightDate = flightRequest.getFlightDate();
+        if (flightDate == null) {
+            if (flight.getFlightDate() != null) {
+                flightDate = flight.getFlightDate();
+            } else if (flight.getDepartureDateTime() != null) {
+                flightDate = flight.getDepartureDateTime().toLocalDate();
+            }
+        }
+
+        LocalDateTime departureDateTime = LocalDateTime.of(flightDate, departureTime);
+        flight.setFlightDate(flightDate);
         flight.setDepartureDateTime(departureDateTime);
         flight.setArrivalDateTime(departureDateTime.plusMinutes(flight.getSchedule().getDurationMinutes()));
 
