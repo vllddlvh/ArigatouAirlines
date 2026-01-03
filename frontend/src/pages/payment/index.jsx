@@ -1,26 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { 
   ArrowLeft, Clock, Plane, CheckCircle2 
 } from 'lucide-react';
 import { motion } from "framer-motion";
 
-// UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-// Services
 import { validateVoucher } from "@/services/voucherService";
 
-// Custom Payment Components
 import BookingSummary from "@/components/payment/BookingSummary";
 import PaymentMethods from "@/components/payment/PaymentMethods";
 import MethodVnPay from "@/components/payment/MethodVnPay";
 import MethodBankTransfer from "@/components/payment/MethodBankTransfer";
+import AncillaryServiceSelector from "@/components/payment/AncillaryServiceSelector"; 
 
 // Helper
 const formatTime = (seconds) => {
@@ -35,8 +33,8 @@ export default function PaymentPage() {
   
   // --- STATE MANAGEMENT ---
   const [bookingData, setBookingData] = useState(null);
-  const [selectedMethod, setSelectedMethod] = useState('vnpay'); // Mặc định chọn VNPAY
-  const [countdown, setCountdown] = useState(15 * 60); // 15 phút
+  const [selectedMethod, setSelectedMethod] = useState('vnpay');
+  const [countdown, setCountdown] = useState(15 * 60);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   // Voucher State
@@ -44,21 +42,23 @@ export default function PaymentPage() {
   const [voucherDiscountAmount, setVoucherDiscountAmount] = useState(0);
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
 
+  // Service State (MỚI)
+  const [selectedServices, setSelectedServices] = useState([]);
+
   // --- 1. INITIALIZE DATA ---
   useEffect(() => {
-    // Lấy dữ liệu từ URL khi trang load
     const { bookingId, bookingCode, totalAmount, baseTotalAmount, voucherCode: queryVoucher, flightInfo } = router.query;
     
-    // Nếu có dữ liệu trên URL (từ trang Booking chuyển sang)
     if (bookingId) {
       const parsedTotal = parseFloat(totalAmount) || 0;
       const parsedBase = baseTotalAmount != null ? parseFloat(baseTotalAmount) : parsedTotal;
+      // Nếu load lại trang mà total < base, coi như đã có giảm giá trước đó (logic cũ)
       const inferredDiscount = parsedBase > parsedTotal ? (parsedBase - parsedTotal) : 0;
 
       const data = {
         bookingId: parseInt(bookingId),
         bookingCode: String(bookingCode),
-        totalAmount: parsedTotal,
+        totalAmount: parsedTotal, 
         baseTotalAmount: parsedBase,
         flightInfo: flightInfo ? JSON.parse(flightInfo) : null
       };
@@ -67,15 +67,12 @@ export default function PaymentPage() {
       setVoucherCode(queryVoucher ? String(queryVoucher) : '');
       setVoucherDiscountAmount(inferredDiscount);
 
-      // Lưu backup vào LocalStorage phòng trường hợp user reload trang (F5)
       localStorage.setItem('pendingPayment', JSON.stringify(data));
     } else {
-      // Nếu URL rỗng (do F5), thử khôi phục từ LocalStorage
       const saved = localStorage.getItem('pendingPayment');
       if (saved) {
         const parsed = JSON.parse(saved);
         setBookingData(parsed);
-        // Reset lại voucher logic khi reload
         const base = Number(parsed.baseTotalAmount ?? 0);
         const total = Number(parsed.totalAmount ?? 0);
         setVoucherDiscountAmount(base > total ? (base - total) : 0);
@@ -83,38 +80,62 @@ export default function PaymentPage() {
     }
   }, [router.query]);
 
-  // --- 2. COUNTDOWN TIMER ---
+  // --- 2. LOGIC TÍNH TOÁN TỔNG TIỀN (QUAN TRỌNG) ---
+  // Tính tổng tiền dịch vụ
+  const servicesTotal = useMemo(() => {
+    return selectedServices.reduce((sum, service) => sum + Number(service.price), 0);
+  }, [selectedServices]);
+
+  // Tính tổng tiền cuối cùng = (Giá vé gốc + Dịch vụ) - Voucher
+  const finalTotalAmount = useMemo(() => {
+    if (!bookingData) return 0;
+    const base = bookingData.baseTotalAmount || 0;
+    const subTotal = base + servicesTotal;
+    const final = subTotal - voucherDiscountAmount;
+    return final > 0 ? final : 0; // Không để âm
+  }, [bookingData, servicesTotal, voucherDiscountAmount]);
+
+  // --- 3. COUNTDOWN TIMER ---
   useEffect(() => {
-    if (paymentSuccess) return; // Dừng đếm nếu đã thanh toán xong
+    if (paymentSuccess) return;
     const timer = setInterval(() => {
       setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, [paymentSuccess]);
 
-  // --- 3. VOUCHER LOGIC ---
+  // --- 4. HANDLERS ---
+  
+  // Toggle Dịch vụ (Thêm/Bớt)
+  const handleToggleService = (service) => {
+    setSelectedServices(prev => {
+        const exists = prev.find(s => s.serviceName === service.serviceName);
+        if (exists) {
+            return prev.filter(s => s.serviceName !== service.serviceName);
+        } else {
+            return [...prev, service];
+        }
+    });
+  };
+
   const handleApplyVoucher = async () => {
     if (!bookingData) return;
     
-    // Nếu xóa mã -> Reset về giá gốc
     const code = voucherCode.trim();
-    const baseAmount = bookingData.baseTotalAmount ?? bookingData.totalAmount;
+    // Tổng tiền để check voucher phải bao gồm cả dịch vụ
+    const currentOrderAmount = (bookingData.baseTotalAmount || 0) + servicesTotal;
 
     if (!code) {
       setVoucherDiscountAmount(0);
-      setBookingData(prev => ({ ...prev, totalAmount: baseAmount }));
       return;
     }
 
     setIsApplyingVoucher(true);
     try {
-      const res = await validateVoucher({ voucherCode: code, orderAmount: baseAmount });
+      const res = await validateVoucher({ voucherCode: code, orderAmount: currentOrderAmount });
       
       const discount = Number(res?.discountAmount ?? 0);
-      const finalAmt = Number(res?.finalAmount ?? (baseAmount - discount));
-
       setVoucherDiscountAmount(discount);
-      setBookingData(prev => ({ ...prev, totalAmount: finalAmt }));
 
       toast({
         title: "Áp dụng thành công",
@@ -122,12 +143,10 @@ export default function PaymentPage() {
         className: "bg-green-50 border-green-200 text-green-800"
       });
     } catch (error) {
-      // Nếu lỗi -> Reset về giá gốc
       setVoucherDiscountAmount(0);
-      setBookingData(prev => ({ ...prev, totalAmount: baseAmount }));
       toast({
         title: "Không thể áp dụng",
-        description: error?.response?.data?.message || "Mã voucher không hợp lệ hoặc đã hết hạn.",
+        description: error?.response?.data?.message || "Mã voucher không hợp lệ.",
         variant: "destructive",
       });
     } finally {
@@ -135,8 +154,10 @@ export default function PaymentPage() {
     }
   };
 
-  // --- 4. SUCCESS HANDLERS ---
+  // --- 5. SUCCESS HANDLERS ---
   const handleManualPaymentSuccess = () => {
+
+    
     setPaymentSuccess(true);
     localStorage.removeItem('pendingPayment');
   };
@@ -144,7 +165,7 @@ export default function PaymentPage() {
   const handleReturnHome = () => router.push('/');
   const handleViewBookings = () => router.push('/my-bookings');
 
-  // --- 5. RENDER ---
+  // --- 6. RENDER ---
   if (!bookingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -155,6 +176,8 @@ export default function PaymentPage() {
       </div>
     );
   }
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white p-4 sm:p-6 pb-20">
@@ -177,7 +200,6 @@ export default function PaymentPage() {
             </p>
           </div>
           
-          {/* Timer Component */}
           <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${countdown < 300 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-orange-100 border-orange-200 text-orange-800'}`}>
             <Clock className="w-5 h-5" />
             <div className="flex flex-col items-end">
@@ -191,7 +213,7 @@ export default function PaymentPage() {
       {/* MAIN GRID LAYOUT */}
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN: Payment Process */}
+        {/* LEFT COLUMN: Flight Info + Services + Payment */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* 1. Flight Info Summary */}
@@ -221,24 +243,29 @@ export default function PaymentPage() {
               )}
             </CardContent>
           </Card>
+          {/* 2. ANCILLARY SERVICES  */}
+          <AncillaryServiceSelector 
+             selectedServices={selectedServices}
+             onToggleService={handleToggleService}
+          />
 
-          {/* 2. Method Selector */}
+          {/* 3. Method Selector */}
           <PaymentMethods 
             selectedMethod={selectedMethod} 
             onSelect={setSelectedMethod} 
           />
 
-          {/* 3. Active Method Content */}
+          {/* 4. Active Method Content */}
           <Card className="border-t-4 border-t-orange-500 shadow-md animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CardContent className="pt-6">
               {selectedMethod === 'vnpay' && (
                 <MethodVnPay 
-                  amount={bookingData.totalAmount} 
+                  amount={finalTotalAmount} 
                 />
               )}
               {selectedMethod === 'bank_transfer' && (
                 <MethodBankTransfer 
-                  amount={bookingData.totalAmount} 
+                  amount={finalTotalAmount} 
                   bookingCode={bookingData.bookingCode} 
                   bookingId={bookingData.bookingId}
                   onSuccess={handleManualPaymentSuccess}
@@ -251,17 +278,63 @@ export default function PaymentPage() {
         {/* RIGHT COLUMN: Bill Summary */}
         <div className="lg:col-span-1">
           <BookingSummary 
-            bookingData={bookingData}
+            bookingData={{
+                ...bookingData,
+                totalAmount: finalTotalAmount
+            }}
             voucherCode={voucherCode}
             setVoucherCode={setVoucherCode}
             handleApplyVoucher={handleApplyVoucher}
             isApplyingVoucher={isApplyingVoucher}
             voucherDiscountAmount={voucherDiscountAmount}
+            // Truyền thêm danh sách dịch vụ để hiển thị bên summary (nếu component hỗ trợ custom render)
+            extraServices={selectedServices} 
+            servicesTotal={servicesTotal}
           />
+          
+          {/* Nếu BookingSummary chưa hiển thị list dịch vụ, ta render thủ công bên dưới nó */}
+          {selectedServices.length > 0 && (
+            <div className="mt-4 bg-orange-50/60 rounded-xl p-4 border border-orange-100">
+              <h4 className="font-bold text-gray-900 text-sm mb-3 flex justify-between items-center">
+                <span>Dịch vụ đã chọn</span>
+                <span className="text-xs font-normal bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full">
+                  {selectedServices.length} món
+                </span>
+              </h4>
+              
+              <ul className="space-y-3">
+                {selectedServices.map((s, index) => (
+                  <li key={s.id || index} className="relative pl-4 border-l-2 border-orange-300">
+                    <div className="flex justify-between items-start">
+                      <div className="pr-2">
+                        <span className="text-sm font-medium text-gray-800 block">
+                          {s.serviceName}
+                        </span>
+                        <span className="text-xs text-gray-500 block mt-0.5 italic">
+                          {s.description}
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                        {s.price.toLocaleString()}đ
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              
+              {/* Tổng phụ tiền dịch vụ */}
+              <div className="mt-3 pt-3 border-t border-orange-200 flex justify-between items-center">
+                <span className="text-xs text-gray-600">Tổng dịch vụ</span>
+                <span className="text-sm font-bold text-orange-700">
+                  {selectedServices.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()}đ
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* SUCCESS DIALOG (Dùng cho phương thức chuyển khoản thủ công) */}
+    
       <Dialog open={paymentSuccess} onOpenChange={setPaymentSuccess}>
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>

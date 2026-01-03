@@ -1,7 +1,7 @@
 package ArigatouAirlines.ApiArigatouAirlines.service;
 
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.BookingServiceResponse;
-import ArigatouAirlines.ApiArigatouAirlines.entity.BookingService;
+import ArigatouAirlines.ApiArigatouAirlines.entity.BookingServiceEntity;
 import ArigatouAirlines.ApiArigatouAirlines.mapper.BookingServiceMapper;
 import ArigatouAirlines.ApiArigatouAirlines.repository.BookingServiceRepository;
 import lombok.AccessLevel;
@@ -25,7 +25,7 @@ public class BookingServiceService {
     }
 
     public BookingServiceResponse getBookingService(int id) {
-        BookingService bookingService = bookingServiceRepository.findById(id)
+        BookingServiceEntity bookingService = bookingServiceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking service not found"));
         return bookingServiceMapper.toBookingServiceResponse(bookingService);
     }
