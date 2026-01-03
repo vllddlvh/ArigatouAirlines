@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity(name = "voucher_usage")
 @Getter
@@ -36,12 +37,12 @@ public class VoucherUsage {
     BigDecimal discountAmount;
 
     @Column(name = "used_at")
-    Instant usedAt;
+    LocalDateTime usedAt;
 
     @PrePersist
     void prePersist() {
         if (usedAt == null) {
-            usedAt = Instant.now();
+            usedAt = LocalDateTime.now();
         }
     }
 }

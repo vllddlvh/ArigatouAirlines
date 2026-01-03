@@ -1,6 +1,8 @@
 package ArigatouAirlines.ApiArigatouAirlines.dto.response;
 
+import ArigatouAirlines.ApiArigatouAirlines.entity.Role;
 import ArigatouAirlines.ApiArigatouAirlines.enums.Gender;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -23,5 +25,5 @@ public class UserResponse {
     LocalDate dateOfBirth;
     Gender gender;
     String avatar;
-    Set<String> roles;
+    Set<Role> roles;
 }

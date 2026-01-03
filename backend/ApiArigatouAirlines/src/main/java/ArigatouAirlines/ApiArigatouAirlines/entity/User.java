@@ -37,10 +37,6 @@ public class User {
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
 
-    @Column(name = "is_active")
-    @Builder.Default
-    boolean isActive = true;
-
     @Enumerated(EnumType.STRING)
     Gender gender;
 

@@ -25,8 +25,11 @@ public enum ErrorCode {
     POINT_IS_NULL(1006, "User's point must not be null!", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1007, "Email already exists!", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL(1008, "Invalid email format!", HttpStatus.BAD_REQUEST),
-    USER_UPDATE_ROLE(1010, "User cannot update role!", HttpStatus.BAD_REQUEST),
+    PHONE_EXISTED(1009, "Phone already exists", HttpStatus.BAD_REQUEST),
+    USER_CANNOT_UPDATE_ROLE(1010, "User cannot update role!", HttpStatus.BAD_REQUEST),
     INVALID_GENDER(1011, "Invalid Gender value!", HttpStatus.BAD_REQUEST),
+    POSTID_IS_NOT_EXISTED(1012, "PostID is not existed", HttpStatus.BAD_REQUEST),
+
 
     // ─────────────── 2xxx: Authentication & Authorization ───────────────
     UNAUTHENTICATED(2001, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
@@ -53,6 +56,9 @@ public enum ErrorCode {
     EMAIL_IS_NULL(4005, "Email must not be null!", HttpStatus.BAD_REQUEST),
     DOB_IS_NULL(4006, "Date of birth must not be null!", HttpStatus.BAD_REQUEST),
     CONFIRM_PASSWORD_FAIL(4007, "New password and confirm password do not match!", HttpStatus.BAD_REQUEST),
+    INVALID_USERNAME_MAX(4008, "Username must be at less than 20 characters!", HttpStatus.BAD_REQUEST),
+    FULLNAME_IS_NULL(4009, "Fullname must not be null!", HttpStatus.BAD_REQUEST),
+    PHONE_NULL(4010, "Phone must not be null!", HttpStatus.BAD_REQUEST),
     DOB_IS_THE_PAST(4011, "Date of birth must be in\n" + "the past", HttpStatus.BAD_REQUEST),
 
 
@@ -65,6 +71,8 @@ public enum ErrorCode {
     AIRCRAFT_TYPE_ID_NOT_EXSITED(5005, "AircraftTypeId doesn't existed!", HttpStatus.BAD_REQUEST),
     AIRCRAFT_ID_NOT_EXSITED(5006, "AircraftId  doesn't existed!", HttpStatus.BAD_REQUEST),
     SEATLAYOUT_ID_NOT_EXSITED(5007, "SeatLayoutId doesn't existed!", HttpStatus.BAD_REQUEST),
+    SEAT_ID_NOT_EXSITED(5008, "SeatId doesn't existed!", HttpStatus.BAD_REQUEST),
+
 
 
     //─────────────── 6xxx: Flight ───────────────
@@ -93,7 +101,14 @@ public enum ErrorCode {
     VOUCHER_CODE_REQUIRED(8008, "Voucher code is required!", HttpStatus.BAD_REQUEST),
     VOUCHER_CODE_EXISTED(8009, "Voucher code already exists!", HttpStatus.CONFLICT),
 
-    FLIGHT_AIRCRAFT_REQUIRED(8013, "Flight must have an aircraft to generate seat map!", HttpStatus.BAD_REQUEST);
+    FLIGHT_AIRCRAFT_REQUIRED(8013, "Flight must have an aircraft to generate seat map!", HttpStatus.BAD_REQUEST),
+
+    BOOKING_ID_IS_NOT_EXISTED(8014, "BookingID is not existed!", HttpStatus.BAD_REQUEST),
+    PAYMENT_ID_IS_NOT_EXISTED(8015, "PaymentID is not existed!", HttpStatus.BAD_REQUEST),
+    BOOKING_WAS_CANCELLED(8016, "Booking was cancelled!", HttpStatus.BAD_REQUEST),
+    VOUCHER_ID_IS_NOT_EXISTED(8017, "VoucherID is not existed!", HttpStatus.BAD_REQUEST),
+    VOUCHER_WAS_USED_USAGE_LIMIT(8018, "This voucher has already been used up!", HttpStatus.BAD_REQUEST),
+    AMOUNT_BOOKING_MORE_THAN_MIN_ORDER_AMOUNT(8019, "Amount booking more than min order amount voucher!", HttpStatus.BAD_REQUEST);
 
 
     int code;

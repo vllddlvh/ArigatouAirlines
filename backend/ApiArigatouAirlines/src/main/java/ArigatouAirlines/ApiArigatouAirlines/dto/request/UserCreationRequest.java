@@ -22,7 +22,8 @@ public class UserCreationRequest {
     @UniqueEmail(message = "EMAIL_EXISTED")
     String email;
 
-    @Size(min = 6, max = 20, message = "INVALID_USERNAME")
+    @Size(min = 6, message = "INVALID_USERNAME_MIN")
+    @Size(max = 20, message = "INVALID_USERNAME_MAX")
     @NotNull(message = "USERNAME_IS_NULL")
     String username;
 
