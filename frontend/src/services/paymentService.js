@@ -48,3 +48,47 @@ export const cancelPayment = async (bookingId) => {
   );
   return extractBody(response);
 };
+
+
+/**
+ * Tạo URL thanh toán VNPAY
+ * Gọi đến API: GET /payment/create_payment
+ * @param {number} amount - Số tiền cần thanh toán (Optional: tùy vào backend có nhận hay không)
+ * @returns {Promise<Object>} - Trả về object chứa URL thanh toán (PaymentResponse)
+ */
+export const createVnPayUrl  = async (bookingId, voucherCode = null, voucherId = null) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/payment/create_payment`, 
+      {
+        headers: getAuthHeader(),
+        params: {
+          bookingId: bookingId,
+          voucherCode: voucherCode,
+          voucherId: voucherId
+        }
+      }
+    );
+    return extractBody(response);
+  } catch (error) {
+    console.error('Error creating payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gửi thông tin trả về từ VNPAY về Backend để xác thực
+ * Gọi đến API: GET /payment/payment_info
+ * @param {Object} params - Object chứa các tham số từ URL (vnp_Amount, vnp_ResponseCode,...)
+ * @returns {Promise<Object>} - Kết quả giao dịch (TransactionStatus)
+ */
+export const verifyVnPayReturn = async (params) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/payment/payment_info`,
+    {
+      headers: getAuthHeader(),
+      params: params, // Axios sẽ tự động chuyển object này thành query string (?vnp_Amount=...&vnp_...)
+    }
+  );
+  return extractBody(response);
+};

@@ -8,9 +8,11 @@ import ArigatouAirlines.ApiArigatouAirlines.service.FlightService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,6 +34,16 @@ public class FlightController {
     public ApiResponse<List<FlightResponseWithoutList>> getListFlight() {
         return ApiResponse.<List<FlightResponseWithoutList>>builder()
                 .body(flightService.getListFlight())
+                .build();
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<List<FlightResponseWithoutList>> searchFlights(
+            @RequestParam(required = false) String departureAirport,
+            @RequestParam(required = false) String arrivalAirport,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate) {
+        return ApiResponse.<List<FlightResponseWithoutList>>builder()
+                .body(flightService.searchFlights(departureAirport, arrivalAirport, departureDate))
                 .build();
     }
 

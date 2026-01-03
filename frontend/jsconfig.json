@@ -15,6 +15,6 @@
       "@/utils/*": ["utils/*"] // Alias cho utils
     }
   },
-  "include": ["next-env.d.ts", "**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "src/components/chat/ChatHeader.jsx"],
   "exclude": ["node_modules"]
 }

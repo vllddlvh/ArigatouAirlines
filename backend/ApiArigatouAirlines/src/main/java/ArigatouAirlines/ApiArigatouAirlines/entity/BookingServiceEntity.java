@@ -6,14 +6,14 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
-@Entity(name = "booking_s")
+@Entity(name = "booking_service")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class BookingService {
+public class BookingServiceEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_service_id")

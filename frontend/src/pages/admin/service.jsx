@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 // Icons from Lucide
 import { 
     Plus, Edit, Trash2, CheckCircle, XCircle, DollarSign, ShoppingBag, Armchair, Shield, Loader2
@@ -10,6 +10,7 @@ import { Dialog,DialogContent,DialogHeader,DialogTitle,DialogFooter  } from '@/c
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsList,TabsContent } from '@/components/ui/tabs';
 import {Table, TableHead,TableHeader,TableBody,TableRow,TableCell} from '@/components/ui/table-admin';
+import { createAncillaryService, deleteAncillaryService, getAllAncillaryServices, updateAncillaryService } from '@/services/ancillaryService';
 
 
 // --- UTILITY FUNCTIONS ---
@@ -246,46 +247,97 @@ const FeeList = ({ fees, type, onAction, toast }) => {
 
 export default function ServiceFeeManagementPage() {
     const { toast } = useToast();
-    const [fees, setFees] = useState(MOCK_FEES_DATA);
+    const [fees, setFees] = useState({
+        [FEE_TYPES.LUGGAGE]: [],
+        [FEE_TYPES.SEAT]: [],
+        [FEE_TYPES.INSURANCE]: [],
+    });
     const [activeTab, setActiveTab] = useState(FEE_TYPES.LUGGAGE);
     const [isLoading, setIsLoading] = useState(false);
 
-    // --- Hàm xử lý tất cả các hành động CRUD cho Phí dịch vụ ---
-    const handleAction = ({ type, payload, feeType }) => {
+    const fetchAllServices = useCallback(async () => {
         setIsLoading(true);
-        const currentType = feeType || activeTab;
+        try {
+            const data = await getAllAncillaryServices();
+            const list = Array.isArray(data) ? data : [];
 
-        setTimeout(() => {
-            let success = true;
-            let description = "";
+            const mappedForAll = list.map((s) => {
+                const rawPrice = s?.price;
+                const priceNumber = typeof rawPrice === 'number' ? rawPrice : Number(rawPrice);
+                const safePrice = Number.isFinite(priceNumber) ? priceNumber : 0;
 
-            setFees(prev => {
-                let currentFees = [...prev[currentType]];
-                
-                switch (type) {
-                    case 'ADD_FEE':
-                        const newId = Math.max(...currentFees.map(p => p.id), 0) + 1;
-                        currentFees.push({ ...payload, id: newId });
-                        description = `Đã cấu hình phí "${payload.name}" thành công.`;
-                        break;
-                    case 'UPDATE_FEE':
-                        currentFees = currentFees.map(p => p.id === payload.id ? payload : p);
-                        description = `Đã cập nhật phí "${payload.name}" thành công.`;
-                        break;
-                    case 'DELETE_FEE':
-                        currentFees = currentFees.filter(p => p.id !== payload);
-                        description = "Đã xóa cấu hình phí thành công.";
-                        break;
-                    default:
-                        success = false; description = "Hành động không xác định.";
-                }
-                
-                return { ...prev, [currentType]: currentFees };
+                const description = s?.description ?? '';
+
+                return {
+                    id: s?.serviceId,
+                    name: s?.serviceName,
+                    price: safePrice,
+                    condition: description,
+                    rule: description,
+                    type: safePrice > 0 && safePrice <= 1 ? 'Percent' : 'Fixed',
+                };
             });
 
-            toast({ title: success ? "Thành công" : "Lỗi", description, variant: success ? "success" : "destructive" });
+            setFees({
+                [FEE_TYPES.LUGGAGE]: mappedForAll,
+                [FEE_TYPES.SEAT]: mappedForAll,
+                [FEE_TYPES.INSURANCE]: mappedForAll,
+            });
+        } catch (error) {
+            const msg = error?.response?.data?.message || 'Không thể tải danh sách dịch vụ. Hãy đảm bảo bạn đã đăng nhập admin.';
+            toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+        } finally {
             setIsLoading(false);
-        }, 500);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchAllServices();
+    }, [fetchAllServices]);
+
+    // --- Hàm xử lý tất cả các hành động CRUD cho Phí dịch vụ ---
+    const handleAction = async ({ type, payload, feeType }) => {
+        setIsLoading(true);
+
+        try {
+            if (type === 'ADD_FEE') {
+                await createAncillaryService({
+                    serviceName: payload?.name,
+                    description: payload?.condition || payload?.rule || '',
+                    price: payload?.price ?? 0,
+                });
+                toast({ title: 'Thành công', description: `Đã thêm dịch vụ "${payload?.name}".`, variant: 'success' });
+                await fetchAllServices();
+                return;
+            }
+
+            if (type === 'UPDATE_FEE') {
+                await updateAncillaryService(payload?.id, {
+                    serviceName: payload?.name,
+                    description: payload?.condition || payload?.rule || '',
+                    price: payload?.price ?? 0,
+                });
+                toast({ title: 'Thành công', description: `Đã cập nhật dịch vụ "${payload?.name}".`, variant: 'success' });
+                await fetchAllServices();
+                return;
+            }
+
+            if (type === 'DELETE_FEE') {
+                const ok = window.confirm('Bạn có chắc chắn muốn xóa dịch vụ này?');
+                if (!ok) return;
+                await deleteAncillaryService(payload);
+                toast({ title: 'Thành công', description: 'Đã xóa dịch vụ.', variant: 'success' });
+                await fetchAllServices();
+                return;
+            }
+
+            toast({ title: 'Lỗi', description: 'Hành động không xác định.', variant: 'destructive' });
+        } catch (error) {
+            const msg = error?.response?.data?.message || 'Thao tác thất bại. Hãy kiểm tra quyền ADMIN và dữ liệu nhập.';
+            toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -321,7 +373,7 @@ export default function ServiceFeeManagementPage() {
 
                             {/* Nội dung Tab */}
                             {Object.values(FEE_TYPES).map(feeType => (
-                                <TabsContent key={feeType} value={feeType} activeTab={activeTab}>
+                                <TabsContent key={feeType} value={feeType}>
                                     <FeeList
                                         fees={fees[feeType]} 
                                         type={feeType}

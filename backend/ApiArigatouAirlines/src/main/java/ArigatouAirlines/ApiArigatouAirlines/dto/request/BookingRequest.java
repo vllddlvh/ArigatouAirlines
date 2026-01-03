@@ -33,4 +33,7 @@ public class BookingRequest {
     List<PassengerRequest> listPassengerRequest;
 
     String voucherCode;
+
+    List<Integer> listAncillaryServiceId;
+
 }

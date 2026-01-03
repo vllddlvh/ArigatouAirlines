@@ -1,5 +1,6 @@
 package ArigatouAirlines.ApiArigatouAirlines.controller;
 
+import ArigatouAirlines.ApiArigatouAirlines.dto.request.BookingServiceRequest;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.ApiResponse;
 import ArigatouAirlines.ApiArigatouAirlines.dto.response.BookingServiceResponse;
 import ArigatouAirlines.ApiArigatouAirlines.service.BookingServiceService;
@@ -16,6 +17,13 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookingServiceController {
     BookingServiceService bookingServiceService;
+
+    @PostMapping
+    ApiResponse<BookingServiceResponse> createBookingService(@RequestBody BookingServiceRequest request) {
+        return ApiResponse.<BookingServiceResponse>builder()
+                .body(bookingServiceService.createBookingService(request))
+                .build();
+    }
 
     @GetMapping
     ApiResponse<List<BookingServiceResponse>> getAllBookingServices() {
