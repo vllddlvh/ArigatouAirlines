@@ -17,7 +17,7 @@ export function ConfirmationStep({
   onHome,
 }) {
   const [showBoardingPass, setShowBoardingPass] = useState(false);
-  const [currentTicket, setCurrentTicket] = useState(null); // Lưu vé hiện tại để hiển thị trong Dialog
+  const [currentTicket, setCurrentTicket] = useState(null); 
   const ticketRef = useRef();
 
 
@@ -25,7 +25,6 @@ export function ConfirmationStep({
     if (!departureTime) return "N/A";
     
     try {
-      // Giả sử departureTime dạng "07:45 AM"
       const parts = departureTime.split(" ");
       if (parts.length !== 2) {
         console.error("Invalid departure time format");
@@ -42,7 +41,7 @@ export function ConfirmationStep({
       let hour = parseInt(hourStr, 10);
       const minute = parseInt(minuteStr, 10);
   
-      // Chuyển đổi sang 24h
+
       const meridiemUpper = meridiem.toUpperCase();
       if (meridiemUpper === "PM" && hour !== 12) {
         hour += 12;
@@ -50,16 +49,14 @@ export function ConfirmationStep({
         hour = 0;
       }
   
-      // Tạo đối tượng Date hôm nay với giờ và phút tương ứng
       const now = new Date();
       now.setHours(hour);
       now.setMinutes(minute);
       now.setSeconds(0);
       now.setMilliseconds(0);
   
-      // Lấy thời gian dưới dạng giây
       const departureTimeInSeconds = Math.floor(now.getTime() / 1000);
-      const boardingTimeInSeconds = departureTimeInSeconds - 30 * 60; // trừ 30 phút
+      const boardingTimeInSeconds = departureTimeInSeconds - 30 * 60; 
       const boardingDate = new Date(boardingTimeInSeconds * 1000);
   
       if (isNaN(boardingDate.getTime())) {

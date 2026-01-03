@@ -20,7 +20,7 @@ public class TicketResponse {
 
     BookingResponse booking;
 
-    int  flightId;
+    FlightResponse  flight;
 
     PassengerResponse passenger;
 
