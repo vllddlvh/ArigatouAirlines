@@ -55,7 +55,7 @@ public class Booking {
     @PrePersist
     void prePersist() {
         if (bookingCode == null || bookingCode.isBlank()) {
-            bookingCode = UUID.randomUUID().toString();
+            bookingCode = UUID.randomUUID().toString().substring(0, 20);
         }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
