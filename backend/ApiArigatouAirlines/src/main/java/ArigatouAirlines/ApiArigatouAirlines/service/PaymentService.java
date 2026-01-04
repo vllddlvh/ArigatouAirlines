@@ -214,6 +214,7 @@ public class PaymentService {
             payment.setPaymentDate(LocalDateTime.now());
             booking.setStatusBooking(StatusBooking.Pending);
             booking.setStatusPayment(StatusPaymentBooking.Failed);
+            booking.setTotalAmount(payment.getAmount());
             for(int i = 0; i < ticketList.size(); i++) {
                 FlightSeat flightSeat = ticketList.get(i).getFlightSeat();
                 flightSeat.setStatus(StatusFlightSeat.Available);
