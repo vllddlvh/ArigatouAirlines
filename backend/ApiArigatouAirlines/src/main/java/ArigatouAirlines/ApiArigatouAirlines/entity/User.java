@@ -50,6 +50,7 @@ public class User {
     )
     Set<Role> roles;
 
+    @Builder.Default
     @Column(name = "is_active", columnDefinition = "TINYINT(1) DEFAULT 1")
-    boolean isActive;
+    boolean isActive = true;
 }

@@ -58,6 +58,7 @@ export const cancelPayment = async (bookingId) => {
  */
 export const createVnPayUrl  = async (bookingId, voucherCode = null, voucherId = null) => {
   try {
+    console.log(voucherCode)
     const response = await axios.get(
       `${API_BASE_URL}/payment/create_payment`, 
       {

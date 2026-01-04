@@ -91,6 +91,7 @@ public class PaymentService {
             BigDecimal discountAmount = calAmountVoucher(voucher, amountBooking);
             amountBooking = amountBooking.subtract(discountAmount);
 
+
             var context = SecurityContextHolder.getContext();
             String username = context.getAuthentication().getName();
             User user = userRepository.findByUsername(username)
@@ -234,9 +235,6 @@ public class PaymentService {
         }
         if(discountType.equals(DiscountType.Percentage)) {
             amount = amountBooking.multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-            if(amount.compareTo(maxDiscountAmount) > 0) {
-                amount = maxDiscountAmount;
-            }
         } else {
             amount = voucher.getDiscountValue();
         }
